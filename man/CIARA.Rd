@@ -20,7 +20,7 @@ K-nearest neighbors matrix (n_cells X n_cells).
 }
 
 \item{background}{
-Vector of genes form which the entropy of mixing is computed
+Vector of genes for which the function \emph{CIARA_gene} is run.
 }
 
 \item{cores_number}{

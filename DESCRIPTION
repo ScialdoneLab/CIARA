@@ -1,11 +1,19 @@
 Package: CIARA
 Type: Package
-Title: What the Package Does (Title Case)
+Title: CIARA
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Author: Gabriele Lubatti
+Maintainer: Gabriele Lubatti <gabriele.lubatti@helmholtz-muenchen.de>
+Description: Identification of potential markers of rare cell types looking at genes whose expression is confined in small regions of the expression space
+Depends:
+    R (>= 4.0.2),
+    ggplot2 (>= 3.3.3),
+    clustree (>= 0.4.3),
+    plotly (>= 4.9.3),
+    Biobase (>= 2.48.0),
+    DescTools (>= 0.99.43),
+    rlist (>= 0.4.6.2),
+    Seurat (>= 4.0.1)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true

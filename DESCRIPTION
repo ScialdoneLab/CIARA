@@ -1,19 +1,28 @@
-Package: CIARA
 Type: Package
+Package: CIARA
 Title: CIARA
 Version: 0.1.0
 Author: Gabriele Lubatti
-Maintainer: Gabriele Lubatti <gabriele.lubatti@helmholtz-muenchen.de>
-Description: Identification of potential markers of rare cell types looking at genes whose expression is confined in small regions of the expression space
+Maintainer: Gabriele Lubatti
+    <gabriele.lubatti@helmholtz-muenchen.de>
+Description: Identification of potential markers of rare
+    cell types looking at genes whose expression is confined in small
+    regions of the expression space
+License: Artistic-2.0
 Depends:
-    R (>= 4.0.2),
-    ggplot2 (>= 3.3.3),
-    clustree (>= 0.4.3),
-    plotly (>= 4.9.3),
-    Biobase (>= 2.48.0),
-    DescTools (>= 0.99.43),
-    rlist (>= 0.4.6.2),
-    Seurat (>= 4.0.1)
-License: What license is it under?
+    R (>= 4.0)
+Imports:
+    ggplot2,
+    magrittr
+Suggests:
+    circlize,
+    clustree,
+    ComplexHeatmap,
+    plotly,
+    Seurat (>= 4.0),
+    testthat
+biocViews: software
+Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.1.1

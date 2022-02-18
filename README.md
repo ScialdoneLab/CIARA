@@ -3,41 +3,12 @@ CIARA (Cluster Independent Algorithm for the identification of RAre cell types) 
 It is possible to use these highly localized genes as features in standard cluster algorithm (i.e. Louvain), for identifying extremely rare population(3/4 cells from thousand of cells)
 
 ## Installation
-Before installing CIARA, the following packages should be installed first:
-```
-if (!requireNamespace("BiocManager", quietly = TRUE)){
-install.packages("BiocManager")}
-if (!require("Biobase")) {BiocManager::install("Biobase")}
-if (!require("ggplot2")) { install.packages("ggplot2", dependencies = TRUE, repos="http://cran.r-project.org")}
-if (!require("clustree")) { install.packages("clustree", dependencies = TRUE, repos="http://cran.r-project.org")}
-if (!require("plotly")) {install.packages("plotly", dependencies = TRUE, repos="http://cran.r-project.org")}
-if (!require("DescTools")) {install.packages("DescTools", dependencies = TRUE, repos="http://cran.r-project.org")}
-if (!require("Seurat")) {install.packages("Seurat", dependencies = TRUE, repos="http://cran.r-project.org")}
-if (!require("rlist")) {install.packages("rlist", dependencies = TRUE, repos="http://cran.r-project.org")}
-```
 
 For installation, please use the following command:
 
 ```install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")```.
 The main function of the package is **CIARA_gene** and **CIARA**
 
-## Troubleshooting installation errors
-The package was developed within R.4.0.2. A different version of R (higher or lower) may lead to installation failed. If is not possible to install the package following the command in the section **Installation**, then download this GitHub repository (master) at the location *your_path* and then run the following:
-
-```
-#load required packages and functions
-setwd(paste0(your_path,"/CIARA-master/vignettes"))
-source("CIARA_packages.R")
-source("Plotting_functions.R")
-source("CIARA_core_functions.R")
-source("Clustering_functions.R")
-```
-With the command above, all the functions of the library CIARA will be available to use.
-The input data in order to reproduce the vignettes in the section **Tutorials** are available at the paths:
-1. **/your_path/CIARA-master/inst/extdata**
-
-If CIARA is not installed, it is possible to fully reproduce all the vignettes in the section **Tutorials** using the scripts available in the folder 
-**[vignettes_no_installation](https://github.com/ScialdoneLab/CIARA/tree/master/vignettes_no_installation):**
 
 ## CIARA_gene
 

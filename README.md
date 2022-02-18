@@ -197,14 +197,14 @@ For more exaustive information about the functions offered by CIARA for the iden
 
 ## Vignette
 
-The following vignette is available and completely reproducible. It uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.biorxiv.org/content/10.1101/2020.07.21.213512v1). The raw count matrix was downloaded from  [http://human-gastrula.net].
+The following vignette is available and completely reproducible. It uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.nature.com/articles/s41586-021-04158-y). The raw count matrix was downloaded from  [http://human-gastrula.net].
 An extremely rare population of primordial germ cells (PGCs-7 cells) is easily identifed with entropy of mixing.
 It can be accessed within R with:
 ```
 utils::vignette("CIARA")
 ```
 
-## Additional vignette
+## Additional tutorials
 Additional tutorials are available:
 ### **[Mouse ESC](https://github.com/ScialdoneLab/CIARA/blob/master/vignettes/mouse_esc_tutorial_december_2021.Rmd):**
 This tutorial uses single cell RNA seq from mouse embryonic stem cells from [Iturbe *et al.*, 2021](https://www.nature.com/articles/s41594-021-00590-w).Two rare population of cells, one with transcriptional features close to the late 2-cells stage in mouse embryo development known as 2CLC  and another of only 4  differentiating cells emerge.
@@ -215,7 +215,8 @@ This tutorial uses single cell RNA seq from mouse embryo from [Tyser *et al.*, 2
 
 
 ### **[Human gastrula](https://github.com/ScialdoneLab/CIARA/blob/master/vignettes/Human_gastrula_december_2021.Rmd):**
-This tutorial uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.biorxiv.org/content/10.1101/2020.07.21.213512v1). The raw count matrix was downloaded from  [http://human-gastrula.net].
+This tutorial is an extension of waht is shown in the vignette provided within the CIARA package.
+This tutorial uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.nature.com/articles/s41586-021-04158-y). The raw count matrix was downloaded from  [http://human-gastrula.net].
 An extremely rare population of primordial germ cells (PGCs-7 cells) is easily identifed with entropy of mixing.
 
 ## Python version

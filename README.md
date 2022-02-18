@@ -195,10 +195,17 @@ With the cluster analysis based on CIARA we are able to detect two clusters (End
 For more exaustive information about the functions offered by CIARA for the identification of rare populations of cells  see **Tutorials section** below and the help page of the single functions. (*?function_name*).
 
 
-## Tutorials
+## Vignette
 
-There are the additional following tutorials available and completely reproducible:
+The following vignette is available and completely reproducible. It uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.biorxiv.org/content/10.1101/2020.07.21.213512v1). The raw count matrix was downloaded from  [http://human-gastrula.net].
+An extremely rare population of primordial germ cells (PGCs-7 cells) is easily identifed with entropy of mixing.
+It can be accessed within R with:
+```
+utils::vignette("CIARA")
+```
 
+## Additional vignette
+Additional tutorials are available:
 ### **[Mouse ESC](https://github.com/ScialdoneLab/CIARA/blob/master/vignettes/mouse_esc_tutorial_december_2021.Rmd):**
 This tutorial uses single cell RNA seq from mouse embryonic stem cells from [Iturbe *et al.*, 2021](https://www.nature.com/articles/s41594-021-00590-w).Two rare population of cells, one with transcriptional features close to the late 2-cells stage in mouse embryo development known as 2CLC  and another of only 4  differentiating cells emerge.
 
@@ -208,7 +215,7 @@ This tutorial uses single cell RNA seq from mouse embryo from [Tyser *et al.*, 2
 
 
 ### **[Human gastrula](https://github.com/ScialdoneLab/CIARA/blob/master/vignettes/Human_gastrula_december_2021.Rmd):**
-This tutorial uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2020](https://www.biorxiv.org/content/10.1101/2020.07.21.213512v1). The raw count matrix was downloaded from  [http://human-gastrula.net].
+This tutorial uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.biorxiv.org/content/10.1101/2020.07.21.213512v1). The raw count matrix was downloaded from  [http://human-gastrula.net].
 An extremely rare population of primordial germ cells (PGCs-7 cells) is easily identifed with entropy of mixing.
 
 ## Python version

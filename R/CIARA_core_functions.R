@@ -7,7 +7,7 @@
 #' @param n_cells_high maximum number of cells where a gene is expressed at a
 #' level above threshold
 #' @return vector with all genes expressed at a level higher than
-#' \emph{treshold} in a number of cells between \emph{n_cells} and
+#' \emph{threshold} in a number of cells between \emph{n_cells} and
 #' \emph{n_cells_high}
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #'
@@ -77,7 +77,7 @@ get_background_full <- function(norm_matrix, threshold = 1, n_cells_low = 3, n_c
 #' parameter alternative = "g"
 #' @param odds_ratio odds_ratio returned by the function \emph{fisher.test}
 #' with parameter alternative = "g"
-#' @param local_region Integer. Minimum numer of local regions (cell with its
+#' @param local_region Integer. Minimum number of local regions (cell with its
 #' knn neighbours) where the binarized gene expression is enriched in 1.
 #' @param approximation Logical.For a given gene, the fisher test is run in the
 #' local regions of only the cells where the binarized gene expression is 1.

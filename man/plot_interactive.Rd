@@ -22,7 +22,7 @@ Number of rows must be equal to the number of cells}
 will be coloured following a gradient according to the corresponding value
 of this vector.}
 
-\item{text}{Charachter vector specifying the highly localized genes in each
+\item{text}{Character vector specifying the highly localized genes in each
 cell. It is the output from \emph{selection_localized_genes}.}
 
 \item{min_x}{Set the min limit on the x axis.}

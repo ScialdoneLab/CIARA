@@ -24,7 +24,7 @@ level above threshold}
 }
 \value{
 vector with all genes expressed at a level higher than
-\emph{treshold} in a number of cells between \emph{n_cells} and
+\emph{threshold} in a number of cells between \emph{n_cells} and
 \emph{n_cells_high}
 }
 \description{

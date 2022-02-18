@@ -18,7 +18,7 @@ cluster_analysis_integrate_rare(
 
 \item{project_name}{Character name of the Seurat project.}
 
-\item{resolution}{Numeric value specifying the paramter \emph{resolution}
+\item{resolution}{Numeric value specifying the parameter \emph{resolution}
 used in the Seurat function \emph{FindClusters}.}
 
 \item{neighbors}{Numeric value specifying the parameter \emph{k.param} in

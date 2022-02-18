@@ -15,7 +15,7 @@ cluster_analysis_sub(
 \arguments{
 \item{raw_counts}{Raw count matrix (n_genes X n_cells).}
 
-\item{resolution}{Numeric value specifying the paramter \emph{resolution}
+\item{resolution}{Numeric value specifying the parameter \emph{resolution}
 used in the Seurat function \emph{FindClusters}.}
 
 \item{neighbors}{Numeric value specifying the parameter \emph{k.param} in

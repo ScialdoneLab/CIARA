@@ -14,7 +14,7 @@ selection_localized_genes(
 \arguments{
 \item{norm_counts}{Norm count matrix (genes X cells).}
 
-\item{localized_genes}{vector of higly localized genes as provided by the
+\item{localized_genes}{vector of highly localized genes as provided by the
 last element of the list given as output from \emph{CIARA_mixing_final}.}
 
 \item{min_number_cells}{Minimum number of cells where a genes must be

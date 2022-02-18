@@ -2,7 +2,7 @@
 #'
 #' @param raw_counts Raw count matrix (n_genes X n_cells).
 #' @param project_name Character name of the Seurat project.
-#' @param resolution Numeric value specifying the paramter \emph{resolution}
+#' @param resolution Numeric value specifying the parameter \emph{resolution}
 #' used in the Seurat function \emph{FindClusters}.
 #' @param neighbors Numeric value specifying the parameter \emph{k.param} in
 #' the Seurat function \emph{FindNeighbors}
@@ -104,8 +104,8 @@ de_seurat_cluster <- function(seurat_object, cluster, names_cell, max_p_value) {
 
 #' merge_cluster
 #'
-#' @param old_cluster original cluster asignment that need to be updated
-#' @param new_cluster new cluster asignment that need to be integrated with
+#' @param old_cluster original cluster assignment that need to be updated
+#' @param new_cluster new cluster assignment that need to be integrated with
 #' \emph{old_cluster}.
 #' @param max_number Threshold in size for clusters in \emph{new_cluster}. Only
 #' cluster with number of cells smaller than \emph{max_number} will be
@@ -154,7 +154,7 @@ merge_cluster <- function(old_cluster, new_cluster, max_number = NULL) {
 #' assignment.
 #' @param localized_genes Character vector with localized genes detected by CIARA.
 #' @param background Character vector with all the genes names to use as
-#' backgroud for the Fisher test.
+#' background for the Fisher test.
 #' @param number_hvg Integer value. Number of top HVGs provided by the Seurat
 #' function \emph{FindVariableFeatures}.
 #' @param min_p_value Threshold on p values provided by Fisher test.
@@ -348,7 +348,7 @@ markers_cluster_seurat <- function(seurat_object, cluster, cell_names, number_to
 #' \emph{single_cluster} is greater than \emph{threshold} and in all the other
 #' clusters is equal to zero.
 #'
-#' @param single_cluster Character. Label of one specifi cluster
+#' @param single_cluster Character. Label of one specify cluster
 #' @param marker_list Third element of the output list as returned by the
 #' function \emph{markers_cluster_seurat}
 #' @param threshold Numeric. The median of the genes across cells belong to

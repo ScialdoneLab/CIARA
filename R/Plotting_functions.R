@@ -220,7 +220,7 @@ plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, conditi
 #' @param color vector of length equal to n_rows in coordinate_umap.Each cell
 #' will be coloured following a gradient according to the corresponding value
 #' of this vector.
-#' @param text Charachter vector specifying the highly localized genes in each
+#' @param text Character vector specifying the highly localized genes in each
 #' cell. It is the output from \emph{selection_localized_genes}.
 #' @param min_x Set the min limit on the x axis.
 #' @param max_x Set the max limit on the x axis.
@@ -271,7 +271,7 @@ plot_interactive <- function(coordinate_umap, color, text, min_x = NULL, max_x =
 
 #' selection_localized_genes
 #'
-#' @param localized_genes vector of higly localized genes as provided by the
+#' @param localized_genes vector of highly localized genes as provided by the
 #' last element of the list given as output from \emph{CIARA_mixing_final}.
 #' @param min_number_cells Minimum number of cells where a genes must be
 #' expressed (> 0).
@@ -330,7 +330,7 @@ selection_localized_genes <- function (norm_counts, localized_genes, min_number_
 
 
 
-#' plot_balons_marker
+#' plot_balloon_marker
 #'
 #' @param marker_complete Third element of the output list as
 #' returned by the function \emph{markers_cluster_seurat}
@@ -342,8 +342,8 @@ selection_localized_genes <- function (norm_counts, localized_genes, min_number_
 #' @inheritParams plot_heatmap_marker
 #' @return ggplot object.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
-#' @export plot_balons_marker
-plot_balons_marker <- function (norm_counts, cluster, marker_complete,
+#' @export plot_balloon_marker
+plot_balloon_marker <- function (norm_counts, cluster, marker_complete,
                           max_number, max_size = 5, text_size = 7) {
   livelli <- levels(factor(cluster))
   all_markers_plot <- rep(list(0), length(livelli))

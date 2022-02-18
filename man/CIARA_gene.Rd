@@ -29,7 +29,7 @@ parameter alternative = "g"}
 \item{odds_ratio}{odds_ratio returned by the function \emph{fisher.test}
 with parameter alternative = "g"}
 
-\item{local_region}{Integer. Minimum numer of local regions (cell with its
+\item{local_region}{Integer. Minimum number of local regions (cell with its
 knn neighbours) where the binarized gene expression is enriched in 1.}
 
 \item{approximation}{Logical.For a given gene, the fisher test is run in the

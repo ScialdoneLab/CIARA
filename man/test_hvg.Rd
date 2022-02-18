@@ -22,7 +22,7 @@ assignment.}
 \item{localized_genes}{Character vector with localized genes detected by CIARA.}
 
 \item{background}{Character vector with all the genes names to use as
-backgroud for the Fisher test.}
+background for the Fisher test.}
 
 \item{number_hvg}{Integer value. Number of top HVGs provided by the Seurat
 function \emph{FindVariableFeatures}.}

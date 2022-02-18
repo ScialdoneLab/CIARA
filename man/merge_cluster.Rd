@@ -7,9 +7,9 @@
 merge_cluster(old_cluster, new_cluster, max_number = NULL)
 }
 \arguments{
-\item{old_cluster}{original cluster asignment that need to be updated}
+\item{old_cluster}{original cluster assignment that need to be updated}
 
-\item{new_cluster}{new cluster asignment that need to be integrated with
+\item{new_cluster}{new cluster assignment that need to be integrated with
 \emph{old_cluster}.}
 
 \item{max_number}{Threshold in size for clusters in \emph{new_cluster}. Only

@@ -16,7 +16,7 @@ white_black_markers(
 \item{cluster}{Vector of length equal to the number of cells, with cluster
 assignment.}
 
-\item{single_cluster}{Character. Label of one specifi cluster}
+\item{single_cluster}{Character. Label of one specify cluster}
 
 \item{norm_counts}{Norm count matrix (genes X cells).}
 

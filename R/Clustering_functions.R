@@ -22,15 +22,16 @@ cluster_analysis_integrate_rare <- function(raw_counts, project_name, resolution
   if (!(requireNamespace("Seurat", quietly = TRUE))) {
     stop("Package Seurat needed for this function to work. Please install it: install.packages('Seurat')")
   }
-   seurat_object <- CreateSeuratObject(counts = raw_counts, project = project_name)
-   seurat_object <- subset( seurat_object, subset = nFeature_RNA > 0)
-   seurat_object <- NormalizeData( seurat_object, verbose = FALSE)
-   seurat_object <- FindVariableFeatures( seurat_object, selection.method = "vst", nfeatures = 2000)
-   seurat_object <- ScaleData( seurat_object, verbose = FALSE)
-   seurat_object <- RunPCA( seurat_object, npcs = max_dimension, verbose = FALSE, features = feature_genes)
-   seurat_object <- RunUMAP( seurat_object, reduction = "pca", dims = 1:20, set.seed = 42)
-   seurat_object <- FindNeighbors( seurat_object, reduction = "pca", dims = 1:max_dimension, k.param = neighbors)
-   seurat_object <- FindClusters( seurat_object, resolution = resolution)
+  nFeature_RNA <- NULL
+  seurat_object <- Seurat::CreateSeuratObject(counts = raw_counts, project = project_name)
+  seurat_object <- subset( seurat_object, subset = nFeature_RNA > 0)
+  seurat_object <- Seurat::NormalizeData( seurat_object, verbose = FALSE)
+  seurat_object <- Seurat::FindVariableFeatures( seurat_object, selection.method = "vst", nfeatures = 2000)
+  seurat_object <- Seurat::ScaleData( seurat_object, verbose = FALSE)
+  seurat_object <- Seurat::RunPCA( seurat_object, npcs = max_dimension, verbose = FALSE, features = feature_genes)
+  seurat_object <- Seurat::RunUMAP( seurat_object, reduction = "pca", dims = 1:20, set.seed = 42)
+  seurat_object <- Seurat::FindNeighbors( seurat_object, reduction = "pca", dims = 1:max_dimension, k.param = neighbors)
+  seurat_object <- Seurat::FindClusters( seurat_object, resolution = resolution)
   return(seurat_object)}
 
 
@@ -44,7 +45,6 @@ cluster_analysis_integrate_rare <- function(raw_counts, project_name, resolution
 #' @param resolution_vector vector with all values of resolution for which the
 #' Seurat function \emph{FindClusters} is run
 #' @return Clustree object
-#' @note %% ~~further notes~~
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://cran.r-project.org/web/packages/clustree/clustree.pdf}
 #'
@@ -54,12 +54,14 @@ find_resolution <- function(seurat_object, resolution_vector) {
     stop("Package Seurat and clustree needed for this function to work. Please install them: install.packages('Seurat') and install.packages('clustree')")
   }
   for (i in resolution_vector) {
-    seurat_object <- FindClusters(seurat_object, resolution = i)
+    seurat_object <- Seurat::FindClusters(seurat_object, resolution = i)
   }
-  clustree(seurat_object)
+  clustree::clustree(seurat_object)
 }
 
-
+#' @importFrom ggraph guide_edge_colourbar
+#' @export
+ggraph::guide_edge_colourbar
 
 
 
@@ -81,7 +83,7 @@ de_seurat_cluster <- function(seurat_object, cluster, names_cell, max_p_value) {
   level <- levels(as.factor(cluster))
   final_markers <- vector("list", length(level))
   for (i in 1:length(level)) {
-    markers <- FindMarkers(seurat_object, ident.1 = names_cell[cluster == level[i]], ident.2 = names_cell[cluster!=level[i]], only.pos = T)
+    markers <- Seurat::FindMarkers(seurat_object, ident.1 = names_cell[cluster == level[i]], ident.2 = names_cell[cluster!=level[i]], only.pos = T)
     markers_new <- markers[markers$p_val_adj <= max_p_value, ]
     markers_new <- markers_new[order(markers_new$p_val_adj), ]
     markers_final <- row.names(markers_new)
@@ -114,7 +116,8 @@ de_seurat_cluster <- function(seurat_object, cluster, names_cell, max_p_value) {
 merge_cluster <- function(old_cluster, new_cluster, max_number = NULL) {
 
   if(is.null(max_number)) {
-    cluster_final <- new_cluster
+    cluster_final <- old_cluster
+    cluster_final[match(names(new_cluster),names(old_cluster))] <- new_cluster
     return(cluster_final)
   }
   else{
@@ -172,14 +175,15 @@ test_hvg <- function (raw_counts, cluster, localized_genes, background, number_h
   if (!(requireNamespace("Seurat", quietly = TRUE))) {
     stop("Package Seurat needed for this function to work. Please install it: install.packages('Seurat')")
   }
+  nFeature_RNA <- NULL
   levels_cluster <- levels(as.factor(cluster))
   final_p_value <- rep(list(0), length(levels))
   for (i in 1:length(levels_cluster)) {
     raw_counts_small <- raw_counts[, cluster == levels_cluster[i]]
-    seurat_object <- CreateSeuratObject(counts = raw_counts_small, project = "sub_cluster")
+    seurat_object <- Seurat::CreateSeuratObject(counts = raw_counts_small, project = "sub_cluster")
     seurat_object <- subset(seurat_object, subset = nFeature_RNA > 0)
-    seurat_object <- NormalizeData(seurat_object, verbose = FALSE)
-    seurat_object <- FindVariableFeatures(seurat_object, selection.method = "vst", nfeatures = number_hvg)
+    seurat_object <- Seurat::NormalizeData(seurat_object, verbose = FALSE)
+    seurat_object <- Seurat::FindVariableFeatures(seurat_object, selection.method = "vst", nfeatures = number_hvg)
     hvg_genes <- seurat_object@assays$RNA@var.features
     fisher_output <- build_fisher_test(localized_genes, hvg_genes, background)
     final_p_value[[i]] <- list(fisher_output[[1]], fisher_output[[3]], localized_genes[localized_genes %in% hvg_genes])
@@ -223,17 +227,17 @@ cluster_analysis_sub <- function (raw_counts, resolution, neighbors, max_dimensi
   if (!(requireNamespace("Seurat", quietly = TRUE))) {
     stop("Package Seurat needed for this function to work. Please install it: install.packages('Seurat')")
   }
-  seurat_object <- CreateSeuratObject(counts = raw_counts, project = "sub_cluster")
+  nFeature_RNA <- NULL
+  seurat_object <- Seurat::CreateSeuratObject(counts = raw_counts, project = "sub_cluster")
   seurat_object <- subset(seurat_object, subset = nFeature_RNA > 0)
-  seurat_object <- NormalizeData(seurat_object, verbose = FALSE)
-  seurat_object <- FindVariableFeatures(seurat_object, selection.method = "vst", nfeatures = 2000)
-  seurat_object <- seurat_object
-  seurat_object <- ScaleData(seurat_object, verbose = FALSE)
+  seurat_object <- Seurat::NormalizeData(seurat_object, verbose = FALSE)
+  seurat_object <- Seurat::FindVariableFeatures(seurat_object, selection.method = "vst", nfeatures = 2000)
+  seurat_object <- Seurat::ScaleData(seurat_object, verbose = FALSE)
   hvg_genes <- seurat_object@assays$RNA@var.features
   genes_cluster <- hvg_genes
-  seurat_object <- RunPCA(seurat_object, npcs = max_dimension, verbose = FALSE, features = genes_cluster)
-  seurat_object <- FindNeighbors(seurat_object, reduction = "pca", dims = 1:max_dimension, k.param = neighbors)
-  seurat_object <- FindClusters(seurat_object, resolution = resolution)
+  seurat_object <- Seurat::RunPCA(seurat_object, npcs = max_dimension, verbose = FALSE, features = genes_cluster)
+  seurat_object <- Seurat::FindNeighbors(seurat_object, reduction = "pca", dims = 1:max_dimension, k.param = neighbors)
+  seurat_object <- Seurat::FindClusters(seurat_object, resolution = resolution)
   new_cluster <- as.vector(seurat_object$seurat_clusters)
   for (i in 1:length(levels(seurat_object$seurat_clusters))) {
     new_cluster[as.vector(seurat_object$seurat_clusters) == levels(seurat_object$seurat_clusters)[i]] <- paste(name_cluster,
@@ -286,7 +290,7 @@ markers_cluster_seurat <- function(seurat_object, cluster, cell_names, number_to
     message(paste0("Cluster ", level[i]))
   }
   marker_all <- unlist(marker_cluster)
-  marker_all <- marker_all[isUnique(marker_all)]
+  marker_all <- marker_all[Biobase::isUnique(marker_all)]
 
   for (i in 1:length(level)) {
     marker_cluster[[i]] <- marker_cluster[[i]][marker_cluster[[i]]%in%marker_all]

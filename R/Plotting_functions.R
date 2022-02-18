@@ -8,8 +8,8 @@
 #' @seealso \url{https://cran.r-project.org/web/packages/ggplot2/index.html}
 #' @export plot_umap
 plot_umap <- function(coordinate_umap, cluster){
-  umap_plot <- ggplot(coordinate_umap, aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +
-    geom_point(aes(colour = as.factor(cluster))) + xlab("UMAP 1") + ylab("UMAP 2") + labs(col = "Cluster")
+  umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +
+    ggplot2::geom_point(ggplot2::aes(colour = as.factor(cluster))) + ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Cluster")
   return(list(umap_plot))
 }
 
@@ -57,10 +57,10 @@ plot_genes_sum <- function(coordinate_umap, norm_counts, genes_relevant, name_ti
   row.names(coordinate_umap) <- colnames(norm_counts)
   coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], ]
   gene_sum <- sort(gene_sum)
-  umap_plot <- ggplot(coordinate_umap, aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +
-    geom_point(aes(colour = (gene_sum)))  + xlab("UMAP 1") + ylab("UMAP 2") + labs(col = "Log norm counts") +
-    scale_colour_gradient(low = "white",  high = "blue") +
-    ggtitle(name_title)
+  umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +
+    ggplot2::geom_point(ggplot2::aes(colour = (gene_sum)))  + ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Log norm counts") +
+    ggplot2::scale_colour_gradient(low = "white",  high = "blue") +
+    ggplot2::ggtitle(name_title)
   return((umap_plot))
 }
 
@@ -89,10 +89,10 @@ plot_gene <- function(norm_counts, coordinate_umap, gene_id, title_name){
   row.names(coordinate_umap) <- colnames(norm_counts)
   coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], ]
   gene_expr <- sort(gene_expr)
-  umap_plot <- ggplot(coordinate_umap, aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +
-    geom_point(aes(colour = (gene_expr)))  + xlab("UMAP 1") + ylab("UMAP 2") + labs(col = "Log norm counts")+
-    scale_colour_gradient(low = "white", high = "blue") +
-    ggtitle(title_name)
+  umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +
+    ggplot2::geom_point(ggplot2::aes(colour = (gene_expr)))  + ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Log norm counts")+
+    ggplot2::scale_colour_gradient(low = "white", high = "blue") +
+    ggplot2::ggtitle(title_name)
   return((umap_plot))
 }
 
@@ -181,23 +181,23 @@ plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, conditi
                           ,Condition = medium_finale)
 
 
-  haCol1 <- HeatmapAnnotation(df = data_heatmap, col = list(Cluster = color_cluster, Condition = color_condition)
+  haCol1 <- ComplexHeatmap::HeatmapAnnotation(df = data_heatmap, col = list(Cluster = color_cluster, Condition = color_condition)
 
                              , show_legend = T)
 
-  ht21 <- Heatmap(as.matrix(norm_counts_plot)
+  ht21 <- ComplexHeatmap::Heatmap(as.matrix(norm_counts_plot)
                  ,cluster_rows = FALSE
-                 , col = colorRamp2(c(0, round(max(norm_counts_plot))), c("white", "red"))
+                 , col = circlize::colorRamp2(c(0, round(max(norm_counts_plot))), c("white", "red"))
                  , name = "log norm counts"
                  , cluster_columns = F
                  , top_annotation = haCol1
-                 , row_names_gp = gpar(fontsize = text_size
+                 , row_names_gp = grid::gpar(fontsize = text_size
                  )
                  , show_column_names = F
                  , show_row_names = T)
 
 
-  draw(ht21)
+  ComplexHeatmap::draw(ht21)
 
 
 
@@ -235,7 +235,7 @@ plot_interactive <- function(coordinate_umap, color, text, min_x = NULL, max_x =
     stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
   }
   colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
-  fig <- plot_ly(data = coordinate_umap,
+  fig <- plotly::plot_ly(data = coordinate_umap,
                  x = ~UMAP_1, y = ~UMAP_2,
                  color = ~color,
                  type = "scatter",
@@ -384,12 +384,12 @@ plot_balons_marker <- function (norm_counts, cluster, marker_complete,
   values <- unlist(values)
   all_markers_values <- unlist(all_markers_values)
   balloon_melted <- data.frame(all_markers_plot, cluster_label_all, values)
-  colnames(balloon_melted) <- c("genes_plot", "cluster_label_all", "values")
-  p <- ggplot(balloon_melted, aes(x = cluster_label_all, y = as.character(genes_plot)))
-  p + geom_point(aes(size = values, colour = as.numeric(all_markers_values))) + theme(panel.background = element_blank(), panel.border = element_rect(colour = "blue", fill = NA,  size = 3)) +
-    scale_size_area(max_size = max_size) + scale_colour_gradient(low = "white", high = "midnight blue", na.value = NA) +
-    labs(colour = "Mean log2 norm expression", size = "Value (fraction cells above 1 log2 norm counts)") +
-    xlab("Cluster") + ylab("Markers")  + theme(text = element_text(size = text_size), axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1), axis.title.x = element_blank())
+  colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", "values")
+  p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, y = all_markers_plot))
+  p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + ggplot2::theme(panel.background = ggplot2::element_blank(), panel.border = ggplot2::element_rect(colour = "blue", fill = NA,  size = 3)) +
+    ggplot2::scale_size_area(max_size = max_size) + ggplot2::scale_colour_gradient(low = "white", high = "midnight blue", na.value = NA) +
+    ggplot2::labs(colour = "Mean log2 norm expression", size = "Value (fraction cells above 1 log2 norm counts)") +
+    ggplot2::xlab("Cluster") + ggplot2::ylab("Markers")  + ggplot2::theme(text = ggplot2::element_text(size = text_size), axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, hjust = 1), axis.title.x = ggplot2::element_blank())
 }
 
 

@@ -19,9 +19,6 @@ Clustree object
 \description{
 find_resolution
 }
-\note{
-%% ~~further notes~~
-}
 \seealso{
 \url{https://cran.r-project.org/web/packages/clustree/clustree.pdf}
 }

@@ -371,11 +371,11 @@ names(top_meso) <- rep("ExE Mesoderm_1", length(top_meso))
 toMatch <- c("Endoderm")
 
 plot_balloon_marker(norm_human_data[, grep(paste(toMatch, collapse="|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse="|"), final_cluster_human)], top_endo, 20, max_size=5, text_size=10)
-dev.off()
+
 
 toMatch <- c("Hemogenic Endothelial Progenitors")
 plot_balloon_marker(norm_human_data[, grep(paste(toMatch, collapse = "|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse = "|"), final_cluster_human)], top_hemo, 20, max_size = 5, text_size = 8)
-dev.off()
+
 
 toMatch <- c("ExE Mesoderm")
 plot_balloon_marker(norm_human_data[, grep(paste(toMatch, collapse = "|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse = "|"), final_cluster_human)], top_meso, length(top_meso), max_size = 5, text_size = 8)

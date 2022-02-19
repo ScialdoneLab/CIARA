@@ -20,8 +20,9 @@ Clustree object
 find_resolution
 }
 \seealso{
-\url{https://cran.r-project.org/web/packages/clustree/clustree.pdf}
+\url{https://CRAN.R-project.org/package=clustree}
 }
 \author{
 Gabriele Lubatti \email{gabriele.lubatti@helmholtz-muenchen.de}
 }
+

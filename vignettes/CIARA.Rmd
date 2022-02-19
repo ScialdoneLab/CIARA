@@ -35,15 +35,17 @@ In this vignette it is shown the analysis performed on single cell RNA seq human
 
 We load the raw count matrix and umap coordinate defined in the original paper
 ```{r }
-load(system.file("extdata", "raw_elmir_5_30.Rda", package ="CIARA"))
-raw_human_data <- raw_elmir_5_30
+load(system.file("extdata", "raw_counts_human_data.Rda", package ="CIARA"))
+load(system.file("extdata", "hvg_human_gastrula.Rda", package ="CIARA"))
 umap_elmir <- readRDS(system.file("extdata", "annot_umap.rds", package = "CIARA"))
 
 ```
 
 Obtain normalized count matrix and knn matrix ( euclidean distance on highly variable genes) using Seurat.
 ```{r }
-  human_data_seurat <- cluster_analysis_integrate_rare(raw_human_data, "Human_data", 0.1, 5, 30)
+  human_data_seurat <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_data", 0.1, 5, 30, feature_genes = hvg_human_gastrula)
+
+human_data_seurat@assays$RNA@var.features <- hvg_human_gastrula
 
 ```
 
@@ -149,7 +151,7 @@ plot_interactive(coordinate_umap_human, gene_sum, genes_name_text, min_x = NULL,
 
 We run louvain cluster analysis implemented in Seurat using as features the highly localized genes provided by CIARA
 ```{r }
-human_data_ciara <- cluster_analysis_integrate_rare(raw_human_data, "Elmir data", 0.01, 5, 30, (ciara_genes))
+human_data_ciara <- cluster_analysis_integrate_rare(raw_counts_human_data, "Elmir data", 0.01, 5, 30, (ciara_genes))
 
 ```
 
@@ -220,7 +222,7 @@ Detect the clusters enriched in highly localized genes and then performs on thes
 
 ```{r }
 
-result_test <- test_hvg(raw_human_data, final_cluster_human, (ciara_genes), background, 100, 0.05)
+result_test <- test_hvg(raw_counts_human_data, final_cluster_human, (ciara_genes), background, 100, 0.05)
 
 ```
 
@@ -238,9 +240,9 @@ result_test[[2]]
 
 ```{r }
 
-raw_endoderm <- raw_human_data[, as.vector(umap_elmir$cluster_id) == "Endoderm"]
-raw_hemo <- raw_human_data[, as.vector(umap_elmir$cluster_id) == "Hemogenic Endothelial Progenitors"]
-raw_exe_meso <- raw_human_data[, as.vector(umap_elmir$cluster_id) == "ExE Mesoderm"]
+raw_endoderm <- raw_counts_human_data[, as.vector(umap_elmir$cluster_id) == "Endoderm"]
+raw_hemo <- raw_counts_human_data[, as.vector(umap_elmir$cluster_id) == "Hemogenic Endothelial Progenitors"]
+raw_exe_meso <- raw_counts_human_data[, as.vector(umap_elmir$cluster_id) == "ExE Mesoderm"]
 
 
 

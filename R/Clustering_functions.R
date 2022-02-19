@@ -46,7 +46,7 @@ cluster_analysis_integrate_rare <- function(raw_counts, project_name, resolution
 #' Seurat function \emph{FindClusters} is run
 #' @return Clustree object
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
-#' @seealso \url{https://cran.r-project.org/web/packages/clustree/clustree.pdf}
+#' @seealso \url{https://CRAN.R-project.org/package=clustree}
 #'
 #' @export find_resolution
 find_resolution <- function(seurat_object, resolution_vector) {

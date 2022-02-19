@@ -38,7 +38,7 @@ gg_color_hue <- function(n) {
 #' @inheritParams plot_umap
 #' @return ggplot2 object.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
-#' @seealso \url{https://cran.r-project.org/web/packages/ggplot2/index.html}
+#' @seealso \url{ https://CRAN.R-project.org/package=ggplot2}
 #'
 #' @export plot_genes_sum
 plot_genes_sum <- function(coordinate_umap, norm_counts, genes_relevant, name_title){
@@ -78,7 +78,7 @@ plot_genes_sum <- function(coordinate_umap, norm_counts, genes_relevant, name_ti
 #' @inheritParams plot_umap
 #' @return ggplot2 object
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
-#' @seealso \url{https://cran.r-project.org/web/packages/ggplot2/index.html}
+#' @seealso \url{https://CRAN.R-project.org/package=ggplot2}
 #'
 #' @export plot_gene
 plot_gene <- function(norm_counts, coordinate_umap, gene_id, title_name){

@@ -137,7 +137,7 @@ final_cluster[grep("step_2",final_cluster)] <- "PGC"
 result_test <- test_hvg(raw_counts,final_cluster, ciara_genes, background, number_hvg = 100, min_p_value = 0.05)
 result_test[[2]]
  "Endoderm"  "Hemogenic Endothelial Progenitors". "ExE Mesoderm"
-# We need to do sub cluster in the above two clusters
+# We need to do sub cluster in the above three clusters
 raw_endoderm <- raw_counts[, human_embryo_cluster == "Endoderm"]
 raw_emo <- raw_elmir[, human_embryo_cluster == "Hemogenic Endothelial Progenitors"]
 raw_exe_meso=raw_elmir[, human_embryo_cluster == "ExE Mesoderm"]

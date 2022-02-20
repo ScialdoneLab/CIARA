@@ -20,7 +20,7 @@ ggplot2 object.
 plot_umap
 }
 \seealso{
-\url{https://cran.r-project.org/web/packages/ggplot2/index.html}
+\url{https://CRAN.R-project.org/package=ggplot2}
 }
 \author{
 Gabriele Lubatti \email{gabriele.lubatti@helmholtz-muenchen.de}

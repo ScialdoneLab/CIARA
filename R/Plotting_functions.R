@@ -5,7 +5,7 @@
 #' @inheritParams test_hvg
 #' @return ggplot2 object.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
-#' @seealso \url{https://cran.r-project.org/web/packages/ggplot2/index.html}
+#' @seealso \url{https://CRAN.R-project.org/package=ggplot2}
 #' @export plot_umap
 plot_umap <- function(coordinate_umap, cluster){
   umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +

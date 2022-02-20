@@ -142,7 +142,7 @@ norm_counts_small <- apply(norm_human_data_ciara, 1, function(x) {
   y <- x/sum(x)
   return(y)
   })
-    gene_sum <- apply(norm_counts_small, 1, sum)
+gene_sum <- apply(norm_counts_small, 1, sum)
     
 genes_name_text <- selection_localized_genes(norm_human_data_ciara, ciara_genes, min_number_cells = 4, max_number_genes = 4)
 colnames(coordinate_umap_human) <- c("UMAP_1", "UMAP_2")

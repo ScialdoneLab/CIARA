@@ -1,11 +1,11 @@
 Type: Package
 Package: CIARA
-Title: Cluster independent algorithm for rare cell types identification
+Title: Cluster Independent Algorithm for Rare Cell Types Identification
 Version: 0.1.0
 Author: Gabriele Lubatti
 Maintainer: Gabriele Lubatti
     <gabriele.lubatti@helmholtz-muenchen.de>
-Description: Identification of markers of rare cell types BY looking at genes whose expression is confined in small regions of the expression space.
+Description: Identification of markers of rare cell types by looking at genes whose expression is confined in small regions of the expression space.
 License: Artistic-2.0
 Depends:
     R (>= 4.0)

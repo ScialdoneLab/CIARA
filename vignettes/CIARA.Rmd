@@ -33,19 +33,19 @@ In this vignette it is shown the analysis performed on single cell RNA seq human
 
 ## Load human gastrula data and create norm counts and knn matrices using Seurat 
 
-We load the raw count matrix and umap coordinate defined in the original paper
+We load the raw count matrix and umap coordinate defined in the original paper.
+Raw count matrix can be downloaded [here](http://www.human-gastrula.net)
 ```{r }
-load(system.file("extdata", "raw_counts_human_data.Rda", package ="CIARA"))
-load(system.file("extdata", "hvg_human_gastrula.Rda", package ="CIARA"))
 umap_elmir <- readRDS(system.file("extdata", "annot_umap.rds", package = "CIARA"))
+
+coordinate_umap_human <- umap_elmir[, 2:3]
 
 ```
 
 Obtain normalized count matrix and knn matrix ( euclidean distance on highly variable genes) using Seurat.
-```{r }
-  human_data_seurat <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_data", 0.1, 5, 30, feature_genes = hvg_human_gastrula)
+```{r, eval = FALSE }
+  human_data_seurat <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_data", 0.1, 5, 30)
 
-human_data_seurat@assays$RNA@var.features <- hvg_human_gastrula
 
 ```
 
@@ -56,17 +56,13 @@ human_data_seurat@assays$RNA@var.features <- hvg_human_gastrula
 
 
 
-```{r }
+```{r, eval = FALSE }
 
 norm_human_data <- as.matrix(Seurat::GetAssayData(human_data_seurat, slot = "data", assay = "RNA"))
 
-
-general_cluster_human <- human_data_seurat$RNA_snn_res.0.1
-
-
 knn_human_data <- as.matrix(human_data_seurat@graphs$RNA_nn)
 
-coordinate_umap_human <- umap_elmir[, 2:3]
+
 
 
 ```
@@ -79,7 +75,7 @@ Cluster annotation provided in the original paper
 ```{r }
 
 original_cluster_human <- as.vector(umap_elmir$cluster_id)
-names(original_cluster_human) <- names(human_data_seurat$RNA_snn_res.0.1)
+names(original_cluster_human) <- names(umap_elmir$cell_name)
 plot_umap(coordinate_umap_human, original_cluster_human)
 ```
 
@@ -108,12 +104,19 @@ ciara_genes <- row.names(result)[result[, 1]<1]
 ciara_genes_top <- row.names(result)[order(as.numeric(result[, 1]))]
 ```
 
+```{r, eval = FALSE}
+norm_human_data_ciara <- norm_human_data[ciara_genes, ]
+```
+
+```{r }
+load(system.file("extdata", "norm_human_data_ciara.Rda", package = "CIARA"))
+```
 
 ```{r }
 
 p <- list()
 for(i in (ciara_genes_top)[1:5]) {
-  q <- plot_gene(norm_human_data, coordinate_umap_human, i, i)
+  q <- plot_gene(norm_human_data_ciara, coordinate_umap_human, i, i)
   p <- list(p, q)
 }
 p
@@ -126,20 +129,22 @@ background <- row.names(result)
 
 
 ```{r }
-plot_genes_sum(coordinate_umap_human, norm_human_data, (ciara_genes), "Sum from top CIARA genes")
+plot_genes_sum(coordinate_umap_human, norm_human_data_ciara, (ciara_genes), "Sum from top CIARA genes")
 
 ```
 
 It is also possible to explore wich genes are highly localized in which cells in an interactive way
 
+
+
 ```{r }
-norm_counts_small <- apply(norm_human_data[(ciara_genes),  ], 1, function(x) {
+norm_counts_small <- apply(norm_human_data_ciara, 1, function(x) {
   y <- x/sum(x)
   return(y)
   })
     gene_sum <- apply(norm_counts_small, 1, sum)
     
-genes_name_text <- selection_localized_genes(norm_human_data, ciara_genes, min_number_cells = 4, max_number_genes = 4)
+genes_name_text <- selection_localized_genes(norm_human_data_ciara, ciara_genes, min_number_cells = 4, max_number_genes = 4)
 colnames(coordinate_umap_human) <- c("UMAP_1", "UMAP_2")
 
 if ((requireNamespace("plotly", quietly = TRUE))) {
@@ -150,38 +155,35 @@ plot_interactive(coordinate_umap_human, gene_sum, genes_name_text, min_x = NULL,
 ## Cluster analysis using CIARA highly localized genes
 
 We run louvain cluster analysis implemented in Seurat using as features the highly localized genes provided by CIARA
-```{r }
+```{r, eval = FALSE}
 human_data_ciara <- cluster_analysis_integrate_rare(raw_counts_human_data, "Elmir data", 0.01, 5, 30, (ciara_genes))
 
 ```
 
 We can explore how much the number of clusters changes with the resolution. The original cluster 1 and 2 for resolution 0.01 are constantly present for higher values of resolution.
-```{r }
+```{r, eval = FALSE }
 if ((requireNamespace("clustree", quietly = TRUE))) {
   find_resolution(human_data_ciara, seq(0.01, 1, 0.1))
   }
 ```
 
 
-```{r }
-
-norm_human_ciara <- as.matrix(Seurat::GetAssayData(human_data_ciara, slot = "data", assay="RNA"))
-
-
-
-coordinate_umap_human_ciara <- as.data.frame(Seurat::Embeddings(human_data_ciara, reduction = "umap")[, 1:2])
-
-
-```
-
 
 Cluster 2 (7 cells) is made up by primordial germ cells (PGCs). These cells expressed typical PGCs markers ad NANOS3, NANOG and DPPA5
 
+```{r, eval = FALSE }
+ciara_cluster_human <- human_data_ciara$RNA_snn_res.0.01
+```
+
 ```{r }
-plot_umap(coordinate_umap_human, human_data_ciara$RNA_snn_res.0.01)
-plot_gene(norm_human_ciara, coordinate_umap_human, "NANOS3", "NANOS3")
-plot_gene(norm_human_ciara, coordinate_umap_human, "NANOG", "NANOG")
-plot_gene(norm_human_ciara, coordinate_umap_human, "DPPA5", "DPPA5")
+load(system.file("extdata", "ciara_cluster_human.Rda", package = "CIARA"))
+```
+
+```{r }
+plot_umap(coordinate_umap_human, ciara_cluster_human)
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "NANOS3", "NANOS3")
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "NANOG", "NANOG")
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "DPPA5", "DPPA5")
 
 
 
@@ -193,7 +195,7 @@ plot_gene(norm_human_ciara, coordinate_umap_human, "DPPA5", "DPPA5")
 `
 Merge the original cluster annotation with the one found using CIARA higly localized genes
 ```{r}
-final_cluster_human <- merge_cluster(original_cluster_human, human_data_ciara$RNA_snn_res.0.01, 20)
+final_cluster_human <- merge_cluster(original_cluster_human, ciara_cluster_human, 10)
 ```
 
 ```{r}
@@ -220,7 +222,7 @@ plot_umap(coordinate_umap_human, final_cluster_human)
 Detect the clusters enriched in highly localized genes and then performs on these a sub-cluster analysis (using louvain algorithm implemented in Seurat)
 
 
-```{r }
+```{r, eval = FALSE }
 
 result_test <- test_hvg(raw_counts_human_data, final_cluster_human, (ciara_genes), background, 100, 0.05)
 
@@ -228,7 +230,7 @@ result_test <- test_hvg(raw_counts_human_data, final_cluster_human, (ciara_genes
 
 
 
-```{r }
+```{r, eval = FALSE }
 result_test[[2]]
 ```
 
@@ -238,7 +240,7 @@ result_test[[2]]
 
 
 
-```{r }
+```{r, eval = FALSE }
 
 raw_endoderm <- raw_counts_human_data[, as.vector(umap_elmir$cluster_id) == "Endoderm"]
 raw_hemo <- raw_counts_human_data[, as.vector(umap_elmir$cluster_id) == "Hemogenic Endothelial Progenitors"]
@@ -261,7 +263,7 @@ combined_exe_meso <- cluster_analysis_sub(raw_exe_meso, 0.5, 5, 30, "ExE Mesoder
 
 
 
-```{r }
+```{r, eval = FALSE }
 
 all_sub_cluster <- c(combined_endoderm$seurat_clusters, combined_hemo$seurat_clusters, combined_exe_meso$seurat_clusters)
 final_cluster_human_version_sub <- merge_cluster(final_cluster_human, all_sub_cluster)
@@ -269,6 +271,10 @@ final_cluster_human_version_sub <- merge_cluster(final_cluster_human, all_sub_cl
 
 
 
+
+```{r }
+load(system.file("extdata", "final_cluster_human_version_sub.Rda", package = "CIARA"))
+```
 
 ```{r}
 plot_umap(coordinate_umap_human, final_cluster_human_version_sub)
@@ -296,7 +302,7 @@ table(as.vector(final_cluster_human_version_sub))
 
 ## CIARA identifies three rare population of cells with highly distinctive transcriptional profile 
 
-```{r}
+```{r, eval = FALSE}
 Seurat::DefaultAssay(human_data_seurat) <- "RNA"
 markers_human_final <- markers_cluster_seurat(human_data_seurat, final_cluster_human_version_sub, names(human_data_seurat$RNA_snn_res.0.1), 5)
 
@@ -307,23 +313,23 @@ markers_human_all_final <- markers_human_final[[3]]
 
 
 
-```{r}
+```{r, eval = FALSE  }
 white_black_markers <- white_black_markers(final_cluster_human_version_sub, "Hemogenic Endothelial Progenitors_4", norm_human_data, markers_human_all_final, 0)
 sum(white_black_markers)
 
 ```
 
-```{r}
+```{r, eval = FALSE}
 white_black_markers <- white_black_markers(final_cluster_human_version_sub, "Endoderm_2", norm_human_data, markers_human_all_final, 0)
 sum(white_black_markers)
 ```
 
-```{r}
+```{r, eval = FALSE}
 white_black_markers <- white_black_markers(final_cluster_human_version_sub, "ExE Mesoderm_0", norm_human_data, markers_human_all_final, 0)
 sum(white_black_markers)
 ```
 
-```{r}
+```{r, eval = FALSE}
 
 top_endo <- white_black_markers(final_cluster_human_version_sub, "Endoderm_2", norm_human_data, markers_human_all_final, 0)
 top_endo <- names(top_endo)[top_endo]
@@ -337,7 +343,7 @@ names(top_endo) <- rep("Endoderm_2", length(top_endo))
 
 ```
 
-```{r}
+```{r, eval = FALSE}
 
 top_hemo <- white_black_markers(final_cluster_human_version_sub, "Hemogenic Endothelial Progenitors_4", norm_human_data, markers_human_all_final, 0)
 top_hemo <- names(top_hemo)[top_hemo]
@@ -350,7 +356,7 @@ top_hemo <- names(mean_top_hemo)
 names(top_hemo) <- rep("Hemogenic Endothelial Progenitors_4", length(top_hemo))
 ```
 
-```{r}
+```{r, eval = FALSE}
 top_meso <- white_black_markers(final_cluster_human_version_sub, "ExE Mesoderm_1", norm_human_data, markers_human_all_final, 0)
 top_meso <- names(top_meso)[top_meso]
 
@@ -365,6 +371,17 @@ names(top_meso) <- rep("ExE Mesoderm_1", length(top_meso))
 
 ```
 
+```{r, eval = FALSE}
+norm_human_data_plot <- norm_human_data[c(top_endo, top_hemo, top_meso), ]
+```
+
+```{r }
+load(system.file("extdata", "norm_human_data_plot.Rda", package = "CIARA"))
+load(system.file("extdata", "top_meso.Rda", package = "CIARA"))
+load(system.file("extdata", "top_endo.Rda", package = "CIARA"))
+load(system.file("extdata", "top_hemo.Rda", package = "CIARA"))
+
+```
 
 ```{r}
 
@@ -372,15 +389,15 @@ names(top_meso) <- rep("ExE Mesoderm_1", length(top_meso))
 
 toMatch <- c("Endoderm")
 
-plot_balloon_marker(norm_human_data[, grep(paste(toMatch, collapse="|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse="|"), final_cluster_human)], top_endo, 20, max_size=5, text_size=10)
+plot_balloon_marker(norm_human_data_plot[, grep(paste(toMatch, collapse="|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse="|"), final_cluster_human)], top_endo, 20, max_size=5, text_size=10)
 
 
 toMatch <- c("Hemogenic Endothelial Progenitors")
-plot_balloon_marker(norm_human_data[, grep(paste(toMatch, collapse = "|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse = "|"), final_cluster_human)], top_hemo, 20, max_size = 5, text_size = 8)
+plot_balloon_marker(norm_human_data_plot[, grep(paste(toMatch, collapse = "|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse = "|"), final_cluster_human)], top_hemo, 20, max_size = 5, text_size = 8)
 
 
 toMatch <- c("ExE Mesoderm")
-plot_balloon_marker(norm_human_data[, grep(paste(toMatch, collapse = "|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse = "|"), final_cluster_human)], top_meso, length(top_meso), max_size = 5, text_size = 8)
+plot_balloon_marker(norm_human_data_plot[, grep(paste(toMatch, collapse = "|"), final_cluster_human)], final_cluster_human_version_sub[grep(paste(toMatch, collapse = "|"), final_cluster_human)], top_meso, length(top_meso), max_size = 5, text_size = 8)
 
 
 
@@ -394,12 +411,12 @@ Expression of some of the highly localized genes detected by CIARA that are mark
 
 ```{r }
 
-plot_gene(norm_human_data, coordinate_umap_human, "C1R", "C1R")
-plot_gene(norm_human_data, coordinate_umap_human, "NANOS3", "NANOS3")
-plot_gene(norm_human_data, coordinate_umap_human, "NANOG", "NANOG")
-plot_gene(norm_human_data, coordinate_umap_human, "SOX17", "SOX17")
-plot_gene(norm_human_data, coordinate_umap_human, "DPPA5", "DPPA5")
-plot_gene(norm_human_data, coordinate_umap_human, "CSF1", "CSF1")
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "C1R", "C1R")
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "NANOS3", "NANOS3")
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "NANOG", "NANOG")
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "SOX17", "SOX17")
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "DPPA5", "DPPA5")
+plot_gene(norm_human_data_ciara, coordinate_umap_human, "CSF1", "CSF1")
 ```
 
 

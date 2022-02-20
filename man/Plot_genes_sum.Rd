@@ -26,7 +26,7 @@ normalized to 1. Then for each cell, the sum from the (normalized) genes
 expression is computed and shown in the output plot.
 }
 \seealso{
-\url{https://cran.r-project.org/web/packages/ggplot2/index.html}
+\url{ https://CRAN.R-project.org/package=ggplot2}
 }
 \author{
 Gabriele Lubatti \email{gabriele.lubatti@helmholtz-muenchen.de}

@@ -124,7 +124,7 @@ merge_cluster <- function(old_cluster, new_cluster, max_number = NULL) {
     index_small <- which(table(new_cluster)<max_number)
     cluster_small <- names(table(new_cluster))[index_small]
     if (length(cluster_small) > 0) {
-      message(paste0("Clusters with number of cells below ", max_number, " in the new partition: ", cluster_small))
+      message(paste0("Clusters with number of cells below ", max_number, " in the new partition: ", length(cluster_small)))
       cluster_final <- old_cluster
     for (i in 1:length(cluster_small)) {
       #cluster_final[names(old_cluster)%in%names(new_cluster)[as.vector(new_cluster)==cluster_small[i]]]=paste(cluster_small[i], "step_2", sep="-")

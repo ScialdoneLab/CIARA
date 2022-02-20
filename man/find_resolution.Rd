@@ -25,4 +25,3 @@ find_resolution
 \author{
 Gabriele Lubatti \email{gabriele.lubatti@helmholtz-muenchen.de}
 }
-

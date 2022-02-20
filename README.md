@@ -49,7 +49,7 @@ An example of input could be:
 ```
 load(file = "norm_counts.Rda")
 load(file = "knn_matrix.Rda")
-background <- Get_background_full(norm_counts, threshold = 1, n_cells_low = 3, n_cells_high = 20)
+background <- get_background_full(norm_counts, threshold = 1, n_cells_low = 3, n_cells_high = 20)
 result <- CIARA(norm_matrix, knn_matrix, background, cores_number = 1, min_p_value = 0.001, odds_ratio = 2, local_region = 1, approximation = FALSE)
 ```
 The two input files *norm_counts* and *knn_matrix* can be obtained from a seurat object:

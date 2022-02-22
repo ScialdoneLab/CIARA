@@ -62,7 +62,7 @@ In the next two sections (**Visualization of highly localized genes** and **Clus
 
 ## Visualization of highly localized genes
 
- We can visualize the highly localized genes dentified with CIARA with the functions **plot_gene**, **plot_genes_sum** and even in an interactive way with the function 
+ We can visualize the highly localized genes identified with CIARA with the functions **plot_gene**, **plot_genes_sum** and even in an interactive way with the function 
 **plot_interactive**. For more exhaustive information about the functions offered by CIARA for visualization  see **Tutorials section** below and the help page of the single functions. (*?function_name*).
 The pattern expression of the top two genes according to CIARA are shown.
 ```
@@ -111,7 +111,7 @@ This approach consists of four steps:
 2. **Identification of rare population**: A standard cluster analysis (with the function **cluster_analysis_integrate_rare**) is performed on all the dataset using as features the highly localized genes provided by the function **CIARA** 
 3. **Merging of step 1 and 2**: Any cluster identified at step 2 of size  smaller than **max_number** constitutes an independent cluster.
 4. **Identification of markers for small clusters**: It is possible to check if the rare cell types are well defined according to their markers with the function **white_black_markers**. See ?**white_black_markers** for more information.
-5. **Identification of cell sub-types**: For each of the cluster identified at step 3, a Fisher test is performed to see if there is a statistically significant enrichment between the HVGs in the cluster and the higly localized genes (function **test_hvg**). For all the clusters where there is an enrichment, a sub cluster analysis starting from the original cluster is performed using as features  HVGs (function **cluster_analysis_sub**)
+5. **Identification of cell sub-types**: For each of the cluster identified at step 3, a Fisher test is performed to see if there is a statistically significant enrichment between the HVGs in the cluster and the highly localized genes (function **test_hvg**). For all the clusters where there is an enrichment, a sub cluster analysis starting from the original cluster is performed using as features  HVGs (function **cluster_analysis_sub**)
 
 An example is the following:
 ```

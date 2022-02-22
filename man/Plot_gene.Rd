@@ -17,7 +17,7 @@ Number of rows must be equal to the number of cells}
 \item{title_name}{Character name.}
 }
 \value{
-ggplot2 object
+ggplot2 object.
 }
 \description{
 Cells are coloured according to the expression of \emph{gene_id} and plotted

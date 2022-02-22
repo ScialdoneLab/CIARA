@@ -23,9 +23,9 @@ level above threshold}
 level above threshold}
 }
 \value{
-vector with all genes expressed at a level higher than
+Character vector with all genes expressed at a level higher than
 \emph{threshold} in a number of cells between \emph{n_cells} and
-\emph{n_cells_high}
+\emph{n_cells_high}.
 }
 \description{
 get_background_full

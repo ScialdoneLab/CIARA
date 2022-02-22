@@ -30,7 +30,7 @@ which we want to plot the expression.}
 \item{text_size}{Size of the text in the heatmap plot.}
 }
 \value{
-ggplot object.
+ggplot2 object showing balloon plot.
 }
 \description{
 plot_balloon_marker

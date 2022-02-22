@@ -35,8 +35,8 @@ list with length equal to the number of clusters. Each entry is list of
 three elements. The first two elements contain the p value and the odds
 ration given by the Fisher test The third is a vector with genes names that
 are present both in \emph{localized_genes} and in top \emph{number_hvg} HVGs
-} \item{second element}{a character vector with the name of the cluster that
-have a p value smaller than \emph{min_p_value}}
+.} \item{second element}{a character vector with the name of the cluster that
+have a p value smaller than \emph{min_p_value}.}
 }
 \description{
 For each cluster in \emph{cluster}, HVGs are defined with

@@ -30,7 +30,7 @@ the condition of the cells (i.e. batch, dataset of origin..)}
 \item{text_size}{Size of the text in the heatmap plot.}
 }
 \value{
-A Heatmap-class object.
+Heatmap class object.
 }
 \description{
 plot_heatmap_marker

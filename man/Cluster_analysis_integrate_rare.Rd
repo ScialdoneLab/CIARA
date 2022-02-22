@@ -32,7 +32,7 @@ dimensions used in the parameter \emph{dims} for the Seurat function
 \emph{features} in the Seurat function \emph{RunPCA}.}
 }
 \value{
-Seurat object
+Seurat object including raw and normalized counts matrices, UMAP coordinates and cluster result.
 }
 \description{
 cluster_analysis_integrate_rare

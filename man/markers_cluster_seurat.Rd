@@ -23,7 +23,7 @@ cluster.}
 List of three elements. The first is a vector with \emph{number_top}
 marker genes for each cluster. The second is a vector with \emph{number_top}
 marker genes and corresponding cluster. The third element is a vector with
-all marker genes for each cluster
+all marker genes for each cluster.
 }
 \description{
 The Seurat function \emph{FindMarkers} is used to identify general marker

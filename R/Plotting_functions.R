@@ -76,7 +76,7 @@ plot_genes_sum <- function(coordinate_umap, norm_counts, genes_relevant, name_ti
 #' @param title_name Character name.
 #' @inheritParams plot_genes_sum
 #' @inheritParams plot_umap
-#' @return ggplot2 object
+#' @return ggplot2 object.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://CRAN.R-project.org/package=ggplot2}
 #'
@@ -114,7 +114,7 @@ plot_gene <- function(norm_counts, coordinate_umap, gene_id, title_name){
 #' @param text_size Size of the text in the heatmap plot.
 #' @inheritParams test_hvg
 #' @inheritParams plot_genes_sum
-#' @return A Heatmap-class object.
+#' @return Heatmap class object.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://www.rdocumentation.org/packages/ComplexHeatmap/versions/1.10.2/topics/Heatmap}
 #'
@@ -227,6 +227,7 @@ plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, conditi
 #' @param min_y Set the min limit on the y axis.
 #' @param max_y Set the min limit on the y axis.
 #' @inheritParams plot_umap
+#' @return plotly object given by \emph{plot_ly function} (from library \emph{plotly}).
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://plotly.com/r/}
 #' @export plot_interactive
@@ -340,7 +341,7 @@ selection_localized_genes <- function (norm_counts, localized_genes, min_number_
 #' @inheritParams plot_genes_sum
 #' @inheritParams test_hvg
 #' @inheritParams plot_heatmap_marker
-#' @return ggplot object.
+#' @return ggplot2 object showing balloon plot.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @export plot_balloon_marker
 plot_balloon_marker <- function (norm_counts, cluster, marker_complete,

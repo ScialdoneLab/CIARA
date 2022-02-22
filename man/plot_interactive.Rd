@@ -33,6 +33,9 @@ cell. It is the output from \emph{selection_localized_genes}.}
 
 \item{max_y}{Set the min limit on the y axis.}
 }
+\value{
+plotly object given by \emph{plot_ly function} (from library \emph{plotly}).
+}
 \description{
 It shows in an interactive plot which are the highly localized genes in each
 cell. It is based on plotly library

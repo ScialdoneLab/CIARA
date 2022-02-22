@@ -38,8 +38,8 @@ knn neighbours) where the binarized gene expression is enriched in 1.}
 local regions of only the cells where the binarized gene expression is 1.}
 }
 \value{
-Return a dataframe with n_rows equal to the length of
-\emph{background} . Each row is the output from \emph{CIARA_gene}
+Dataframe with n_rows equal to the length of
+\emph{background} . Each row is the output from \emph{CIARA_gene}.
 }
 \description{
 It selects highly localized genes as specified in \emph{CIARA_gene},

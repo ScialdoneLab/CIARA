@@ -29,7 +29,7 @@ dimensions used in the parameter \emph{dims} for the Seurat function
 clustering is done.}
 }
 \value{
-Seurat object
+Seurat object including raw and normalized counts matrices and cluster result.
 }
 \description{
 cluster_analysis_sub

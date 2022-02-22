@@ -14,7 +14,7 @@ find_resolution(seurat_object, resolution_vector)
 Seurat function \emph{FindClusters} is run}
 }
 \value{
-Clustree object
+Clustree object showing the connection between clusters obtained at different level of resolution as specified in \emph{resolution_vector}.
 }
 \description{
 find_resolution

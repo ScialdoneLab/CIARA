@@ -6,9 +6,9 @@
 #' level above threshold
 #' @param n_cells_high maximum number of cells where a gene is expressed at a
 #' level above threshold
-#' @return vector with all genes expressed at a level higher than
+#' @return Character vector with all genes expressed at a level higher than
 #' \emph{threshold} in a number of cells between \emph{n_cells} and
-#' \emph{n_cells_high}
+#' \emph{n_cells_high}.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #'
 #'
@@ -156,8 +156,8 @@ CIARA_gene <- function(norm_matrix, knn_matrix, gene_expression, p_value = 0.001
 #' @param cores_number Integer.Number of cores to use.
 #' @inheritParams CIARA_gene
 #' @inheritParams get_background_full
-#' @return Return a dataframe with n_rows equal to the length of
-#' \emph{background} . Each row is the output from \emph{CIARA_gene}
+#' @return Dataframe with n_rows equal to the length of
+#' \emph{background} . Each row is the output from \emph{CIARA_gene}.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #'
 #'

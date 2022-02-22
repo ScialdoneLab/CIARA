@@ -11,7 +11,7 @@
 #' \emph{FindNeighbors}
 #' @param feature_genes vector of features specifying the argument
 #' \emph{features} in the Seurat function \emph{RunPCA}.
-#' @return Seurat object
+#' @return Seurat object including raw and normalized counts matrices, UMAP coordinates and cluster result.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso
 #' \url{https://www.rdocumentation.org/packages/Seurat/versions/4.0.1/topics/FindClusters}
@@ -44,7 +44,7 @@ cluster_analysis_integrate_rare <- function(raw_counts, project_name, resolution
 #' \emph{cluster_analysis_integrate_rare}
 #' @param resolution_vector vector with all values of resolution for which the
 #' Seurat function \emph{FindClusters} is run
-#' @return Clustree object
+#' @return Clustree object showing the connection between clusters obtained at different level of resolution as specified in \emph{resolution_vector}.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://CRAN.R-project.org/package=clustree}
 #'
@@ -109,7 +109,8 @@ de_seurat_cluster <- function(seurat_object, cluster, names_cell, max_p_value) {
 #' \emph{old_cluster}.
 #' @param max_number Threshold in size for clusters in \emph{new_cluster}. Only
 #' cluster with number of cells smaller than \emph{max_number} will be
-#' integrated in \emph{old cluster}. If \emph{max_number} is NULL, then the final partition is equal to \emph{new_cluster}.
+#' integrated in \emph{old cluster}. If \emph{max_number} is NULL, then all the clusters in \emph{new_cluster} are integrated in \emph{old cluster}.
+#' @return Numeric vector of length equal to \emph{old_cluster} showing the merged cluster assignment between \emph{old cluster} and \emph{new_cluster}.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #'
 #' @export merge_cluster
@@ -134,6 +135,7 @@ merge_cluster <- function(old_cluster, new_cluster, max_number = NULL) {
     else {
       warning(paste0("There are not clusters with number of cells below ", max_number))
       cluster_final <- old_cluster
+      return(cluster_final)
     }
   }
 }
@@ -163,8 +165,8 @@ merge_cluster <- function(old_cluster, new_cluster, max_number = NULL) {
 #' three elements. The first two elements contain the p value and the odds
 #' ration given by the Fisher test The third is a vector with genes names that
 #' are present both in \emph{localized_genes} and in top \emph{number_hvg} HVGs
-#' } \item{second element}{a character vector with the name of the cluster that
-#' have a p value smaller than \emph{min_p_value}}
+#' .} \item{second element}{a character vector with the name of the cluster that
+#' have a p value smaller than \emph{min_p_value}.}
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso
 #' \url{https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/fisher.test}
@@ -216,7 +218,7 @@ test_hvg <- function (raw_counts, cluster, localized_genes, background, number_h
 #' @param name_cluster Character.Name of the original cluster for which the sub
 #' clustering is done.
 #' @inheritParams cluster_analysis_integrate_rare
-#' @return Seurat object
+#' @return Seurat object including raw and normalized counts matrices and cluster result.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso
 #' \url{https://www.rdocumentation.org/packages/Seurat/versions/4.0.1/topics/RunPCA}
@@ -270,7 +272,7 @@ cluster_analysis_sub <- function (raw_counts, resolution, neighbors, max_dimensi
 #' @return List of three elements. The first is a vector with \emph{number_top}
 #' marker genes for each cluster. The second is a vector with \emph{number_top}
 #' marker genes and corresponding cluster. The third element is a vector with
-#' all marker genes for each cluster
+#' all marker genes for each cluster.
 #'
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://www.rdocumentation.org/packages/Seurat/versions/4.0.1/topics/FindMarkers}

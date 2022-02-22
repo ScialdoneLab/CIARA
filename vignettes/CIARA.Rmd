@@ -193,7 +193,7 @@ plot_gene(norm_human_data_ciara, coordinate_umap_human, "DPPA5", "DPPA5")
 
 
 `
-Merge the original cluster annotation with the one found using CIARA higly localized genes
+Merge the original cluster annotation with the one found using CIARA highly localized genes
 ```{r}
 final_cluster_human <- merge_cluster(original_cluster_human, ciara_cluster_human, 10)
 ```

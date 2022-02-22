@@ -14,7 +14,10 @@ merge_cluster(old_cluster, new_cluster, max_number = NULL)
 
 \item{max_number}{Threshold in size for clusters in \emph{new_cluster}. Only
 cluster with number of cells smaller than \emph{max_number} will be
-integrated in \emph{old cluster}. If \emph{max_number} is NULL, then the final partition is equal to \emph{new_cluster}.}
+integrated in \emph{old cluster}. If \emph{max_number} is NULL, then all the clusters in \emph{new_cluster} are integrated in \emph{old cluster}.}
+}
+\value{
+Numeric vector of length equal to \emph{old_cluster} showing the merged cluster assignment between \emph{old cluster} and \emph{new_cluster}.
 }
 \description{
 merge_cluster

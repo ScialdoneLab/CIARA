@@ -19,7 +19,7 @@ And the development version from GitHub with:
 ```install_github("ScialdoneLab/CIARA/master",auth_token="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",ref="master")```.
 
 ## Getting started 
-The main function of the package is **CIARA_gene** and **CIARA**
+The main functions of the package are **CIARA_gene** and **CIARA**
 
 
 ### CIARA_gene

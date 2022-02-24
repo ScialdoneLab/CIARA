@@ -15,12 +15,14 @@ You can install the released version of CIARA from CRAN with:
 ```install.packages("CIARA")```
 
 And the development version from GitHub with:
+
 ```install_github("ScialdoneLab/CIARA/master",auth_token="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",ref="master")```.
 
+## Getting started 
 The main function of the package is **CIARA_gene** and **CIARA**
 
 
-## CIARA_gene
+### CIARA_gene
 
 ```CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, odds_ratio=2, local_region = 1, approximation = FALSE)```
 requires as input:
@@ -36,7 +38,7 @@ requires as input:
 The gene expression is binarized (1/0) if the value in a given cell is above/below the median. Each of cell with its first K nearest neighbors defined a local region. If there are at least **local_region** enriched in 1 according **to fisher.test** (with p value below than **p_value** and odds ratio above or equal to **odds_ratio**) , then the entropy for the gene is computed starting from the probability of having 1/0. The minimum of the entropy across all the enriched local regions is the entropy of mixing. If there are no enriched local regions, then the entropy of mixing  and the p value by default are set to 1
 The output of **CIARA_gene**  is a list with one element corresponding to the p value of the gene
 
-## CIARA
+### CIARA
 
 ```CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2,local_region = 1, approximation = FALSE) ```
 requires as input:
@@ -70,7 +72,7 @@ knn_matrix <- as.matrix(seurat_object@graphs$RNA_nn)
 
 In the next two sections (**Visualization of highly localized genes** and **Cluster analysis based on CIARA for the identification of extremely rare population of cells**) it is shown the analysis of the scRNA seq data from human embryo at the gastrulation state from [Tyser *et al.*, 2020](https://www.biorxiv.org/content/10.1101/2020.07.21.213512v1)
 
-## Visualization of highly localized genes
+### Visualization of highly localized genes
 
  We can visualize the highly localized genes identified with CIARA with the functions **plot_gene**, **plot_genes_sum** and even in an interactive way with the function 
 **plot_interactive**. For more exhaustive information about the functions offered by CIARA for visualization  see **Tutorials section** below and the help page of the single functions. (*?function_name*).
@@ -113,7 +115,7 @@ plot_interactive(coordinate_umap, gene_sum, genes_name_text, min_x=NULL, max_x=N
 
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/interactive_plot_new.png" width="700" height="500">
 
-## Cluster analysis based on CIARA for the identification of extremely rare population of cells
+### Cluster analysis based on CIARA for the identification of extremely rare population of cells
 
 We can use the genes identified by CIARA as features in standard algorithm (i.e. Louvain) for the identification of extremely rare population of cells (3/4 cells from dataset of thousand of cells).
 This approach consists of four steps:

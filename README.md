@@ -1,3 +1,9 @@
+<!-- badges: start -->
+[![](https://www.r-pkg.org/badges/version/CIARA)](https://cran.r-project.org/package=CIARA)
+[![](http://cranlogs.r-pkg.org/badges/grand-total/CIARA?color=green)](https://cran.r-project.org/package=CIARA)
+
+<!-- badges: end -->
+
 # CIARA
 CIARA (Cluster Independent Algorithm for the identification of RAre cell types) is an R package that identifies potential markers of rare cell types looking at genes whose expression is confined in small regions of the expression space. 
 It is possible to use these highly localized genes as features in standard cluster algorithm (i.e. Louvain), for identifying extremely rare population(3/4 cells from thousand of cells)

@@ -1,6 +1,7 @@
 <!-- badges: start -->
 [![](https://www.r-pkg.org/badges/version/CIARA)](https://cran.r-project.org/package=CIARA)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/CIARA?color=green)](https://cran.r-project.org/package=CIARA)
+[![](http://cranlogs.r-pkg.org/badges/last-day/CIARA?color=green)](https://cran.r-project.org/package=CIARA)
 
 <!-- badges: end -->
 

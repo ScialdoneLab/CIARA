@@ -10,9 +10,13 @@ It is possible to use these highly localized genes as features in standard clust
 
 ## Installation
 
-For installation, please use the following command:
+You can install the released version of CIARA from CRAN with:
 
-```install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")```.
+```install.packages("CIARA")```
+
+And the development version from GitHub with:
+```install_github("ScialdoneLab/CIARA/master",auth_token="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",ref="master")```.
+
 The main function of the package is **CIARA_gene** and **CIARA**
 
 

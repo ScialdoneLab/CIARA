@@ -1,0 +1,119 @@
+---
+title: "Running CIARA on Seurat Objects"
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  github_document:
+    html_preview: true
+    toc: true
+    toc_depth: 3
+    fig_width: 16
+  html_document:
+    df_print: kable
+    theme: united
+    fig_height: 5
+    fig_width: 16
+    out_height: 4
+---
+
+This vigettte demonstrates how to run CIARA (Cluster Independent Algorithm for the identification of RAre cell types) on Seurat objects. Functions and parameters are based on the CRAN package [CIARA](https://CRAN.R-project.org/package=CIARA). If you use CIARA, please cite:
+> CIARA: Cluster Independent Algorithm for Rare Cell Types Identification
+>
+> Gabriele Lubatti
+>
+> R package version 0.1.0. https://CRAN.R-project.org/package=CIARA
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 95),
+  message = FALSE,
+  warning = FALSE
+)
+options(timeout = 1000)
+```
+
+Prerequisites to install: 
+
+* [Seurat](https://satijalab.org/seurat/install)
+* [SeuratWrappers](https://github.com/satijalab/seurat-wrappers)
+* [CIARA](https://CRAN.R-project.org/package=CIARA)
+
+```{r packages}
+source("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/integration_seurat/CIARA_seurat.R")
+library(Seurat)
+library(SeuratWrappers)
+```
+
+In this vignette it is shown the analysis performed on single cell RNA seq human gastrula data from [Tyser, R.C.V. et al., 2021](https://www.nature.com/articles/s41586-021-04158-y#citeas).
+
+## Load human gastrula data and create norm counts and knn matrices using Seurat 
+
+We load the raw count matrix and umap coordinate defined in the original paper.
+Raw count matrix can be downloaded [here](http://www.human-gastrula.net).
+Here we directly load the normalized count matrix previously obtained with Seurat function NormalizeData.
+
+```{r}
+load(system.file("extdata", "norm_human_data_ciara.Rda", package = "CIARA"))
+human_data_seurat <- CreateSeuratObject(counts = norm_human_data_ciara[,1:100], 
+        project = "Human Gastrula")
+    human_data_seurat <- subset(human_data_seurat, subset = nFeature_RNA > 
+        0)
+    human_data_seurat <- FindVariableFeatures(human_data_seurat, 
+        selection.method = "vst", nfeatures = 2000)
+    human_data_seurat <- ScaleData(human_data_seurat, verbose = FALSE)
+    human_data_seurat <- RunPCA(human_data_seurat, npcs = 30, 
+        verbose = FALSE)
+    human_data_seurat <- RunUMAP(human_data_seurat, reduction = "pca", 
+        dims = 1:20, set.seed = 42)
+    human_data_seurat <- FindNeighbors(human_data_seurat, reduction = "pca", 
+        dims = 1:30, k.param = 5)
+    human_data_seurat <- FindClusters(human_data_seurat, resolution = 0.1)
+    
+```
+
+
+
+```{r }
+human_data_seurat=get_background_full_seurat(human_data_seurat,threshold = 1, n_cells_low = 3, n_cells_high = 20)
+```
+
+## Run CIARA 
+
+CIARA (Cluster Independent Algorithm for the identification of RAre cell types) is a cluster independent approach that selects genes localized in a small number of neighboring cells from high dimensional PCA space.
+We don't execute the CIARA algorithm and we directly load the result
+
+```{r }
+human_data_seurat <- CIARA_seurat( human_data_seurat, cores_number = 1, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation = FALSE)
+```
+
+## Identifying highly localized genes 
+
+```{r }
+result=human_data_seurat[["RNA"]][['CIARA_p_value']]
+genes_name= row.names(result)[! (is.na(result[,1]))]
+result=result[genes_name, ]
+names(result)=genes_name
+
+
+ciara_genes <- names(result)[result<1]
+ciara_genes_top <- names(result)[order(as.numeric(result))]
+
+
+
+```
+
+
+```{r }
+FeaturePlot(human_data_seurat, features = ciara_genes_top[1:2])
+```
+
+For more down stream analysis, including cluster analysis using CIARA highly localized genes, please see  utils::vignette("CIARA")
+
+
+```{r}
+utils::sessionInfo()
+```
+
+

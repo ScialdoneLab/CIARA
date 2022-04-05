@@ -1329,21 +1329,20 @@ which(sam_genes=="DPPA5")
 
 ```
 
-
-
 ```{r }
-#load(system.file("extdata", "elmir_hyper_old.Rda", package ="EntropyMixingRnew"))
-load(system.file("extdata", "elmir_december_2021.Rda", package ="EntropyMixingRnew"))
-
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+vedo=load("elmir.Rda")
 ```
 
 
 
 ```{r }
-entropy_genes=row.names(result)[result[,2]<1]
-geni_top=row.names(result)[result[,2]<0.0001&result[,1]==0]
-geni_top_top=row.names(result)[order(as.numeric(result[,2]))]
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
 ```
+
+
+
 
 
 ```{r}

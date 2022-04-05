@@ -334,47 +334,6 @@ plot_genes_sum(cordinate_gini,norm_gini,ciara_genes,"Sum from top entropy genes"
 ```
 
 
-## Comparison for PGC: gini index vs entropy of mixing
-
-```{r}
-vedo=load(system.file("extdata", "experiment_name_StatisticsTable_afterLOESS_elmir.RData", package ="EntropyMixingR"))
-#"ExprM.Stat2"   
-
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
-vedo=load("elmir_hyper_old.Rda")
-
-
-entropy_genes=row.names(result)[result[,2]<1]
-
-max_gini=ExprM.Stat2$log2.Maxs
-gini_value=ExprM.Stat2$Gini
-#max_gini=gini_index$log2..Max.Expression.Level..
-
-
-label_all=c(rep("No Gini gene",length(max_gini)))
-#label_all[ExprM.Stat2$Gini.pvalue<0.0001]="Gini gene"
-label_all[row.names(ExprM.Stat2)%in%Genelist.top_pvalue]="Gini gene"
-
-mtcars=data.frame(label_all,gini_value,max_gini)
-pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_fig_1_c.pdf")
-ggplot(mtcars, aes(x=max_gini, y=gini_value, color=label_all)) +
-  geom_point()+xlab("log2 (Max Expression Level)")+ylab("Gini")+labs(color="Label")
-
-dev.off()
-
-label_all=c(rep("No CIARA gene",length(max_gini)))
-label_all[row.names(ExprM.Stat2)%in%entropy_genes]="CIARA gene"
-
-mtcars=data.frame(label_all,gini_value,max_gini)
-row.names(mtcars)=row.names(ExprM.Stat2)
-mtcars=mtcars[c(row.names(ExprM.Stat2)[!row.names(ExprM.Stat2)%in%entropy_genes],row.names(ExprM.Stat2)[row.names(ExprM.Stat2)%in%entropy_genes]),]
-pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_fig_1_d.pdf")
-ggplot(mtcars, aes(x=max_gini, y=gini_value, color=label_all)) +
-  geom_point()+xlab("log2 (Max Expression Level)")+ylab("Gini")+labs(color="Label")
-dev.off()
-
-```
-
 
 
 ```{r }
@@ -1573,58 +1532,13 @@ save(knn_matrix_race,file="knn_matrix_race.Rda")
 
 
 
-## Start Entropy of mixing
+## Start CIARA
 
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_hyper_server.R -n norm_race -k knn_matrix_race -o race_hyper.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
+cd home/ies/gabriele.lubatti/ciara_marco/raceid
 
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_race -k knn_matrix_race -o race_a.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a TRUE
 
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_hyper_server_all_cells.R -n norm_race -k knn_matrix_race -o race_hyper_old.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
-
-#ncells:317
-#Time difference of 45.14149 secs
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_hyper_server_blood_new.R -n norm_race -k knn_matrix_race -o race_hyper_new.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
-#ncells:317
-#Time difference of 18.67952 secs
-
-
-
-##New
-```{r }
-##LAST VERSION (setting srun -p normal_q -c 10  --mem=100G -t 1:00:00 --pty bash)
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_server_december_2021_easy.R -n norm_race -k knn_matrix_race -o race_december_2021.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a FALSE
-#Time difference of 38.31422 secs
-
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_server_december_2021_easy.R -n norm_race -k knn_matrix_race -o race_december_2021_a.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a TRUE
-
-#Time difference of 10.31625 secs
-
-
-#from pyhton
-#Execution Time CIARA Approx: 4.31s
-#Execution Time CIARA Full: 15.93s
-
-```
-
-
-##Old
-
-```{r }
-##LAST VERSION (setting srun -p normal_q -c 20  --mem=100G -t 1:00:00 --pty bash)
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_server_december_2021_new.R -n norm_race -k knn_matrix_race -o race_december_2021.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a FALSE
-
-# Time difference of 1.190571 mins 
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_server_december_2021_new.R -n norm_race -k knn_matrix_race -o race_december_2021_a.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a TRUE
-
-
-#Time difference of 19.85399 secs
-
-
-```
-
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_race -k knn_matrix_race -o race.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a FALSE
 
 ```{r }
 setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
@@ -1637,65 +1551,52 @@ load(file="general_race.Rda")
 ```
 
 
-
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-load("race_hyper_new.Rda")
-result_new=result
-```
-```{r }
-entropy_genes_new=row.names(result_new)[result_new[,1]<1]
-#geni_top_new=row.names(result_new)[result_new[,2]<0.00001&result_new[,1]==0]
-```
-
-
-
-```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-load("race_hyper_old.Rda")
-result_old=result
-```
-
-```{r }
-entropy_genes_old=row.names(result_old)[result_old[,2]<1]
-#geni_top_old=row.names(result_old)[result_old[,1]<0.00001&result_old[,2]==0]
-```
-
-```{r }
-jacardi_entropy=find_jacardi_genes(entropy_genes_old,entropy_genes_new)
-#jacardi_entropy=find_jacardi_genes(background_old,background_new)
-
-```
-
-
-
-
-```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-load("race_hyper.Rda")
-
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("race.Rda")
 ```
 
 
 ```{r }
-entropy_genes=row.names(result)[result[,2]<1]
-geni_top=row.names(result)[result[,1]<0.00001&result[,2]==0]
-
-#geni_top=row.names(result)[result[,1]<0.0001]
+ciara_genes_old=row.names(result)[result[,1]<1]
+geni_top_top_old=row.names(result)[order(as.numeric(result[,1]))]
+background_old=row.names(result)
 ```
 
 
+```{r }
+ciara_genes = ciara_genes_old
+geni_top_top = geni_top_top_old
+background = background_old
+```
+
 
 ```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("race_a.Rda")
+```
+
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
 background=row.names(result)
-#background=c(names(entropy_genes),names(entropy_genes_excluded))
 ```
+
+
+
+```{r }
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+#load("race_hyper_new.Rda")
+#result_new=result
+```
+
 
 ```{r }
 library(ggplot2)
 p=list()
-for(i in (geni_top)[1:10]){
-  q=Plot_gene(norm_race,cordinate_race,i,i)
+for(i in (geni_top_top)[1:10]){
+  q=plot_gene(norm_race,cordinate_race,i,i)
   p=list(p,q)
 }
 p
@@ -1703,14 +1604,14 @@ p
 
 
 ```{r }
-Plot_genes_sum(cordinate_race,norm_race,(geni_top),"Sum from top entropy genes")
+plot_genes_sum(cordinate_race,norm_race,ciara_genes,"Sum from top entropy genes")
 
 
 ```
 
 ```{r }
 #mayra_seurat_entropy_24=Cluster_analysis_integrate_rare(mayra_dati_raw_24,"24h",0.01,5,30,names(entro#py_genes))
-race_entropy_1=Cluster_analysis_integrate_rare(race_id_raw,"24h",0.2,3,20,(entropy_genes))
+race_entropy_1=cluster_analysis_integrate_rare(race_id_raw,"24h",0.2,3,20,(ciara_genes))
 #race_entropy_2=Cluster_analysis_integrate_rare(race_id_raw,"24h",0.2,3,30,(entropy_genes))
 
 #mayra_seurat_entropy_24=FindClusters(mayra_seurat_entropy_24,resolution = 0.1)
@@ -1740,17 +1641,26 @@ cordinate_race_entropy=as.data.frame(Embeddings(race_entropy, reduction = "umap"
 
 cluster_race_entropy=as.vector(race_entropy$RNA_snn_res.0.2)
 
+cluster_race_entropy_old=as.vector(race_entropy$RNA_snn_res.0.2)
+
+```
+
+```{r }
+table(cluster_race_entropy,cluster_race_entropy_old)
+
+table(cluster_race_id,cluster_race_entropy_old)
 ```
 
 
+
 ```{r }
-Plot_umap(cordinate_race_entropy,cluster_race_entropy)
-Plot_umap(cordinate_race_entropy,cluster_race_id)
+plot_umap(cordinate_race_entropy,cluster_race_entropy)
+plot_umap(cordinate_race_entropy,cluster_race_id)
 
 #Plot_umap(cordinate_cellsius_entropy,cell_line_all)
 
-Plot_umap(cordinate_race,cluster_race_id)
-Plot_umap(cordinate_race,cluster_race_entropy)
+plot_umap(cordinate_race,cluster_race_id)
+plot_umap(cordinate_race,cluster_race_entropy)
 
 
 
@@ -1765,27 +1675,27 @@ table(cluster_race_entropy,cluster_race_id)
 ```{r }
 
 
-Plot_gene(norm_race_entropy,cordinate_race,"Apoa1","Apoa1")
-Plot_gene(norm_race_entropy,cordinate_race,"Apoa4","Apoa4")
-Plot_gene(norm_race_entropy,cordinate_race,"Fabp1","Fabp1")
-Plot_gene(norm_race_entropy,cordinate_race,"Fabp2","Fabp2")
-Plot_gene(norm_race_entropy,cordinate_race,"Fabp2","Fabp2")
+plot_gene(norm_race_entropy,cordinate_race,"Apoa1","Apoa1")
+plot_gene(norm_race_entropy,cordinate_race,"Apoa4","Apoa4")
+plot_gene(norm_race_entropy,cordinate_race,"Fabp1","Fabp1")
+plot_gene(norm_race_entropy,cordinate_race,"Fabp2","Fabp2")
+plot_gene(norm_race_entropy,cordinate_race,"Fabp2","Fabp2")
 
 
-Plot_gene(norm_race_entropy,cordinate_race,"Chga","Chga")
-Plot_gene(norm_race_entropy,cordinate_race,"Chgb","Chgb")
-Plot_gene(norm_race_entropy,cordinate_race,"Clca3","Clca3")
-Plot_gene(norm_race_entropy,cordinate_race,"Clca4","Clca4")
-Plot_gene(norm_race_entropy,cordinate_race,"Defa24","Defa24") 
+plot_gene(norm_race_entropy,cordinate_race,"Chga","Chga")
+plot_gene(norm_race_entropy,cordinate_race,"Chgb","Chgb")
+plot_gene(norm_race_entropy,cordinate_race,"Clca3","Clca3")
+plot_gene(norm_race_entropy,cordinate_race,"Clca4","Clca4")
+plot_gene(norm_race_entropy,cordinate_race,"Defa24","Defa24") 
 
-Plot_gene(norm_race_entropy,cordinate_race,"Lgr5","Lgr5")
+plot_gene(norm_race_entropy,cordinate_race,"Lgr5","Lgr5")
 
-Plot_gene(norm_race_entropy,cordinate_race,"Ascl2","Ascl2")
+plot_gene(norm_race_entropy,cordinate_race,"Ascl2","Ascl2")
 
-Plot_gene(norm_race_entropy,cordinate_race,"Dclk1","Dclk1")
-Plot_gene(norm_race_entropy,cordinate_race,"Nol3","Nol3")
-Plot_gene(norm_race_entropy,cordinate_race,"Lpl","Lpl")
-Plot_gene(norm_race_entropy,cordinate_race,"Emx2os","Emx2os")
+plot_gene(norm_race_entropy,cordinate_race,"Dclk1","Dclk1")
+plot_gene(norm_race_entropy,cordinate_race,"Nol3","Nol3")
+plot_gene(norm_race_entropy,cordinate_race,"Lpl","Lpl")
+plot_gene(norm_race_entropy,cordinate_race,"Emx2os","Emx2os")
 
 
 
@@ -1811,7 +1721,12 @@ enterocytes (cluster 4), goblet (cluster 6,10,8) Paneth (cluster 7) and enteroen
 ```{r}
 library(Biobase)
 DefaultAssay(race_entropy) <- "RNA"
-markers_first_gini=markers_first_method(race_entropy,cluster_race_entropy,names(race_entropy$RNA_snn_res.0.2),30)
+#markers_first_gini=markers_first_method(race_entropy,cluster_race_entropy,names(race_entropy$RNA_snn_res.0.2),30)
+
+markers_first_gini=markers_cluster_seurat(race_entropy,cluster_race_entropy,names(race_entropy$RNA_snn_res.0.2),30)
+
+
+
 ```
 
 ```{r}
@@ -1844,9 +1759,27 @@ marker_all_day_24_first[marker_all_day_24_first=="Defa24"]
 ```
 
 ##Cluster 5 is enteroendocrine cells
+
+
 ```{r}
 marker_all_day_24_first[marker_all_day_24_first=="Chgb"]
 ```
+
+
+##Tuft cells 
+
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Dclk1"]
+marker_all_day_24_first[marker_all_day_24_first=="Lrmp"]
+marker_all_day_24_first[marker_all_day_24_first=="Trpm5"]
+```
+## Marker other unkonwn cell types
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Nol3"]
+marker_all_day_24_first[marker_all_day_24_first=="Mylk4"]
+marker_all_day_24_first[marker_all_day_24_first=="Lpi"]
+```
+
 ##Cluster 6 is well define (4 cells)
 
 ```{r}
@@ -1868,7 +1801,9 @@ names(geni_7_top)=rep("6",length(geni_7_top))
 ```{r}
 #Plot_balons(norm_race,cluster_race_entropy,marker_all_day_24_first[names(marker_all_day_24_first)==7],30,length(cluster_race_entropy),max_size=5,text_size=10)
 
-IDENTOM::Plot_balons(norm_race,cluster_race_entropy,geni_7_top,length(geni_7_top),max_size=5,text_size=10)
+#IDENTOM::Plot_balons(norm_race,cluster_race_entropy,geni_7_top,length(geni_7_top),max_size=5,text_size=10)
+
+plot_balloon_marker(norm_race,cluster_race_entropy,geni_7_top,length(geni_7_top),max_size=5,text_size=10)
 ```
 
 ##Cluster 7 is well define (3 cells)
@@ -1888,32 +1823,67 @@ names(geni_7_top)=rep("7",length(geni_7_top))
 ```{r}
 #Plot_balons(norm_race,cluster_race_entropy,marker_all_day_24_first[names(marker_all_day_24_first)==7],30,length(cluster_race_entropy),max_size=5,text_size=10)
 
-IDENTOM::Plot_balons(norm_race,cluster_race_entropy,marker_all_day_24_first[names(marker_all_day_24_first)==7],30,max_size=5,text_size=10)
+#IDENTOM::Plot_balons(norm_race,cluster_race_entropy,marker_all_day_24_first[names(marker_all_day_24_first)==7],30,max_size=5,text_size=10)
 
-IDENTOM::Plot_balons(norm_race,cluster_race_entropy,geni_7_top,length(geni_7_top),max_size=5,text_size=10)
+#IDENTOM::Plot_balons(norm_race,cluster_race_entropy,geni_7_top,length(geni_7_top),max_size=5,text_size=10)
+
+
+
+plot_balloon_marker(norm_race,cluster_race_entropy,marker_all_day_24_first[names(marker_all_day_24_first)==7],30,max_size=5,text_size=10)
+plot_balloon_marker(norm_race,cluster_race_entropy,geni_7_top,length(geni_7_top),max_size=5,text_size=10)
 ```
 
 ```{r}
+geni_8=marker_all_day_24_first[names(marker_all_day_24_first)==8]
+logic_8=apply(norm_race[geni_8,cluster_race_entropy==8],1,function(x){
+  if (length(x[x>1])==length(x)){
+    return(TRUE)
+  }
+  else{return(FALSE)}
+})
+
+geni_8_top=geni_8[logic_8]
+names(geni_8_top)=rep("8",length(geni_8_top))
+```
+
+```{r}
+#Plot_balons(norm_race,cluster_race_entropy,marker_all_day_24_first[names(marker_all_day_24_first)==7],30,length(cluster_race_entropy),max_size=5,text_size=10)
+
+#IDENTOM::Plot_balons(norm_race,cluster_race_entropy,marker_all_day_24_first[names(marker_all_day_24_first)==7],30,max_size=5,text_size=10)
+
+#IDENTOM::Plot_balons(norm_race,cluster_race_entropy,geni_7_top,length(geni_7_top),max_size=5,text_size=10)
 
 
-white_black_7=white_black_marker(cluster_race_entropy,7,norm_race,marker_all_day_24_first,0)
+
+
+plot_balloon_marker(norm_race,cluster_race_entropy,geni_8_top,length(geni_8_top),max_size=5,text_size=10)
+```
+
+
+
+```{r}
+
+white_black_7=white_black_markers(cluster_race_entropy,8,norm_race,marker_all_day_24_first,0)
 sum(white_black_7)
-white_black_6=white_black_marker(cluster_race_entropy,6,norm_race,marker_all_day_24_first,0)
+
+white_black_7=white_black_markers(cluster_race_entropy,7,norm_race,marker_all_day_24_first,0)
+sum(white_black_7)
+white_black_6=white_black_markers(cluster_race_entropy,6,norm_race,marker_all_day_24_first,0)
 sum(white_black_6)
 
 
-white_black_5=white_black_marker(cluster_race_entropy,5,norm_race,marker_all_day_24_first,0)
+white_black_5=white_black_markers(cluster_race_entropy,5,norm_race,marker_all_day_24_first,0)
 sum(white_black_5)
 
 
 
-white_black_4=white_black_marker(cluster_race_entropy,4,norm_race,marker_all_day_24_first,0)
+white_black_4=white_black_markers(cluster_race_entropy,4,norm_race,marker_all_day_24_first,0)
 sum(white_black_4)
 
-white_black_3=white_black_marker(cluster_race_entropy,3,norm_race,marker_all_day_24_first,0)
+white_black_3=white_black_markers(cluster_race_entropy,3,norm_race,marker_all_day_24_first,0)
 sum(white_black_3)
 
-white_black_2=white_black_marker(cluster_race_entropy,2,norm_race,marker_all_day_24_first,0)
+white_black_2=white_black_markers(cluster_race_entropy,2,norm_race,marker_all_day_24_first,0)
 sum(white_black_2)
 
 
@@ -1935,7 +1905,7 @@ entropy_4=marker_all_day_24_first[names(marker_all_day_24_first)==4]
 ```{r}
 library(Biobase)
 DefaultAssay(race_entropy) <- "RNA"
-markers_first_gini_2=markers_first_method(race_entropy,cluster_race_id,names(race_entropy$RNA_snn_res.0.2),30)
+markers_first_gini_2=markers_cluster_seurat(race_entropy,cluster_race_id,names(race_entropy$RNA_snn_res.0.2),30)
 
 
 ```
@@ -1957,29 +1927,29 @@ marker_all_day_24_first=markers_first_elmir[[3]]
 ```{r}
 
 
-white_black_11=white_black_marker(cluster_race_id,11,norm_race,marker_all_day_24_first,0)
+white_black_11=white_black_markers(cluster_race_id,11,norm_race,marker_all_day_24_first,0)
 sum(white_black_11)
 
-white_black_10=white_black_marker(cluster_race_id,10,norm_race,marker_all_day_24_first,0)
+white_black_10=white_black_markers(cluster_race_id,10,norm_race,marker_all_day_24_first,0)
 sum(white_black_10)
 
-white_black_9=white_black_marker(cluster_race_id,9,norm_race,marker_all_day_24_first,0)
+white_black_9=white_black_markers(cluster_race_id,9,norm_race,marker_all_day_24_first,0)
 sum(white_black_9)
 
 
-white_black_5=white_black_marker(cluster_race_id,5,norm_race,marker_all_day_24_first,0)
+white_black_5=white_black_markers(cluster_race_id,5,norm_race,marker_all_day_24_first,0)
 sum(white_black_5)
 
-white_black_8=white_black_marker(cluster_race_id,8,norm_race,marker_all_day_24_first,0)
+white_black_8=white_black_markers(cluster_race_id,8,norm_race,marker_all_day_24_first,0)
 sum(white_black_8)
 
-white_black_4=white_black_marker(cluster_race_id,4,norm_race,marker_all_day_24_first,0)
+white_black_4=white_black_markers(cluster_race_id,4,norm_race,marker_all_day_24_first,0)
 sum(white_black_4)
 
-white_black_6=white_black_marker(cluster_race_id,6,norm_race,marker_all_day_24_first,0)
+white_black_6=white_black_markers(cluster_race_id,6,norm_race,marker_all_day_24_first,0)
 sum(white_black_6)
 
-white_black_7=white_black_marker(cluster_race_id,7,norm_race,marker_all_day_24_first,0)
+white_black_7=white_black_markers(cluster_race_id,7,norm_race,marker_all_day_24_first,0)
 sum(white_black_7)
 
 
@@ -2003,8 +1973,8 @@ table(cluster_race_id,cluster_race_entropy)
 ```
 
 ```{r}
-find_jacardi(cluster_race_entropy,cluster_race_id,norm_race,3,4)
-find_jacardi(cluster_race_entropy,cluster_race_id,norm_race,5,5)
+#find_jacardi(cluster_race_entropy,cluster_race_id,norm_race,3,4)
+#find_jacardi(cluster_race_entropy,cluster_race_id,norm_race,5,5)
 ```
 
 ```{r}
@@ -2074,12 +2044,16 @@ test[[2]][test[[1]]<0.05&test[[2]]>2]
 ```
 
 
+
+
+
+
 ## End RaceID
 
 
 ## Big 10x_dataset 68 cells server hpc
 
-## Pre processing
+## Pre processing on server hpc-build.scidom.de
 
 ```{r }
 #/home/ies/gabriele.lubatti/entropy_mixing/blood_10x_data/GiniClust2/Proj/10X_full/data
@@ -2242,6 +2216,12 @@ save(knn_matrix_blood_new,file="knn_matrix_blood_new.Rda")
 ```
 
 
+## Start with CIARA
+
+cd /home/ies/gabriele.lubatti/ciara_marco/68k_cells
+
+
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_blood_new -k knn_matrix_blood_new -o blood_new.Rda -r 1 -l 3 -h 100 -t 1 -p 0.001 -c 10 -a TRUE
 
 ## Start with Entropy of Mixing
 
@@ -2396,7 +2376,7 @@ dev.off()
 
 ## Pre processing
 
-## Server
+## Server hpc-build.scidom.de
 
 ```{r }
 Cluster_analysis_integrate_rare=function (raw_counts, batch_name_1, resolution, neighbors, max_dimension, 
@@ -2462,65 +2442,13 @@ load("/home/ies/gabriele.lubatti/entropy_mixing/blood_10x_data/GiniClust2/Proj/i
 ```
 
 
-## Start with Entropy of Mixing
-
-## IN THE FINAL VERSION I USED DEFAULT PARAMETERS FOR ENTROPY OF MIXING
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/blood_10x_data/GiniClust2/Proj/10X_full/data/Entropy_hyper_server_all_cells.R -n norm_gini2 -k knn_matrix_gini -o gini_2_old.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001
-#n_cells:278
-#Time difference of 24.21628 secs
-
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/blood_10x_data/GiniClust2/Proj/10X_full/data/Entropy_hyper_server_all_cells.R -n norm_gini2 -k knn_matrix_gini -o gini_2_old_test.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
-#n_cells:278
-#Time difference of  8.870712 secs secs
-
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/blood_10x_data/GiniClust2/Proj/10X_full/data/Entropy_hyper_server_blood_new.R -n norm_gini2 -k knn_matrix_gini -o gini_2_new.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001
-#n_cells 278: 
-#Time difference of 9.089941 secs
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/blood_10x_data/GiniClust2/Proj/10X_full/data/Entropy_hyper_server_blood_new.R -n norm_gini2 -k knn_matrix_gini -o gini_2_new_new.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
-#n_cells 278: 
-#Time difference of 2.819211 secs
-
-##New
-```{r }
-##LAST VERSION (setting srun -p normal_q -c 10  --mem=100G -t 1:00:00 --pty bash)
- #cd /home/ies/gabriele.lubatti/entropy_mixing/blood_10x_data/GiniClust2/Proj/10X_full/data
-
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_server_december_2021_easy.R -n norm_gini2 -k knn_matrix_gini -o gini2_december_2021_new.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a FALSE
-#Time difference of 24.37659 secs 
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_server_december_2021_easy.R -n norm_gini2 -k knn_matrix_gini -o gini2_december_2021_new_a.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a TRUE
-#Time difference of 5.914052 secs
-
-
-#Execution Time CIARA Approx: 2.1s
-#Execution Time CIARA Full: 8.09s
-
-```
-
-##Old
-```{r }
-##LAST VERSION (setting srun -p normal_q -c 20  --mem=500G -t 1:00:00 --pty bash)
+## START CIARA
 
 
 
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_gini2 -k knn_matrix_gini -o gini2_a.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a TRUE
 
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_server_december_2021_new.R -n norm_gini2 -k knn_matrix_gini -o gini2_december_2021_new.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a FALSE
-
-
-#Time difference of 28.94114 secs 
-
-
-#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/published_data/Entropy_server_december_2021_new.R -n norm_gini2 -k knn_matrix_gini -o gini2_december_2021_a.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a TRUE
-
-
-#Time difference of 6.929575 secs
-```
-
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_gini2 -k knn_matrix_gini -o gini2.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a FALSE
 
 ```{r }
 setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
@@ -2548,85 +2476,88 @@ cordinate_umap_gini=as.data.frame(Embeddings(giniclust2, reduction = "umap")[, 1
 ```
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-load("gini_2_old.Rda")
-result_old=result
-```
-
-
-
-
-
-
-```{r }
-entropy_genes_old=row.names(result_old)[result_old[,2]<1]
-#geni_top_old=row.names(result_old)[result_old[,1]<0.00001&result_old[,2]==0]
-```
-
-
-
-
-```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-load("gini_2_new.Rda")
-result_new=result
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("gini2.Rda")
 ```
 
 
 ```{r }
-entropy_genes_new=row.names(result_new)[result_new[,1]<1]
-#geni_top_new=row.names(result_new)[result_new[,2]<0.00001&result_new[,1]==0]
+ciara_genes_old=row.names(result)[result[,1]<1]
+geni_top_top_old=row.names(result)[order(as.numeric(result[,1]))]
+background_old=row.names(result)
 ```
-
 
 
 ```{r }
-jacardi_entropy=find_jacardi_genes(entropy_genes_old,entropy_genes_new)
-#jacardi_entropy=find_jacardi_genes(background_old,background_new)
-
+ciara_genes = ciara_genes_old
+geni_top_top = geni_top_top_old
+background = background_old
 ```
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("gini2_a.Rda")
+```
+
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+background=row.names(result)
+```
+
 
 
 ```{r }
 #setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-#load("gini_2.Rda")
-#library(EntropyMixingR)
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-load("gini_2_old_old.Rda")
-entropy_genes=row.names(result)[result[,2]<1]
-geni_top=row.names(result)[result[,1]<0.00001&result[,2]==0]
-background=row.names(result)
-#geni_top=row.names(result)[result[,1]==0&result[,2]<0.001]
-#background=c(names(entropy_genes),names(entropy_genes_excluded))
+#load("gini_2_old.Rda")
+#result_old=result
 ```
+
+
+
+
+
+
+
+
+
+
+```{r }
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+#load("gini_2_new.Rda")
+#result_new=result
+```
+
+
+
+
+
 
 
 
 ```{r }
 library(ggplot2)
 p=list()
-for(i in (geni_top)[1:10]){
-  q=Plot_gene(norm_gini2,cordinate_umap_gini,i,i)
+for(i in (geni_top_top)[1:10]){
+  q=plot_gene(norm_gini2,cordinate_umap_gini,i,i)
   p=list(p,q)
 }
 p
 ```
 ```{r }
-Plot_genes_sum(cordinate_umap_gini,norm_gini2,entropy_genes,"sum")
-```
-
-
-```{r }
-library(ggplot2)
-Plot_genes_sum(cordinate_umap_gini,norm_gini2,geni_top,"sum")
+plot_genes_sum(cordinate_umap_gini,norm_gini2,ciara_genes,"sum")
 ```
 
 
 
+
+
+
 ```{r }
-#mayra_seurat_entropy_24=Cluster_analysis_integrate_rare(mayra_dati_raw_24,"24h",0.01,5,30,names(entro#py_genes))
-library(IDENTOM)
-giniclu2_entropy=Cluster_analysis_integrate_rare(raw_gini2,"24h",0.3,5,30,entropy_genes)
+
+giniclu2_entropy=cluster_analysis_integrate_rare(raw_gini2,"24h",0.3,5,30,ciara_genes)
 
 #giniclu2_entropy_2=EntropyMixingR::Cluster_analysis_integrate_rare(raw_gini2,"24h",0.3,3,30,entropy_genes)
 
@@ -2645,7 +2576,7 @@ find_resolution(giniclu2_entropy,seq(0.01,1,0.1))
 
 
 ```{r }
-Plot_umap(cordinate_umap_gini,as.vector(giniclu2_entropy$RNA_snn_res.0.3))
+plot_umap(cordinate_umap_gini,as.vector(giniclu2_entropy$RNA_snn_res.0.3))
 
 cluster_entropy=as.vector(giniclu2_entropy$RNA_snn_res.0.3)
 
@@ -2653,17 +2584,17 @@ finalCluster_plot=cluster_entropy
 finalCluster_plot[cluster_entropy==1]="Rare cell type 2"
 finalCluster_plot[cluster_entropy==2]="Rare cell type 1"
 finalCluster_plot[cluster_entropy!=2&cluster_entropy!=1]="No rare cell type"
-Plot_umap(cordinate_umap_gini,finalCluster_plot)
+plot_umap(cordinate_umap_gini,finalCluster_plot)
 
 
 
-Plot_umap(cordinate_umap_gini,finalCluster)
+plot_umap(cordinate_umap_gini,finalCluster)
 
 finalCluster_plot=finalCluster
 finalCluster_plot[finalCluster==1]="Rare cell type 1"
 finalCluster_plot[finalCluster==2]="Rare cell type 2"
 finalCluster_plot[finalCluster!=2&finalCluster!=1]="No rare cell type"
-Plot_umap(cordinate_umap_gini,finalCluster_plot)
+plot_umap(cordinate_umap_gini,finalCluster_plot)
 ```
 
 ```{r}
@@ -2752,24 +2683,65 @@ find_jacardi_new(finalCluster,norm_gini_entropy_3,1,positive_cells_1)
 ```{r }
 
 
-Plot_gene(norm_gini2,cordinate_umap_gini,"Col4a1","Col4a1")
-Plot_gene(norm_gini2,cordinate_umap_gini,"Col4a2","Col4a2")
-Plot_gene(norm_gini2,cordinate_umap_gini,"Lama1","Lama1")
-#Plot_gene(norm_gini2,cordinate_umap_gini,"Lama2","Lama2")
-#Plot_gene(norm_gini2,cordinate_umap_gini,"Cstl","Cstl")
-
-Plot_gene(norm_gini2,cordinate_umap_gini,"Rhox9","Rhox9")
-
-Plot_gene(norm_gini2,cordinate_umap_gini,"Rhox6","Rhox6")
-
-Plot_gene(norm_gini2,cordinate_umap_gini,"Sct","Sct")
+plot_gene(norm_gini2,cordinate_umap_gini,"Col4a1","Col4a1")
+plot_gene(norm_gini2,cordinate_umap_gini,"Col4a2","Col4a2")
+plot_gene(norm_gini2,cordinate_umap_gini,"Lama1","Lama1")
 
 
-Plot_gene(norm_gini2,cordinate_umap_gini,"Sct","Sct")
+plot_gene(norm_gini2,cordinate_umap_gini,"Rhox9","Rhox9")
+
+plot_gene(norm_gini2,cordinate_umap_gini,"Rhox6","Rhox6")
+
+plot_gene(norm_gini2,cordinate_umap_gini,"Sct","Sct")
+
+
+plot_gene(norm_gini2,cordinate_umap_gini,"Sct","Sct")
 
 
 
 ```
+
+
+
+```{r }
+library("mltools")
+
+
+norm_gini_entropy_3
+finalCluster
+cluster_entropy
+
+
+method_score=rep(0,length(colnames(norm_gini_entropy_3)))
+ciara_score=rep(0,length(colnames(norm_gini_entropy_3)))
+original_score=rep(0,length(colnames(norm_gini_entropy_3)))
+original_score[colnames(norm_gini_entropy_3)%in%positive_cells_1]=1
+method_score[finalCluster==1]=1
+ciara_score[cluster_entropy==2]=1
+
+mcc(ciara_score,original_score)
+
+
+mcc(method_score,original_score)
+
+
+
+
+method_score=rep(0,length(colnames(norm_gini_entropy_3)))
+ciara_score=rep(0,length(colnames(norm_gini_entropy_3)))
+original_score=rep(0,length(colnames(norm_gini_entropy_3)))
+original_score[colnames(norm_gini_entropy_3)%in%positive_cells_2]=1
+method_score[finalCluster==2]=1
+ciara_score[cluster_entropy==1]=1
+
+mcc(ciara_score,original_score)
+
+
+mcc(method_score,original_score)
+
+
+```
+
 
 ## End GiniClust2
 

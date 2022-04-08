@@ -52,7 +52,12 @@ load("elmir_december_2021.Rda")
 
 umap_elmir <- readRDS(system.file("extdata", "annot_umap.rds", package = "CIARA"))
 
+#setwd("/Users/gabriele.lubatti/Downloads")
+
 coordinate_umap_human <- umap_elmir[, 2:3]
+
+#write.csv2(coordinate_umap_human,file="coordinate_umap_human.csv")
+#write.csv2(raw_elmir_5_30,file="raw_elmir_5_30.csv")
 
 
 #setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
@@ -83,11 +88,14 @@ spatial_annotation=read.table("spatial_annotation.txt")
 
 #spatial_annotation=read.table(system.file("extdata", "spatial_annotation.txt", package ="CIARA"))
 origin_space=spatial_annotation[,2]
+
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(origin_space,file="origin_space.csv")
 ```
 
 
 ```{r }
-
+library(CIARA)
 elmir_seurat_5=cluster_analysis_integrate_rare(raw_elmir_5_30,"Elmir_data",0.1,5,30)
 
 
@@ -104,6 +112,9 @@ elmir_seurat_5=cluster_analysis_integrate_rare(raw_elmir_5_30,"Elmir_data",0.1,5
 
 norm_elmir_5_30=as.matrix(GetAssayData(elmir_seurat_5, slot = "data",assay="RNA"))
 
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(norm_elmir_5_30,file="norm_elmir_5_30.csv")
+
 
 general_cluster_version_elmir=elmir_seurat_5$RNA_snn_res.0.1
 
@@ -111,6 +122,9 @@ general_cluster_version_elmir=elmir_seurat_5$RNA_snn_res.0.1
 knn_matrix_elmir_5_30=as.matrix(elmir_seurat_5@graphs$RNA_nn)
 
 cordinate_umap=umap_elmir[,2:3]
+
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(cordinate_umap,file="cordinate_umap.csv")
 
 #setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
 #save(knn_matrix_elmir_5_30,file="knn_matrix_elmir_5_30.Rda")
@@ -130,6 +144,11 @@ cordinate_umap=umap_elmir[,2:3]
 original_cluster=as.vector(umap_elmir$cluster_id)
 names(original_cluster)=names(elmir_seurat_5$RNA_snn_res.0.1)
 plot_umap(cordinate_umap,original_cluster)
+
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(original_cluster,file="original_cluster.csv")
+#write.csv2(as.vector(umap_elmir$sub_cluster),file="original_sub_cluster.csv")
+
 ```
 
 ```{r }
@@ -458,6 +477,49 @@ markers_first_elmir_final=markers_cluster_seurat(elmir_seurat_5,final_cluster_ve
 markers_first_elmir_1_final=markers_first_elmir_final[[1]]
 markers_first_elmir_3_final=markers_first_elmir_final[[3]]
 ```
+```{r}
+ markers_PGC <- Seurat::FindMarkers(elmir_seurat_5, ident.1 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub == 
+            "PGC"], ident.2 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub != "PGC"], 
+            only.pos = T)
+markers_PGC <- markers_PGC[markers_PGC$p_val_adj <= 0.05, 
+            ]
+        markers_PGC <- markers_PGC[order(markers_PGC$p_val_adj), 
+            ]
+        markers_PGC <- row.names(markers_PGC)
+
+markers_primitive <- Seurat::FindMarkers(elmir_seurat_5, ident.1 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub == 
+            "Primitive Streak"], ident.2 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub != "Primitive Streak"], 
+            only.pos = T)
+markers_primitive <- markers_primitive[markers_primitive$p_val_adj <= 0.05, 
+            ]
+        markers_primitive <- markers_primitive[order(markers_primitive$p_val_adj), 
+            ]
+        markers_primitive <- row.names(markers_primitive)
+```
+
+```{r}
+common_pgc_primitive=intersect(markers_primitive,markers_PGC)
+
+
+
+
+p=list()
+for(i in (common_pgc_primitive)){
+  q=plot_gene(norm_elmir_5_30,cordinate_umap,i,i)
+  p=list(p,q)
+}
+p
+
+common_pgc_primitive
+```
+
+```{r}
+geni_pgc=c("NANOS3","NANOG","DPPA5")
+mean(norm_elmir_5_30[geni_pgc[1], final_cluster_version_sub=="PGC"])
+mean(norm_elmir_5_30[geni_pgc[2], final_cluster_version_sub=="PGC"])
+mean(norm_elmir_5_30[geni_pgc[3], final_cluster_version_sub=="PGC"])
+
+```
 
 ```{r}
 setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/markers_human_gastrula")
@@ -704,5 +766,230 @@ plot_umap(diff_map_endo,final_cluster_version_sub[original_cluster=="ExE Mesoder
 ```
 
 
+## CellPHONE DB input
 
 
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+name_select=names(table(as.vector(umap_elmir$sub_cluster)[as.vector(umap_elmir$cluster_id)=="Hemogenic Endothelial Progenitors"]))
+name_select_full=c(name_select,"megakaryocytes","rare YS endoderm","ExE Mesoderm_0","ExE Mesoderm_1","Erythroblasts")
+
+cluster_cell=as.vector(umap_elmir$sub_cluster)
+cluster_cell[final_cluster_version_sub=="Hemogenic Endothelial Progenitors_4"]="megakaryocytes"
+cluster_cell[final_cluster_version_sub=="Endoderm_2"]="rare YS endoderm"
+cluster_cell[final_cluster_version_sub=="ExE Mesoderm_0"]="ExE Mesoderm_0"
+cluster_cell[final_cluster_version_sub=="ExE Mesoderm_1"]="ExE Mesoderm_1"
+
+cluster_cell_small=cluster_cell[cluster_cell%in%name_select_full]
+
+norm_elmir_small=norm_elmir_5_30[,cluster_cell%in%name_select_full]
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.table(norm_elmir_small[1:100,],file="norm_elmir_small.txt", quote = F)
+
+meta_data_cell=data.frame(colnames(norm_elmir_small),cluster_cell_small)
+colnames(meta_data_cell)=c("Cell","cell_type")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.table(meta_data_cell,file="meta_data_cell.txt", quote = F, row.names = F)
+
+
+```
+
+```{r }
+cluster_livelli=levels(factor(cluster_cell_small))
+mean_livelli=rep(list(0),length(cluster_livelli))
+for ( i in 1:length(cluster_livelli)){
+mean_single=apply(norm_elmir_5_30[,cluster_cell_small==cluster_livelli[i]],1,mean)
+mean_livelli[[i]]=mean_single>=0.1
+
+}
+summary_matrix=matrix(unlist(mean_livelli), ncol=length(mean_livelli), byrow=FALSE)
+
+filter_genes=apply(summary_matrix,1,function(x){
+  if (sum(x)>0){
+    return(TRUE)
+  }
+  else{
+    return(FALSE)
+  }
+})
+
+genes_cell=row.names(norm_elmir_5_30)[filter_genes]
+
+norm_elmir_small=norm_elmir_small[genes_cell,]
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.table(norm_elmir_small,file="norm_elmir_small.txt")
+norm_elmir_new=cbind(row.names(norm_elmir_small),norm_elmir_small)
+colnames(norm_elmir_new)=c("Gene",colnames(norm_elmir_small))
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.csv(norm_elmir_new,file="norm_elmir_new.csv", row.names = FALSE, quote= FALSE)
+write.table(norm_elmir_new,file="norm_elmir_new.txt", row.names = FALSE, quote= FALSE)
+
+
+
+
+
+cluster_cell_small[cluster_cell_small=="Blood Progenitors"]="Blood_Progenitors"
+cluster_cell_small[cluster_cell_small=="Erythro-Myeloid Progenitors"]="Erythro_Myeloid_Progenitors"
+cluster_cell_small[cluster_cell_small=="Hemogenic Endothelium"]="Hemogenic_Endothelium"
+cluster_cell_small[cluster_cell_small=="Myeloid Progenitors"]="Myeloid_Progenitors"
+cluster_cell_small[cluster_cell_small=="rare YS endoderm"]="rare_YS_endoderm"
+meta_data_cell=data.frame(colnames(norm_elmir_small),cluster_cell_small)
+colnames(meta_data_cell)=c("Cell","cell_type")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.table(meta_data_cell,file="meta_data_cell.txt", row.names =F, quote=FALSE)
+write.csv(meta_data_cell,file="meta_data_cell.csv", row.names =F, quote=FALSE)
+```
+
+## Running cell phone db
+# cd /opt/anaconda3/envs/cpdb/bin
+```{r }
+
+./cellphonedb method statistical_analysis --counts-data gene_name --output-path /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data  /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/meta_data_cell.csv /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/norm_elmir_new.csv
+
+```
+
+
+## Run Comunet
+```{r }
+path_comunet="/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R"
+path_csv="/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/phone_db_output"
+path_out="/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/phone_db_output/out"
+
+
+
+main.path <- "/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/phone_db_output"
+input.path <- paste0(main.path
+                    ,"/out") # CellPhoneDB output folder
+outputPath = paste0(main.path
+                    ,"/comunet_output")
+
+# Please make sure, the complex_input.csv and gene_input.csv are downloaded to your working directory
+complex_input <- paste0(main.path
+                        ,"/complex_input.csv"
+)
+gene_input <- paste0(main.path
+                     ,"/gene_input.csv"
+                     )
+```
+
+```{r }
+# complex input
+complex_input <- read.csv(complex_input)
+complex_input$complex_name <- gsub("_"
+                                   ," "
+                                   ,complex_input$complex_name)
+
+# gene input
+gene_input <- read.csv(gene_input)
+```
+
+```{r }
+# read in CellPhoneDB output
+CellPhoneDB_output <- read.csv(paste0(input.path
+                                      ,"/significant_means.txt")
+                               ,sep = "\t"
+                               ,check.names = F)
+
+# delete duplicates
+CellPhoneDB_output <- CellPhoneDB_output[!duplicated(CellPhoneDB_output$interacting_pair),]
+
+# add row names (interacting pairs)
+rownames(CellPhoneDB_output) <- CellPhoneDB_output$interacting_pair
+
+# transform 'receptor_a' colomn into boolean
+CellPhoneDB_output$receptor_a  <- sapply(CellPhoneDB_output$receptor_a
+                                         ,function(i){
+                                           if(i == "True") T else F
+                                         }
+)
+
+# transform 'receptor_b' colomn into boolean
+CellPhoneDB_output$receptor_b  <- sapply(CellPhoneDB_output$receptor_b
+                                         ,function(i){
+                                           if(i == "True") T else F
+                                         }
+)
+```
+
+
+```{r }
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/convert_CellPhoneDB_output.R")
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/utils.R")
+
+interactions <- convert_CellPhoneDB_output(CellPhoneDB_output = CellPhoneDB_output
+                                           ,complex_input = complex_input
+                                           ,gene_input = gene_input)
+print(str(interactions))
+
+
+
+
+```
+```{r }
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/lrp_clustering.R")
+
+lrp_clusters <- lrp_clustering(weight_array = interactions$weight_array
+                               ,ligand_receptor_pair_df = interactions$ligand_receptor_pair_df
+                               ,nodes = interactions$nodes
+                              )
+print(str(lrp_clusters))
+```
+```{r }
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/plot_cluster_heatmap.R")
+
+plot_cluster_heatmap(dissim_matrix = lrp_clusters$dissim_matrix
+                    ,lrp_clusters = lrp_clusters$clusters
+                    )
+```
+
+```{r }
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/plot_cluster_UMAP.R")
+
+plot_cluster_UMAP(ligand_receptor_pair_df = interactions$ligand_receptor_pair_df
+                  ,dissim_matrix = lrp_clusters$dissim_matrix
+                  ,lrp_clusters = lrp_clusters$clusters
+                 )
+```
+
+
+```{r }
+legend.gradient = function(pnts,cols=heat.colors(100),limits=c(0,1), title='Legend', ...){
+	pnts = try(as.matrix(pnts),silent=T)
+	if(!is.matrix(pnts)) stop("you must have a 4x2 matrix")
+	if(dim(pnts)[1]!=4 || dim (pnts)[2]!=2) stop ("Matrix must have dimensions of 4 rows and 2 columms")
+	if(length(cols)<2) stop("You must have 2 or more colors")
+	#break up the min and max into a number of values == length(cols)
+	yvals = seq(min(pnts[, 2]), max(pnts[, 2]), length=length(cols)+1)
+	#cycle through each of the yvals and create polygons
+	for (i in 1:length(cols)){  #create the polygon for that color
+		polygon(x=pnts[,1],y=c(yvals[i],yvals[i],yvals[i+1],yvals[i+1]),col=cols[i],border=F)
+	}
+	#add the text
+	text(max(pnts[,1]),min(pnts[,2]),labels=limits[1],pos=4,...)
+	text(max(pnts[,1]),max(pnts[,2]),labels=limits[2],pos=4,...)
+	text(min(pnts[,1]),max(pnts[,2]),labels=title,adj=c(0,-1),...)
+}
+```
+
+```{r }
+library(igraph)
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/plot_communication_graph.R")
+# plot communication plots for clusters (first three clusters)
+for(clusterNr in c(1:2)){
+    cluster  <-  paste("cluster"
+                      ,clusterNr)
+    plot_communication_graph(LRP = cluster
+                       ,weight_array = lrp_clusters$weight_array_by_cluster[,,cluster]
+                       ,ligand_receptor_pair_df = interactions$ligand_receptor_pair_df
+                       ,nodes = interactions$nodes
+                       ,is_cluster = T
+                      )
+}
+
+
+
+```

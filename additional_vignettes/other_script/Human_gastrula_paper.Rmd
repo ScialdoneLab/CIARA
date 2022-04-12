@@ -1,0 +1,1197 @@
+---
+title: "Human Gastrula Data"
+author: "Gabriele Lubatti"
+date: "3/30/2021"
+output: html_document
+---
+
+
+
+```{r } 
+gc()
+rm(list=ls())
+#library(devtools)
+#install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")
+#library(devtools)
+#install_github("ScialdoneLab/IDENTOM",auth_token="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",ref="master")
+```
+
+```{r } 
+library(destiny)#Not necessary for IDENTOM
+#library(Biobase)
+#library(Seurat)
+#library(clustree)
+#library(plotly)
+#library(ggplot2)
+
+#library(DescTools)
+#library(rlist)
+#library(parallel)
+```
+
+```{r } 
+library(CIARA)
+library(Seurat)
+library(clustree)
+```
+
+
+
+
+## Load input 
+
+```{r }
+#load(system.file("extdata", "raw_elmir_5_30.Rda", package ="CIARA"))
+#raw_counts=raw_elmir_5_30
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("raw_elmir_5_30.Rda")
+raw_counts=raw_elmir_5_30
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("elmir_december_2021.Rda")
+
+umap_elmir <- readRDS(system.file("extdata", "annot_umap.rds", package = "CIARA"))
+
+#setwd("/Users/gabriele.lubatti/Downloads")
+
+coordinate_umap_human <- umap_elmir[, 2:3]
+
+#write.csv2(coordinate_umap_human,file="coordinate_umap_human.csv")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+write.csv(raw_elmir_5_30,file="raw_elmir_5_30.csv")
+
+
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#save(hvg_human_gastrula,file="hvg_human_gastrula.Rda")
+
+```
+
+
+
+
+## Load data
+
+```{r }
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+diff_map_endo=read.csv("endo_diffmap.csv")
+diff_map_hema=read.csv("hep_diffmap_coord.csv")
+#diff_map_endo=read.csv(system.file("extdata", "endo_diffmap.csv", package ="CIARA"))
+
+#diff_map_hema=read.csv(system.file("extdata", "hep_diffmap_coord.csv", package ="CIARA"))
+
+```
+
+```{r }
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+spatial_annotation=read.table("spatial_annotation.txt")
+
+#spatial_annotation=read.table(system.file("extdata", "spatial_annotation.txt", package ="CIARA"))
+origin_space=spatial_annotation[,2]
+
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(origin_space,file="origin_space.csv")
+```
+
+
+```{r }
+library(CIARA)
+elmir_seurat_5=cluster_analysis_integrate_rare(raw_elmir_5_30,"Elmir_data",0.1,5,30)
+
+
+```
+
+
+
+
+
+
+
+
+```{r }
+
+norm_elmir_5_30=as.matrix(GetAssayData(elmir_seurat_5, slot = "data",assay="RNA"))
+
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(norm_elmir_5_30,file="norm_elmir_5_30.csv")
+
+
+general_cluster_version_elmir=elmir_seurat_5$RNA_snn_res.0.1
+
+
+knn_matrix_elmir_5_30=as.matrix(elmir_seurat_5@graphs$RNA_nn)
+
+cordinate_umap=umap_elmir[,2:3]
+
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(cordinate_umap,file="cordinate_umap.csv")
+
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+#save(knn_matrix_elmir_5_30,file="knn_matrix_elmir_5_30.Rda")
+#save(norm_elmir_5_30,file="norm_elmir_5_30.Rda")
+
+
+```
+
+
+
+
+## Cluster provided by Tyser et al, 2020
+
+
+```{r }
+
+original_cluster=as.vector(umap_elmir$cluster_id)
+names(original_cluster)=names(elmir_seurat_5$RNA_snn_res.0.1)
+plot_umap(cordinate_umap,original_cluster)
+
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(original_cluster,file="original_cluster.csv")
+#write.csv2(as.vector(umap_elmir$sub_cluster),file="original_sub_cluster.csv")
+
+```
+
+```{r }
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/elmir_data/entropy_hyper_server_all_cells.R -n norm_elmir_5_30 -k knn_matrix_elmir_5_30 -o elmir_hyper_old_test.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
+#2.438366 mins
+
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/elmir_data/entropy_hyper_server_blood_new.R -n norm_elmir_5_30 -k knn_matrix_elmir_5_30 -o elmir_hyper_new.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
+#Time difference of 1.058072 mins
+
+
+##LAST VERSION (setting srun -p normal_q -c 10  --mem=10G -t 1:00:00 --pty bash)
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/elmir_data/entropy_server_december_2021_new.R -n norm_elmir_5_30 -k knn_matrix_elmir_5_30 -o elmir_december_2021.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a FALSE
+#Time difference of 6.323627 mins 1.647605 mins
+
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/elmir_data/entropy_server_december_2021_new.R -n norm_elmir_5_30 -k knn_matrix_elmir_5_30 -o elmir_december_2021_a.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a TRUE
+#Time difference of 1.647605 mins
+
+
+
+
+```
+
+## Start analysis with approx = TRUE ane approx = FALSE
+
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_elmir_5_30 -k knn_matrix_elmir_5_30 -o elmir_a.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a TRUE
+
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_elmir_5_30 -k knn_matrix_elmir_5_30 -o elmir.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001 -c 10 -a FALASE
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+vedo=load("elmir_a.Rda")
+```
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+#geni_top=row.names(result)[result[,1]==0&result[,2]<0.0001]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+vedo=load("elmir.Rda")
+```
+
+
+
+```{r }
+ciara_genes_old=row.names(result)[result[,1]<1]
+geni_top_top_old=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+
+
+```{r }
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#load("elmir_december_2021.Rda")
+
+```
+
+
+
+```{r }
+#ciara_genes=row.names(result)[result[,2]<1]
+#geni_top=row.names(result)[result[,2]<0.0001&result[,1]==0]
+#geni_top_top=row.names(result)[order(as.numeric(result[,2]))]
+```
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+#geni_top=row.names(result)[result[,1]==0&result[,2]<0.0001]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+
+
+```{r }
+
+p=list()
+for(i in (geni_top_top)[1:10]){
+  q=plot_gene(norm_elmir_5_30,cordinate_umap,i,i)
+  p=list(p,q)
+}
+p
+```
+
+```{r }
+background=row.names(result)
+```
+
+
+
+```{r }
+plot_genes_sum(cordinate_umap,norm_elmir_5_30,(ciara_genes),"Sum from top CIARA genes")
+
+```
+
+
+```{r }
+norm_counts_small = apply(norm_elmir_5_30[(ciara_genes), ], 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+    gene_sum = apply(norm_counts_small, 1, sum)
+    
+    
+#genes_name_text=selection_localized_genes_here(norm_elmir_5_30,ciara_genes,min_number_cells=4,max_number_genes=4)
+genes_name_text=selection_localized_genes(norm_elmir_5_30,ciara_genes,min_number_cells=4,max_number_genes=4)
+plot.elmir=umap_elmir[,2:3]
+colnames(plot.elmir)=c("UMAP_1","UMAP_2")
+plot_interactive(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+```
+
+
+
+
+
+
+
+
+
+## Cluster analysis using CIARA (step 2)
+```{r }
+elmir_seurat_ciara=cluster_analysis_integrate_rare(raw_elmir_5_30,"Elmir data",0.01,5,30,(ciara_genes))
+
+```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_figure_1/sup_figure_1_a.pdf")
+find_resolution(elmir_seurat_ciara,seq(0.01,1,0.1))
+dev.off()
+```
+
+
+```{r }
+
+norm_elmir_ciara_5_30=as.matrix(GetAssayData(elmir_seurat_ciara, slot = "data",assay="RNA"))
+
+
+
+cordinate_umap_ciara=as.data.frame(Embeddings(elmir_seurat_ciara, reduction = "umap")[, 1:2])
+
+
+```
+
+
+
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_2/figure_2_j.pdf")
+plot_umap(cordinate_umap,elmir_seurat_ciara$RNA_snn_res.0.01)
+dev.off()
+plot_gene(norm_elmir_ciara_5_30,cordinate_umap,"NANOS3","NANOS3")
+plot_gene(norm_elmir_ciara_5_30,cordinate_umap,"NANOG","NANOG")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_figure_1/sup_figure_1_b.pdf")
+plot_gene(norm_elmir_ciara_5_30,cordinate_umap,"SOX17","SOX17")
+dev.off()
+plot_gene(norm_elmir_ciara_5_30,cordinate_umap,"DPPA5","DPPA5")
+
+
+
+
+
+```
+
+
+```{r}
+original_sub_cluster=umap_elmir$sub_cluster
+original_cluster_plot=rep("Other clusters",length(original_sub_cluster))
+original_cluster_plot[original_sub_cluster=="PGC"]="PGC"
+original_cluster_plot[original_sub_cluster=="Axial Mesoderm"]="Axial Mesoderm"
+original_cluster_plot=factor(original_cluster_plot ,levels=c("Other clusters","Axial Mesoderm","PGC"))
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_2/figure_2_i.pdf")
+plot_umap(cordinate_umap,original_cluster_plot)
+dev.off()
+
+```
+
+
+## Cluster analysis using CIARA (step 3)
+
+```{r}
+final_cluster=merge_cluster(original_cluster,elmir_seurat_ciara$RNA_snn_res.0.01,20)
+```
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+ciara_cluster_human=elmir_seurat_ciara$RNA_snn_res.0.01
+save(ciara_cluster_human,file="ciara_cluster_human.Rda")
+```
+
+
+```{r}
+final_cluster[final_cluster=="2-step_2"]="PGC"
+```
+
+
+```{r}
+DefaultAssay(elmir_seurat_5) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(elmir_seurat_5,final_cluster,names(elmir_seurat_5$RNA_snn_res.0.1),5)
+
+markers_first_elmir_1=markers_first_elmir[[1]]
+markers_first_elmir_3=markers_first_elmir[[3]]
+```
+
+```{r }
+plot_umap(cordinate_umap,final_cluster)
+```
+
+```{r}
+
+
+white_black_7=white_black_markers(final_cluster,"PGC",norm_elmir_5_30,markers_first_elmir_3,0)
+sum(white_black_7)
+
+```
+
+
+
+
+
+
+
+
+
+
+## Cluster analysis using CIARA  (step 4)
+
+
+
+```{r }
+##For having just two rare cells population
+#result_test=test_hvg(raw_elmir_5_30,final_cluster,(ciara_genes),background,100,0.001)
+result_test=test_hvg(raw_elmir_5_30,final_cluster,(ciara_genes),background,100,0.05)
+
+```
+
+
+
+```{r }
+result_test[[2]]
+```
+
+
+
+
+
+
+
+```{r }
+raw_elmir=as.matrix(GetAssayData(elmir_seurat_5, slot = "counts",assay="RNA"))
+raw_endoderm=raw_elmir[,as.vector(umap_elmir$cluster_id)=="Endoderm"]
+raw_emo=raw_elmir[,as.vector(umap_elmir$cluster_id)=="Hemogenic Endothelial Progenitors"]
+raw_exe_meso=raw_elmir[,as.vector(umap_elmir$cluster_id)=="ExE Mesoderm"]
+
+
+
+combined_endoderm=cluster_analysis_sub(raw_endoderm,0.2,5,30,"Endoderm")
+
+combined_emo=cluster_analysis_sub(raw_emo,0.6,5,30,"Hemogenic Endothelial Progenitors")
+
+combined_exe_meso=cluster_analysis_sub(raw_exe_meso,0.5,5,30,"ExE Mesoderm")
+
+
+
+
+
+```
+
+
+
+
+```{r }
+
+all_sub_cluster=c(combined_endoderm$seurat_clusters,combined_emo$seurat_clusters,combined_exe_meso$seurat_clusters)
+final_cluster_version_sub=merge_cluster(final_cluster,all_sub_cluster)
+```
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+
+```
+
+
+```{r}
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+final_cluster_human_version_sub=final_cluster_version_sub
+save(final_cluster_human_version_sub, file="final_cluster_human_version_sub.Rda")
+```
+
+```{r}
+plot_umap(umap_elmir[,2:3],umap_elmir$sub_cluster)
+plot_umap(umap_elmir[,2:3],umap_elmir$cluster_id)
+```
+
+```{r}
+plot_umap(umap_elmir[,2:3],final_cluster_version_sub)
+```
+
+
+
+```{r}
+table(as.vector(final_cluster_version_sub))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## CIARA identifies a population of cells with highly distinctive transcriptional profile 
+
+```{r}
+DefaultAssay(elmir_seurat_5) <- "RNA"
+markers_first_elmir_final=markers_cluster_seurat(elmir_seurat_5,final_cluster_version_sub,names(elmir_seurat_5$RNA_snn_res.0.1),5)
+
+markers_first_elmir_1_final=markers_first_elmir_final[[1]]
+markers_first_elmir_3_final=markers_first_elmir_final[[3]]
+```
+```{r}
+ markers_PGC <- Seurat::FindMarkers(elmir_seurat_5, ident.1 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub == 
+            "PGC"], ident.2 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub != "PGC"], 
+            only.pos = T)
+markers_PGC <- markers_PGC[markers_PGC$p_val_adj <= 0.05, 
+            ]
+        markers_PGC <- markers_PGC[order(markers_PGC$p_val_adj), 
+            ]
+        markers_PGC <- row.names(markers_PGC)
+
+markers_primitive <- Seurat::FindMarkers(elmir_seurat_5, ident.1 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub == 
+            "Primitive Streak"], ident.2 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub != "Primitive Streak"], 
+            only.pos = T)
+markers_primitive <- markers_primitive[markers_primitive$p_val_adj <= 0.05, 
+            ]
+        markers_primitive <- markers_primitive[order(markers_primitive$p_val_adj), 
+            ]
+        markers_primitive <- row.names(markers_primitive)
+```
+
+```{r}
+common_pgc_primitive=intersect(markers_primitive,markers_PGC)
+
+
+
+
+p=list()
+for(i in (common_pgc_primitive)){
+  q=plot_gene(norm_elmir_5_30,cordinate_umap,i,i)
+  p=list(p,q)
+}
+p
+
+common_pgc_primitive
+```
+
+```{r}
+geni_pgc=c("NANOS3","NANOG","DPPA5")
+mean(norm_elmir_5_30[geni_pgc[1], final_cluster_version_sub=="PGC"])
+mean(norm_elmir_5_30[geni_pgc[2], final_cluster_version_sub=="PGC"])
+mean(norm_elmir_5_30[geni_pgc[3], final_cluster_version_sub=="PGC"])
+
+```
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/markers_human_gastrula")
+marker_rare_endoderm=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Endoderm_2"]
+marker_rare_endoderm=as.vector(marker_rare_endoderm)
+marker_megakaryocytes=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Hemogenic Endothelial Progenitors_4"]
+marker_megakaryocytes=as.vector(marker_megakaryocytes)
+
+
+marker_extra_emb_mesoderm=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="ExE Mesoderm_1"]
+marker_extra_emb_mesoderm=as.vector(marker_extra_emb_mesoderm)
+
+
+write.csv2(marker_rare_endoderm,file="marker_rare_endoderm.csv",row.names = F)
+write.csv2(marker_megakaryocytes,file="marker_megakaryocytes.csv",row.names = F)
+write.csv2(marker_extra_emb_mesoderm,file="marker_extra_emb_mesoderm.csv",row.names = F)
+
+
+```
+
+
+
+```{r}
+white_black_7=white_black_markers(final_cluster_version_sub,"Hemogenic Endothelial Progenitors_4",norm_elmir_5_30,markers_first_elmir_3_final,0)
+sum(white_black_7)
+
+```
+
+```{r}
+white_black_7=white_black_markers(final_cluster_version_sub,"Endoderm_2",norm_elmir_5_30,markers_first_elmir_3_final,0)
+sum(white_black_7)
+```
+
+```{r}
+white_black_7=white_black_markers(final_cluster_version_sub,"ExE Mesoderm_0",norm_elmir_5_30,markers_first_elmir_3_final,0)
+sum(white_black_7)
+```
+
+```{r}
+
+top_endo=white_black_markers(final_cluster_version_sub,"Endoderm_2",norm_elmir_5_30,markers_first_elmir_3_final,0)
+top_endo=names(top_endo)[top_endo]
+
+
+mean_top_endo=apply(norm_elmir_5_30[top_endo,final_cluster_version_sub=="Endoderm_2"],1,mean)
+mean_top_endo=sort(mean_top_endo,decreasing = T)
+
+top_endo=names(mean_top_endo)
+names(top_endo)=rep("Endoderm_2",length(top_endo))
+
+```
+
+```{r}
+
+top_hemo=white_black_markers(final_cluster_version_sub,"Hemogenic Endothelial Progenitors_4",norm_elmir_5_30,markers_first_elmir_3_final,0)
+top_hemo=names(top_hemo)[top_hemo]
+
+
+mean_top_hemo=apply(norm_elmir_5_30[top_hemo,final_cluster_version_sub=="Hemogenic Endothelial Progenitors_4"],1,mean)
+mean_top_hemo=sort(mean_top_hemo,decreasing = T)
+
+top_hemo=names(mean_top_hemo)
+names(top_hemo)=rep("Hemogenic Endothelial Progenitors_4",length(top_hemo))
+```
+
+```{r}
+top_meso=white_black_markers(final_cluster_version_sub,"ExE Mesoderm_1",norm_elmir_5_30,markers_first_elmir_3_final,0)
+top_meso=names(top_meso)[top_meso]
+
+
+mean_top_meso=apply(norm_elmir_5_30[top_meso,final_cluster_version_sub=="ExE Mesoderm_1"],1,mean)
+mean_top_meso=sort(mean_top_meso,decreasing = T)
+
+top_meso=names(mean_top_meso)
+names(top_meso)=rep("ExE Mesoderm_1",length(top_meso))
+
+
+
+```
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+save(top_endo,file="top_endo.Rda")
+save(top_hemo,file="top_hemo.Rda")
+save(top_meso,file="top_meso.Rda")
+
+```
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load(file="top_endo.Rda")
+load(file="top_hemo.Rda")
+load(file="top_meso.Rda")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+load(file="norm_elmir_5_30.Rda")
+norm_human_data_plot <- norm_elmir_5_30[c(top_endo, top_hemo, top_meso), ]
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+save(norm_human_data_plot,file="norm_human_data_plot.Rda")
+```
+
+
+```{r}
+
+
+
+toMatch=c("Endoderm")
+#Plot_balons(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Endoderm_2"],20,max_size=5,text_size=10)
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_c.pdf")
+plot_balloon_marker(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],top_endo,20,max_size=5,text_size=10)
+dev.off()
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_f.pdf")
+toMatch=c("Hemogenic Endothelial Progenitors")
+plot_balloon_marker(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],top_hemo,20,max_size=5,text_size=8)
+dev.off()
+
+toMatch=c("ExE Mesoderm")
+plot_balloon_marker(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],top_meso,length(top_meso),max_size=5,text_size=8)
+
+
+
+```
+
+
+
+
+
+
+
+```{r }
+
+plot_gene(norm_elmir_5_30,cordinate_umap,"C1R","C1R")
+plot_gene(norm_elmir_5_30,cordinate_umap,"NANOS3","NANOS3")
+plot_gene(norm_elmir_5_30,cordinate_umap,"NANOG","NANOG")
+plot_gene(norm_elmir_5_30,cordinate_umap,"SOX17","SOX17")
+plot_gene(norm_elmir_5_30,cordinate_umap,"DPPA5","DPPA5")
+plot_gene(norm_elmir_5_30,cordinate_umap,"CSF1","CSF1")
+```
+
+
+
+```{r}
+original_cluster_plot=rep("Other clusters",length(original_cluster))
+original_cluster_plot[original_cluster=="Endoderm"]="Endoderm"
+original_cluster_plot[original_cluster=="Hemogenic Endothelial Progenitors"]="Hemogenic Endothelial Progenitors"
+original_cluster_plot[original_cluster=="ExE Mesoderm"]="ExE Mesoderm"
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_a.pdf")
+plot_umap(cordinate_umap,original_cluster_plot)
+dev.off()
+
+
+original_cluster_plot=rep("Other clusters",length(final_cluster_version_sub))
+original_cluster_plot[grep("Endoderm",final_cluster_version_sub)]=final_cluster_version_sub[grep("Endoderm",final_cluster_version_sub)]
+
+original_cluster_plot[grep("Hemogenic Endothelial Progenitors",final_cluster_version_sub)]=final_cluster_version_sub[grep("Hemogenic Endothelial Progenitors",final_cluster_version_sub)]
+original_cluster_plot[grep("ExE Mesoderm",final_cluster_version_sub)]=final_cluster_version_sub[grep("ExE Mesoderm",final_cluster_version_sub)]
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_b.pdf")
+plot_umap(cordinate_umap,original_cluster_plot)
+dev.off()
+
+
+
+```
+
+##Start diffusion map analysis
+
+
+
+
+
+```{r }
+
+diff_map_elmir=diff_map_hema[,3:4]
+cell_diff=diff_map_hema$cell_name
+umap_elmir_diff=umap_elmir
+row.names(umap_elmir_diff)=umap_elmir$cell_name
+
+original_sub_cluster_diff=umap_elmir_diff[cell_diff,]$sub_cluster
+plot_umap(diff_map_elmir,original_sub_cluster_diff)
+
+
+data_diff=data.frame(final_cluster_version_sub,colnames(norm_elmir_5_30))
+row.names(data_diff)=colnames(norm_elmir_5_30)
+sub_cluster_diff=data_diff[cell_diff,1]
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_i.pdf")
+plot_umap(diff_map_elmir,sub_cluster_diff) 
+dev.off()
+```
+
+
+```{r }
+diff_map_elmir_endo=diff_map_endo[,2:4]
+diff_map_elmir_endo=diff_map_elmir_endo[,-2]
+
+umap_elmir_diff=umap_elmir
+row.names(umap_elmir_diff)=umap_elmir$cell_name
+
+cells_endo=as.vector(umap_elmir$cell_name[umap_elmir$cluster_id=="Endoderm"])
+
+original_sub_cluster_diff=umap_elmir_diff[cells_endo,]$sub_cluster
+plot_umap(diff_map_elmir_endo,original_sub_cluster_diff) 
+
+
+data_diff=data.frame(final_cluster_version_sub,colnames(norm_elmir_5_30))
+row.names(data_diff)=colnames(norm_elmir_5_30)
+sub_cluster_diff=data_diff[cells_endo,1]
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_d.pdf")
+plot_umap(diff_map_elmir_endo,sub_cluster_diff) 
+dev.off()
+
+
+
+```
+
+
+
+```{r }
+
+original_cluster=umap_elmir$cluster_id
+names(original_cluster)=colnames(raw_elmir_5_30)
+cluster_diff_exe=original_cluster[original_cluster=="ExE Mesoderm"]
+raw_elmir=as.matrix(GetAssayData(elmir_seurat_5, slot = "counts",assay="RNA"))
+
+raw_exe=raw_elmir[,original_cluster=="ExE Mesoderm"]
+
+batch_1 <- CreateSeuratObject(counts = raw_endoderm, project = "Endoderm")
+    batch_1 <- subset(batch_1, subset = nFeature_RNA > 0)
+    batch_1 <- NormalizeData(batch_1, verbose = FALSE)
+    batch_1 <- FindVariableFeatures(batch_1, selection.method = "vst", 
+        nfeatures = 2000)
+    hvg_endo=batch_1@assays$RNA@var.features
+    
+    raw_endoderm_sub=raw_exe[hvg_endo,]
+    
+    dm <- DiffusionMap(t(raw_endoderm_sub))
+diff_map_endo <- as.data.frame(cbind(DC1 = dm$DC1, DC2 = dm$DC2))
+
+
+plot_umap(diff_map_endo,umap_elmir$sub_cluster[original_cluster=="ExE Mesoderm"]) 
+
+plot_umap(diff_map_endo,final_cluster_version_sub[original_cluster=="ExE Mesoderm"])
+
+```
+
+
+## CellPHONE DB input
+
+## Separate cluster
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+name_select=names(table(as.vector(umap_elmir$sub_cluster)[as.vector(umap_elmir$cluster_id)=="Hemogenic Endothelial Progenitors"]))
+name_select_full=c(name_select,"megakaryocytes","rare YS endoderm","ExE Mesoderm_0","ExE Mesoderm_1","Erythroblasts","YS Endoderm")
+
+cluster_cell=as.vector(umap_elmir$sub_cluster)
+cluster_cell[final_cluster_version_sub=="Hemogenic Endothelial Progenitors_4"]="megakaryocytes"
+cluster_cell[final_cluster_version_sub=="Endoderm_2"]="rare YS endoderm"
+cluster_cell[final_cluster_version_sub=="ExE Mesoderm_0"]="ExE Mesoderm_0"
+cluster_cell[final_cluster_version_sub=="ExE Mesoderm_1"]="ExE Mesoderm_1"
+
+cluster_cell_small=cluster_cell[cluster_cell%in%name_select_full]
+
+norm_elmir_small=norm_elmir_5_30[,cluster_cell%in%name_select_full]
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.table(norm_elmir_small[1:100,],file="norm_elmir_small.txt", quote = F)
+
+meta_data_cell=data.frame(colnames(norm_elmir_small),cluster_cell_small)
+colnames(meta_data_cell)=c("Cell","cell_type")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.table(meta_data_cell,file="meta_data_cell.txt", quote = F, row.names = F)
+
+
+```
+
+## unique hemogeni cluster
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+name_select=names(table(as.vector(umap_elmir$sub_cluster)[as.vector(umap_elmir$cluster_id)=="Hemogenic Endothelial Progenitors"]))
+name_select_full=c(name_select,"megakaryocytes","rare YS endoderm","ExE Mesoderm_0","ExE Mesoderm_1","Erythroblasts","YS Endoderm","Hemogenic Endothelial Progenitors")
+
+cluster_cell=as.vector(umap_elmir$sub_cluster)
+cluster_cell[as.vector(umap_elmir$sub_cluster)%in%name_select]="Hemogenic Endothelial Progenitors"
+cluster_cell[final_cluster_version_sub=="Hemogenic Endothelial Progenitors_4"]="megakaryocytes"
+cluster_cell[final_cluster_version_sub=="Endoderm_2"]="rare YS endoderm"
+cluster_cell[final_cluster_version_sub=="ExE Mesoderm_0"]="ExE Mesoderm_0"
+cluster_cell[final_cluster_version_sub=="ExE Mesoderm_1"]="ExE Mesoderm_1"
+
+
+cluster_cell_small=cluster_cell[cluster_cell%in%name_select_full]
+
+norm_elmir_small=norm_elmir_5_30[,cluster_cell%in%name_select_full]
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#write.table(norm_elmir_small[1:100,],file="norm_elmir_small.txt", quote = F)
+
+meta_data_cell=data.frame(colnames(norm_elmir_small),cluster_cell_small)
+colnames(meta_data_cell)=c("Cell","cell_type")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.table(meta_data_cell,file="meta_data_cell_general.txt", quote = F, row.names = F)
+
+write.csv(meta_data_cell,file="meta_data_cell_general.csv", row.names =F, quote=FALSE)
+
+```
+
+
+```{r }
+cluster_livelli=levels(factor(cluster_cell_small))
+mean_livelli=rep(list(0),length(cluster_livelli))
+for ( i in 1:length(cluster_livelli)){
+mean_single=apply(norm_elmir_5_30[,cluster_cell_small==cluster_livelli[i]],1,mean)
+mean_livelli[[i]]=mean_single>=0.1
+
+}
+summary_matrix=matrix(unlist(mean_livelli), ncol=length(mean_livelli), byrow=FALSE)
+
+filter_genes=apply(summary_matrix,1,function(x){
+  if (sum(x)>0){
+    return(TRUE)
+  }
+  else{
+    return(FALSE)
+  }
+})
+
+genes_cell=row.names(norm_elmir_5_30)[filter_genes]
+
+norm_elmir_small=norm_elmir_small[genes_cell,]
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#write.table(norm_elmir_small,file="norm_elmir_small.txt")
+norm_elmir_new=cbind(row.names(norm_elmir_small),norm_elmir_small)
+colnames(norm_elmir_new)=c("Gene",colnames(norm_elmir_small))
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.csv(norm_elmir_new,file="norm_elmir_new.csv", row.names = FALSE, quote= FALSE)
+#write.table(norm_elmir_new,file="norm_elmir_new.txt", row.names = FALSE, quote= FALSE)
+
+
+
+
+
+cluster_cell_small[cluster_cell_small=="Blood Progenitors"]="Blood_Progenitors"
+cluster_cell_small[cluster_cell_small=="Erythro-Myeloid Progenitors"]="Erythro_Myeloid_Progenitors"
+cluster_cell_small[cluster_cell_small=="Hemogenic Endothelium"]="Hemogenic_Endothelium"
+cluster_cell_small[cluster_cell_small=="Myeloid Progenitors"]="Myeloid_Progenitors"
+cluster_cell_small[cluster_cell_small=="rare YS endoderm"]="Rare_YS_Endoderm"
+cluster_cell_small[cluster_cell_small=="YS Endoderm"]="YS_Endoderm"
+meta_data_cell=data.frame(colnames(norm_elmir_small),cluster_cell_small)
+colnames(meta_data_cell)=c("Cell","cell_type")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#write.table(meta_data_cell,file="meta_data_cell.txt", row.names =F, quote=FALSE)
+write.csv(meta_data_cell,file="meta_data_cell.csv", row.names =F, quote=FALSE)
+```
+
+## Running cell phone db
+# cd /opt/anaconda3/envs/cpdb/bin
+```{r }
+## unique cluster
+./cellphonedb method statistical_analysis --counts-data gene_name --output-path /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/phone_db_output/out  /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/meta_data_cell.csv /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/norm_elmir_new.csv
+
+##common cluster
+./cellphonedb method statistical_analysis --counts-data gene_name --output-path /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/phone_db_output/out_common  /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/meta_data_cell_general.csv /Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/norm_elmir_new.csv
+
+```
+
+
+## Run Comunet
+```{r }
+path_comunet="/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R"
+path_csv="/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/phone_db_output"
+
+path_out="/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/phone_db_output/out"
+
+
+
+main.path <- "/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/phone_db_output"
+input.path <- paste0(main.path
+                    ,"/out_common") # CellPhoneDB output folder
+outputPath = paste0(main.path
+                    ,"/comunet_output_common")
+
+# Please make sure, the complex_input.csv and gene_input.csv are downloaded to your working directory
+complex_input <- paste0(main.path
+                        ,"/complex_input.csv"
+)
+gene_input <- paste0(main.path
+                     ,"/gene_input.csv"
+                     )
+```
+
+```{r }
+# complex input
+complex_input <- read.csv(complex_input)
+complex_input$complex_name <- gsub("_"
+                                   ," "
+                                   ,complex_input$complex_name)
+
+# gene input
+gene_input <- read.csv(gene_input)
+```
+
+```{r }
+# read in CellPhoneDB output
+CellPhoneDB_output <- read.csv(paste0(input.path
+                                      ,"/significant_means.txt")
+                               ,sep = "\t"
+                               ,check.names = F)
+
+# delete duplicates
+CellPhoneDB_output <- CellPhoneDB_output[!duplicated(CellPhoneDB_output$interacting_pair),]
+
+# add row names (interacting pairs)
+rownames(CellPhoneDB_output) <- CellPhoneDB_output$interacting_pair
+
+# transform 'receptor_a' colomn into boolean
+CellPhoneDB_output$receptor_a  <- sapply(CellPhoneDB_output$receptor_a
+                                         ,function(i){
+                                           if(i == "True") T else F
+                                         }
+)
+
+# transform 'receptor_b' colomn into boolean
+CellPhoneDB_output$receptor_b  <- sapply(CellPhoneDB_output$receptor_b
+                                         ,function(i){
+                                           if(i == "True") T else F
+                                         }
+)
+```
+
+
+```{r }
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/convert_CellPhoneDB_output.R")
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/utils.R")
+
+interactions <- convert_CellPhoneDB_output(CellPhoneDB_output = CellPhoneDB_output
+                                           ,complex_input = complex_input
+                                           ,gene_input = gene_input)
+print(str(interactions))
+
+
+
+
+```
+```{r }
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/lrp_clustering.R")
+
+lrp_clusters <- lrp_clustering(weight_array = interactions$weight_array
+                               ,ligand_receptor_pair_df = interactions$ligand_receptor_pair_df
+                               ,nodes = interactions$nodes
+                              )
+print(str(lrp_clusters))
+```
+```{r }
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/plot_cluster_heatmap.R")
+
+plot_cluster_heatmap(dissim_matrix = lrp_clusters$dissim_matrix
+                    ,lrp_clusters = lrp_clusters$clusters
+                    )
+```
+
+```{r }
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/plot_cluster_UMAP.R")
+
+plot_cluster_UMAP(ligand_receptor_pair_df = interactions$ligand_receptor_pair_df
+                  ,dissim_matrix = lrp_clusters$dissim_matrix
+                  ,lrp_clusters = lrp_clusters$clusters
+                 )
+```
+
+
+```{r }
+legend.gradient = function(pnts,cols=heat.colors(100),limits=c(0,1), title='Legend', ...){
+	pnts = try(as.matrix(pnts),silent=T)
+	if(!is.matrix(pnts)) stop("you must have a 4x2 matrix")
+	if(dim(pnts)[1]!=4 || dim (pnts)[2]!=2) stop ("Matrix must have dimensions of 4 rows and 2 columms")
+	if(length(cols)<2) stop("You must have 2 or more colors")
+	#break up the min and max into a number of values == length(cols)
+	yvals = seq(min(pnts[, 2]), max(pnts[, 2]), length=length(cols)+1)
+	#cycle through each of the yvals and create polygons
+	for (i in 1:length(cols)){  #create the polygon for that color
+		polygon(x=pnts[,1],y=c(yvals[i],yvals[i],yvals[i+1],yvals[i+1]),col=cols[i],border=F)
+	}
+	#add the text
+	text(max(pnts[,1]),min(pnts[,2]),labels=limits[1],pos=4,...)
+	text(max(pnts[,1]),max(pnts[,2]),labels=limits[2],pos=4,...)
+	text(min(pnts[,1]),max(pnts[,2]),labels=title,adj=c(0,-1),...)
+}
+```
+
+```{r }
+library(igraph)
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/plot_communication_graph.R")
+# plot communication plots for clusters (first three clusters)
+for(clusterNr in c(1:4)){
+    cluster  <-  paste("cluster"
+                      ,clusterNr)
+    plot_communication_graph(LRP = cluster
+                       ,weight_array = lrp_clusters$weight_array_by_cluster[,,cluster]
+                       ,ligand_receptor_pair_df = interactions$ligand_receptor_pair_df
+                       ,nodes = interactions$nodes
+                       ,is_cluster = T
+                      )
+}
+
+
+
+```
+
+
+```{r }
+
+source("/Users/gabriele.lubatti/Downloads/COMUNET-master/COMUNET/R/plot_lig_rec.R")
+# plot ligand-receptor pairs in each cluster (first three clusters)
+for(clusterNr in c(1:4)){
+    plot_lig_rec(cluster_of_interest = clusterNr
+                 ,lrp_clusters = lrp_clusters$clusters
+                 ,ligand_receptor_pair_df = interactions$ligand_receptor_pair_df
+                 ,node_label_cex = 0.5
+          )
+}
+```
+
+
+
+#ExE mesoderm spatial origin
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+
+#ExE Mesoderm_0
+#ExE Mesoderm_1
+
+#origin_space
+df=data.frame(final_cluster_version_sub[final_cluster_version_sub=="ExE Mesoderm_0"|final_cluster_version_sub=="ExE Mesoderm_1"],origin_space[final_cluster_version_sub=="ExE Mesoderm_0"|final_cluster_version_sub=="ExE Mesoderm_1"])
+colnames(df)=c("cluster","origin_space")
+p<-ggplot(df, aes(x=cluster,y=origin_space, fill=origin_space)) +
+  geom_bar(stat="identity")+theme_minimal()
+p
+```
+
+
+```{r}
+
+barplot_cell_cycle=function(cell_cycle,cluster,title,fraction=TRUE){
+dfForPlot <- data.frame(Phases =cell_cycle
+                                ,clu =cluster)
+
+if(fraction==TRUE){
+pnm <-ggplot(dfForPlot, aes(y=cell_cycle,x=cluster))+geom_bar( aes(fill = cell_cycle,y = (..count..)/sum(..count..)),position="fill")+ ggtitle(title)+ylab("Fraction of cells")+xlab("Cluster")+labs(fill="Batch annotation")+theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1,size=6)) 
+pnm}
+
+if(fraction!=TRUE){
+  pnm <-ggplot(dfForPlot, aes(y=cell_cycle,x=cluster))+geom_bar( aes(fill = cell_cycle,y = (..count..),position="fill"))+ ggtitle(title)+ylab("Number of cells")+xlab("Cluster")+labs(fill="Batch annotation")+theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1,size=6)) 
+pnm
+
+
+}
+return(list(pnm))}
+```
+
+
+##spatial origin ExE mesoderm
+```{r }
+
+library(ggplot2)
+barplot_cell_cycle(df[,2],df[,1],"ExE mesoderm - spatial origin",fraction = F)
+barplot_cell_cycle(df[,2],df[,1],"ExE mesoderm - spatial origin",fraction = T)
+
+
+
+
+
+```
+## Cell Cycle rare YS endoderm
+
+```{r}
+
+Detect_cell_cycle=function(raw_counts){
+ #readRDS(system.file("exdata", "mouse_cycle_markers.rds", package="scran"))
+ 
+#mm.pairs <- readRDS(system.file("exdata", "mouse_cycle_markers.rds", package="scran"))
+mm.pairs <- readRDS(system.file("exdata", "human_cycle_markers.rds", package="scran"))
+out1<-list(g1=mm.pairs$G1,g2=mm.pairs$G2M,s=mm.pairs$S)
+
+#raw_counts=raw_counts_pig_es_all_new_new
+
+cyc<-cyclone(as.matrix(raw_counts),out1)
+score_r<-cyc$scores
+g1_max<-score_r$g1>= 0.5 & score_r$g1>=score_r$g2
+
+g2_max<-score_r$g2>=0.5 & score_r$g2>score_r$g1
+
+s_max<-score_r$g1<0.5 & score_r$g2<0.5
+
+sequenza_2clc<-rep(0,length(colnames(raw_counts)))
+sequenza_2clc[g1_max]="G1"
+sequenza_2clc[s_max]="S"
+sequenza_2clc[g2_max]="G2M"
+
+
+
+provo_2clc=as.factor(sequenza_2clc)
+provo_2clc <- factor(provo_2clc, levels = c("G2M", "S", "G1"))
+return(provo_2clc)
+}
+
+
+
+
+```
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("raw_elmir_5_30.Rda")
+raw_counts=raw_elmir_5_30[,umap_elmir$sub_cluster=="YS Endoderm"]
+
+#convert_human=read.table("/Users/gabriele.lubatti/Desktop/Phd/Embryo_Organoids/R_analysis/human_gene_name_id.txt")
+
+human_id_name=read.table("/Users/gabriele.lubatti/Desktop/Phd/Embryo_Organoids/R_analysis/human_gene_name_id.txt",sep="\t")
+
+human_new=human_id_name[isUnique(human_id_name$V2),]
+row.names(human_new)=human_new$V2
+human_new=human_new[-1,]
+
+raw_counts=raw_counts[row.names(raw_counts)%in%human_new[,2],]
+
+human_id_forse=human_new[row.names(raw_counts),1]
+row.names(raw_counts)=human_id_forse
+
+
+cluster_label=final_cluster_version_sub[umap_elmir$sub_cluster=="YS Endoderm"]
+cluster_label[cluster_label=="Endoderm_2"]="Rare YS endo"
+cluster_label[cluster_label=="Endoderm_0"]="YS endo"
+
+cell_cycle_ys=Detect_cell_cycle(raw_counts)
+```
+
+```{r}
+barplot_cell_cycle(cell_cycle_ys,cluster_label,"YS endoderm - cell cyle ",fraction = F)
+barplot_cell_cycle(cell_cycle_ys,cluster_label,"YS endoderm - cell cyle ",fraction = T)
+
+
+```
+
+```{r}
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+new_cluster=rep("Other Clusters",length(final_cluster_version_sub))
+new_cluster[final_cluster_version_sub=="PGC"]="PGC"
+p=plot_umap(cordinate_umap,new_cluster)
+p[[1]]+scale_color_manual(values=c("grey","black"))
+```
+
+```{r }
+library(ggplot2)
+library(CIARA)
+
+
+
+
+
+method=factor(c("CIARA","CellSIUS","RaceID","GiniClust2","GiniClust3","SAM","FiRE","singleCellHaystack","Triku"),levels=c(c("CIARA","CellSIUS","RaceID","GiniClust2","GiniClust3","SAM","FiRE","singleCellHaystack","Triku")))
+df=data.frame(c(1,0.17,0.53,0.11,0.44,0.30,0,0,0),method)
+colnames(df)=c("MCC","Method")
+ggplot(data=df, aes(x=Method, y=MCC)) +
+  geom_bar(stat="identity", width=0.5)+ylim(0,1)+ggtitle("MCC score")
+#+scale_fill_manual(values=c(CIARA:::gg_color_hue(6)))
+```
+
+
+

@@ -1,0 +1,1049 @@
+---
+title: "mouse_esc_comparison"
+author: "Gabriele Lubatti"
+date: "10/22/2021"
+output: html_document
+---
+
+```{r }
+gc()
+rm(list=ls())
+library(Seurat)
+library(slingshot, quietly = FALSE)
+library(ggplot2)
+library(destiny)
+library(SingleCellExperiment)
+library(gam)
+library(tradeSeq)
+library(umap)
+library(dynamicTreeCut)
+library(ComplexHeatmap)
+library(circlize)
+library(Seurat)
+library(EntropyMixingR)
+```
+```{r }
+Test_Fisher=function(entropy_cluster,method_cluster){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+for (i in 1:length(level)){
+  set_2=names(entropy_cluster)[entropy_cluster==level[i]]
+set_all=colnames(norm_counts_ane_24_update)
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+
+```
+
+```{r }
+Function_fisher=function(a,b,c){
+matrice=matrix(c(sum(c[c%in%a]%in%c[c%in%b]),sum(c[c%in%a]%in%c[!c%in%b]),sum(c[!c%in%a]%in%c[c%in%b]),sum(c[!c%in%a]%in%c[!c%in%b])),nrow=2,ncol=2,byrow = T)
+#Fisher test
+fisher.test(matrice)
+}
+```
+
+```{r }
+white_black_marker=function(cluster_race_entropy,single_cluster,norm_race,marker_list,soglia=1){
+  
+  white_black_7=apply(norm_race[marker_list[names(marker_list)==single_cluster],],1,function(x){
+  mean_one=median(x[cluster_race_entropy==single_cluster])
+  mean_different=rep(0,length(levels(factor(cluster_race_entropy[cluster_race_entropy!=single_cluster]))))
+  for ( i in 1:length(levels(factor(cluster_race_entropy[cluster_race_entropy!=single_cluster])))){
+  mean_different[i]=median(x[cluster_race_entropy==levels(factor(cluster_race_entropy[cluster_race_entropy!=single_cluster]))[i]])}
+  
+  if (mean_one>soglia&sum(mean_different)==0){
+    return(TRUE)
+  }
+  else{return(FALSE)}
+})
+  return(white_black_7)
+}
+
+```
+```{r}
+find_jacardi=function(cluster_new,cluster_old,norm_matrix,single_new,single_old){
+unione=union(colnames(norm_matrix)[cluster_new==single_new],colnames(norm_matrix)[cluster_old==single_old])
+intersezione=intersect(colnames(norm_matrix)[cluster_new==single_new],colnames(norm_matrix)[cluster_old==single_old])
+
+jacardi=length(intersezione)/length(unione)
+print(jacardi)
+return(jacardi)
+}
+```
+```{r}
+Cluster_analysis_integrate_rare_update=function (raw_counts, batch_name_1, resolution, neighbors, max_dimension, 
+    feature_genes = NULL) 
+{
+    batch_1 <- CreateSeuratObject(counts = raw_counts, project = batch_name_1)
+    batch_1 <- subset(batch_1, subset = nFeature_RNA > 0)
+    batch_1 <- NormalizeData(batch_1, verbose = FALSE)
+    batch_1 <- FindVariableFeatures(batch_1, selection.method = "vst", 
+        nfeatures = 2000)
+    batch_combined = batch_1
+    #batch_combined <- ScaleData(batch_combined, verbose = FALSE)
+    batch_combined$frac_mito=frac_mito
+batch_combined$frac_ribo=frac_ribo
+batch_combined <- ScaleData(batch_combined, verbose = FALSE,vars.to.regress = c("nCount_RNA","frac_mito","frac_ribo"))
+    batch_combined <- RunPCA(batch_combined, npcs = max_dimension, 
+        verbose = FALSE, features = feature_genes)
+    batch_combined = RunUMAP(batch_combined, reduction = "pca", 
+        dims = 1:20, set.seed = 42)
+    batch_combined <- FindNeighbors(batch_combined, reduction = "pca", 
+        dims = 1:max_dimension, k.param = neighbors)
+    batch_combined <- FindClusters(batch_combined, resolution = resolution)
+    return(batch_combined)
+}
+```
+
+```{r }
+Plot_balons=function(norm_counts_ane_24,final_cluster_version_sub,marker_plot_day_24_first_plot,max_number,total_cells,max_size=5,text_size=7){
+  #norm_counts_ane_24=norm_rabbit_es_all_new
+  #final_cluster_version_sub=cluster_plot
+  #marker_plot_day_24_first_plot=final_markers_human[names(final_markers_human)==9]
+  #max_number=10
+  #total_cells=length(cluster_plot)
+  #max_size=5
+livelli=levels(factor(final_cluster_version_sub))
+all_markers_plot=rep(list(0),length(livelli))
+all_markers=rep(list(0),length(livelli))
+for ( i in 1:length(livelli)){
+  genes_4_0=marker_plot_day_24_first_plot[(names(marker_plot_day_24_first_plot)==livelli[i])]
+  if(length(genes_4_0)>0){
+  genes_4_0=genes_4_0[1:max_number]
+  all_markers[[i]]=genes_4_0
+genes_4_0_plot=paste(livelli[i],genes_4_0,sep="_")
+all_markers_plot[[i]]=genes_4_0_plot
+  }
+  }
+
+all_markers=lapply(all_markers, function(x) {x[x!=0]})
+all_markers_plot=lapply(all_markers_plot, function(x) {x[x!=0]})
+
+all_markers_values=rep(list(0),length(livelli))
+for ( i in 1:length(livelli)){
+  gene_values_0=apply(norm_counts_ane_24[unlist(all_markers, use.names=FALSE),final_cluster_version_sub==livelli[i]],1,mean)
+  all_markers_values[[i]]=gene_values_0
+}
+#values=rep(list(0),length(livelli))
+#for ( i in 1:length(livelli)){
+  #valore=sum(final_cluster_version_sub==livelli[i])/total_cells
+  #values[[i]]=rep(valore,length(unlist(all_markers)))
+#}
+
+values=rep(list(0),length(livelli))
+for ( i in 1:length(livelli)){
+  valore=apply(norm_counts_ane_24[unlist(all_markers, use.names=FALSE),final_cluster_version_sub==livelli[i]],1,function(x){sum(x>1)/length(x)})
+  values[[i]]=valore
+}
+
+cluster_label_all=rep(list(0),length(livelli))
+for ( i in 1:length(livelli)){
+  cluster_label_all[[i]]=rep(livelli[i],length(unlist(all_markers)))
+}
+
+
+all_markers_plot=unlist(all_markers_plot)
+cluster_label_all=unlist(cluster_label_all)
+values=unlist(values)
+all_markers_values=unlist(all_markers_values)
+balloon_melted=data.frame(all_markers_plot,cluster_label_all,values)
+colnames(balloon_melted)=c("genes_plot","cluster_label_all","values")
+
+p <- ggplot(balloon_melted, aes(x =cluster_label_all, y = as.character(genes_plot))) 
+p+geom_point( aes(size=values,colour=as.numeric(all_markers_values)))+theme(panel.background=element_blank(), panel.border = element_rect(colour = "blue", fill=NA, size=3))+scale_size_area(max_size=max_size)+theme(text = element_text(size=text_size))+ scale_colour_gradient(low = "yellow", high = "black", na.value = NA)+labs(colour="Mean log2 norm expression",size="Value (fraction cells above 1 log2 norm counts)")+xlab("Cluster")+ylab("Markers")
+}
+```
+
+
+```{r }
+find_positive_cells=function(norm_elmir_5_30,geni_marker,threshold){
+
+logic_cell=apply(norm_elmir_5_30[geni_marker,],2,function(x){
+  
+  if (sum(x>threshold)==length(x))
+  {return(TRUE)}
+  else{return(FALSE)}
+})
+positive_cells=colnames(norm_elmir_5_30)[logic_cell]
+return(positive_cells)
+}
+
+
+
+```
+
+```{r }
+find_jacardi_new=function(cluster_new,norm_matrix,single_new,cells_positive){
+unione=union(colnames(norm_matrix)[cluster_new==single_new],cells_positive)
+intersezione=intersect(colnames(norm_matrix)[cluster_new==single_new],cells_positive)
+
+jacardi=length(intersezione)/length(unione)
+print(jacardi)
+return(jacardi)
+}
+```
+
+
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("ane_24.Rda")
+```
+
+```{r }
+#load("/Users/gabriele.lubatti/Desktop/Phd/ciara_of_mixing_library/github_january_2022/ane_dec#ember_2021.Rda")
+```
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+#geni_top=row.names(result)[result[,1]==0&result[,2]<0.0001]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+```{r }
+background=row.names(result)
+```
+
+
+
+
+```{r}
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load("norm_counts_ane_24_update.Rda")
+load(file="raw_counts_ane_24_update.Rda")
+load(file="knn_matrix_ane_24_update.Rda")
+load(file="cordinate_umap_24_update.Rda")
+load(file="final_cluster_version_sub.Rda")
+load("initial_cluster_24_2.Rda")
+```
+```{r}
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+#write.csv(norm_counts_ane_24_update,file="norm_counts_ane_24_update.csv")
+```
+
+```{r }
+
+frac_mito=apply(raw_counts_ane_24_update,2,function(x){
+  #return(sum(x[grep("MT-",row.names(raw_counts))])/sum(x))
+  return(sum(x[grep("mt-",row.names(raw_counts_ane_24_update))])/sum(x))
+  
+  
+  
+})
+
+
+frac_ribo=apply(raw_counts_ane_24_update,2,function(x){
+  #frac_ribo_s=x[grep("RPS",row.names(raw_counts))]
+  #frac_ribo_l=x[grep("RPL",row.names(raw_counts))]
+  frac_ribo_s=x[grep("Rps",row.names(raw_counts_ane_24_update))]
+  frac_ribo_l=x[grep("Rpl",row.names(raw_counts_ane_24_update))]
+  frac_ribo_all=c(frac_ribo_s,frac_ribo_l)
+  return(sum(frac_ribo_all)/sum(x))
+
+
+
+})
+```
+
+```{r}
+mayra_seurat_24_update=Cluster_analysis_integrate_rare_update(raw_counts_ane_24_update,"Mayra_data_24",0.1,5,30)
+```
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="marker_all_day_24_first.Rda")
+```
+
+
+
+## Yes first approach
+## Top 1
+```{r}
+
+
+
+top_1=white_black_markers(final_cluster_version_sub,"1-step_2",norm_counts_ane_24_update,marker_all_day_24_first,1)
+top_1=names(top_1)[top_1]
+
+
+mean_top_1=apply(norm_counts_ane_24_update[top_1,final_cluster_version_sub=="1-step_2"],1,mean)
+mean_top_1=sort(mean_top_1,decreasing = T)
+
+top_1=names(mean_top_1)[1:4]
+names(top_1)=rep("1-step_2",length(top_1))
+
+
+
+plot_balloon_marker(norm_counts_ane_24_update,final_cluster_version_sub,top_1,length(top_1),max_size=5,text_size=10)
+
+
+
+
+```
+```{r}
+
+
+
+top_2=white_black_markers(final_cluster_version_sub,"2-step_2",norm_counts_ane_24_update,marker_all_day_24_first,1)
+top_2=names(top_2)[top_2]
+
+
+mean_top_2=apply(norm_counts_ane_24_update[top_2,final_cluster_version_sub=="2-step_2"],1,mean)
+mean_top_2=sort(mean_top_2,decreasing = T)
+
+top_2=names(mean_top_2)[1:4]
+names(top_2)=rep("2-step_2",length(top_2))
+
+#Plot_balons(norm_counts_ane_24_update,final_cluster_version_sub,top_2,length(top_2),length(final_cluster_version_sub),max_size=5,text_size=10)
+
+plot_balloon_marker(norm_counts_ane_24_update,final_cluster_version_sub,top_2,length(top_2),max_size=5,text_size=10)
+
+
+
+
+```
+
+
+## CellSIUS with fine tune on parameters
+```{r}
+library(CellSIUS)
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/ane_data")
+load("CellSIUS_ane.Rda")
+cluster_id=initial_cluster_24_2
+names(cluster_id)=colnames(norm_counts_ane_24_update)
+ Final_Clusters = CellSIUS_final_cluster_assignment(CellSIUS.out=CellSIUS_ane, group_id=cluster_id, min_n_genes = 3)
+ 
+ 
+
+```
+
+```{r }
+plot_umap(cordinate_umap_24_update,Final_Clusters)
+plot_umap(cordinate_umap_24_update,cluster_id)
+```
+
+```{r }
+geni_marker=top_1
+positive_cells_1=find_positive_cells(norm_counts_ane_24_update,threshold=0,geni_marker)
+
+for (i in levels(factor(Final_Clusters))){
+print(i)
+bo=find_jacardi_new(Final_Clusters,norm_counts_ane_24_update,i,positive_cells_1)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+
+for (i in levels(factor(final_cluster_version_sub))){
+print(i)
+bo=find_jacardi_new(final_cluster_version_sub,norm_counts_ane_24_update,i,positive_cells_1)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+```
+
+```{r }
+geni_marker=top_2
+positive_cells_2=find_positive_cells(norm_counts_ane_24_update,threshold=0,geni_marker)
+
+for (i in levels(factor(Final_Clusters))){
+print(i)
+bo=find_jacardi_new(as.vector(Final_Clusters),norm_counts_ane_24_update,i,positive_cells_2)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+```
+
+
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_48.Rda')
+load("knn_matrix_ane_48.Rda")
+load("norm_counts_ane_48.Rda")
+load("entropy_ane.Rda")
+cordinate_umap_48=as.data.frame(Embeddings(mayra_seurat_48, reduction = "umap")[, 1:2])
+```
+
+
+
+```{r }
+Plot_umap(cordinate_umap_48,cluster_number_48)
+```
+
+
+
+
+
+## Old method
+```{r }
+
+for (i in levels(factor(Final_Clusters))){
+jacardi=find_jacardi(final_cluster_version_sub,Final_Clusters,norm_counts_ane_24_update,"1-step_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+for (i in levels(factor(Final_Clusters))){
+jacardi=find_jacardi(final_cluster_version_sub,Final_Clusters,norm_counts_ane_24_update,"2-step_2",i)
+  print(paste0(i,"-",jacardi))
+}
+```
+
+
+
+
+
+## FiRE
+
+```{r }
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/FIRE")
+source('preprocess.R')
+
+```
+
+```{r }
+data=t(raw_counts_ane_24_update)
+
+genes <- colnames(data)#It can be replaced with original gene names
+
+data_mat <- list(mat=data, gene_symbols=genes)
+
+preprocessedList <- ranger_preprocess(data_mat)
+preprocessedData <- as.matrix(preprocessedList$preprocessedData)
+
+model <- new(FiRE::FiRE, 100, 50, 1017881, 5489, 0)
+
+model$fit(preprocessedData)
+
+score <- model$score(preprocessedData)
+q3 <- quantile(score, 0.75)
+iqr <- IQR(score)
+th <- q3 + (1.5*iqr)
+indIqr <- which(score >= th)
+predictions <- integer(dim(data)[1])
+predictions[indIqr] <- 1 
+
+#model$b
+```
+
+```{r }
+cluster_plot=predictions
+cluster_plot[predictions==1]="Rare cells"
+cluster_plot[predictions==0]="NO Rare cells"
+Plot_umap(cordinate_umap_24_update,cluster_plot)
+```
+
+
+
+```{r }
+#predictions <- integer(dim(data)[1])
+#predictions[indIqr] <- 1 
+names(predictions)=colnames(norm_counts_ane_24_update)
+set_1=names(predictions)[predictions==1]
+final_cluster_version_sub_new=final_cluster_version_sub
+names(final_cluster_version_sub_new)=colnames(norm_counts_ane_24_update)
+
+
+test=Test_Fisher(final_cluster_version_sub_new,predictions)
+```
+
+```{r }
+test[[2]][test[[1]]<=0.05&test[[2]]>2]
+```
+
+## New part
+
+```{r }
+
+positive_cells_pgc=find_positive_cells(norm_counts_ane_24_update,threshold=0,top_1)
+positive_cells_other=colnames(norm_counts_ane_24_update)[!colnames(norm_counts_ane_24_update)%in%positive_cells_pgc]
+
+predictions_small_pgc=predictions[names(predictions)%in%positive_cells_pgc]
+predictions_small_other=predictions[names(predictions)%in%positive_cells_other]
+
+predictions_small_all=c(predictions_small_pgc,predictions_small_other)
+
+cluster_pgc=rep("Positive PGC",length(positive_cells_pgc))
+cluster_other=rep("OTHER",length(positive_cells_other))
+cluster_all=c(cluster_pgc,cluster_other)
+
+
+names(cluster_all)=c(positive_cells_pgc,positive_cells_other)
+
+
+test=Test_Fisher(cluster_all,predictions_small_all)
+```
+
+```{r }
+test[[2]][test[[1]]<=0.05&test[[2]]>2]
+```
+
+
+## END New part
+
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/ane_data")
+cluster_fire=cluster_plot
+names(cluster_fire)=colnames(norm_counts_ane_24_update)
+save(cluster_fire,file="cluster_fire.Rda")
+```
+
+
+
+## Comparison with GiniClust
+
+## Try latest version
+## https://github.com/rdong08/GiniClust3
+
+## Giniclust2 
+
+
+
+```{r }
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/GiniClust2-master/risultato_ane_24/results")
+norm_filter=read.csv('experiment_name_gene.expression.matrix.normCounts.filtered.csv')
+vedo=load("experiment_name_StatisticsTable_afterLOESS.RData")
+#Genelist.top_pvalue
+#ExprM.Stat2
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/GiniClust2-master/risultato_ane_24/results")
+final_geni=load("experiment_name_GeneList_final.RData")
+#GeneList.final
+load("experiment_name_GiniClustering.RData")
+#P_G
+
+tsne_gini=read.csv("experiment_name_Rtnse_Fano_coord2.csv")
+
+vedo=load("experiment_name_FinalClustering.RData")
+#finalCluster
+```
+
+
+```{r }
+plot_umap(tsne_gini,finalCluster)
+```
+
+
+
+```{r }
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="marker_all_day_24_first.Rda")
+
+sum(as.vector(marker_all_day_24_first)[names(marker_all_day_24_first)=="2-step_2"]%in%GeneList.final)
+sum(as.vector(marker_all_day_24_first)[names(marker_all_day_24_first)=="1-step_2"]%in%GeneList.final)
+
+```
+
+
+```{r }
+library(UpSetR)
+listInput <- list(entropy_genes=ciara_genes,gini_genes=GeneList.final)
+
+upset(fromList(listInput), order.by = "freq")
+
+```
+
+
+```{r }
+library(UpSetR)
+listInput <- list(marker_2_step_2=as.vector(marker_all_day_24_first)[names(marker_all_day_24_first)=="2-step_2"],marker_1_step_2=as.vector(marker_all_day_24_first)[names(marker_all_day_24_first)=="1-step_2"],gini_genes=GeneList.final)
+
+upset(fromList(listInput), order.by = "freq")
+
+
+
+
+```
+
+
+## Giniclust3 from python script giniclust3
+
+
+## Gini starting from raw counts (correct)
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+final_gini=read.table("all_gini_ane.txt")
+final_gini=final_gini$V1
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+only_gini=read.table("only_gini_ane.txt")
+only_gini=only_gini$V1
+
+
+Plot_umap(cordinate_umap_24_update,final_gini)
+Plot_umap(cordinate_umap_24_update,only_gini)
+```
+
+
+```{r }
+geni_marker=top_1
+positive_cells=find_positive_cells(norm_counts_ane_24_update,threshold=0,geni_marker)
+
+for (i in levels(factor(final_gini))){
+print(i)
+bo=find_jacardi_new(as.vector(final_gini),norm_counts_ane_24_update,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+table(final_gini[final_cluster_version_sub=="1-step_2"])
+table(final_gini[final_cluster_version_sub=="2-step_2"])
+```
+
+```{r }
+geni_marker=top_2
+positive_cells=find_positive_cells(norm_counts_ane_24_update,threshold=0,geni_marker)
+
+for (i in levels(factor(final_gini))){
+print(i)
+bo=find_jacardi_new(as.vector(final_gini),norm_counts_ane_24_update,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+```
+
+```{r }
+for (i in levels(factor(final_gini))){
+jacardi=find_jacardi(final_cluster_version_sub,final_gini,norm_counts_ane_24_update,"1-step_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(final_gini))){
+jacardi=find_jacardi(final_cluster_version_sub,final_gini,norm_counts_ane_24_update,"2-step_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+
+```
+
+
+
+
+# singleCellHaystack
+
+# Standard parameter
+```{r}
+library(singleCellHaystack)
+set.seed(123)
+dat.pca=as.data.frame(Embeddings(mayra_seurat_24_update, reduction = "pca"))
+median.per.gene <- apply(norm_counts_ane_24_update,1,median) # get the median read count per gene
+dat.detection <- norm_counts_ane_24_update > median.per.gene
+res.pc30 <- haystack(x = dat.pca, detection = dat.detection , method = "highD")
+
+
+show_result_haystack(res.haystack = res.pc30, n = 5)
+
+
+top_values=row.names(res.pc30$results)[order(res.pc30$results$log.p.adj,decreasing = F)]
+# plotting detection of Trim10
+
+plot_gene_haystack(x = cordinate_umap_24_update, gene = top_values[1], expression = dat.detection)
+plot_gene_haystack(x = cordinate_umap_24_update, gene = top_values[2], expression = dat.detection)
+plot_gene_haystack(x = cordinate_umap_24_update, gene = top_values[3], expression = dat.detection)
+plot_gene_haystack(x = cordinate_umap_24_update, gene = top_values[4], expression = dat.detection)
+
+
+
+
+```
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="marker_all_day_24_first.Rda")
+```
+
+
+
+```{r}
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=markers_cluster
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+test=Test_Fisher(final_cluster_version_sub,marker_all_day_24_first,top_values[1:1000])
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>1]
+
+test[[2]][test[[1]]<0.05]
+```
+
+
+```{r}
+which(top_values%in%top_1)
+which(top_values%in%top_2)
+```
+
+
+
+```{r}
+haystack_gene=top_values[1:1000]
+
+listInput <- list(marker_2_step_2=as.vector(marker_all_day_24_first)[names(marker_all_day_24_first)=="2-step_2"],marker_1_step_2=as.vector(marker_all_day_24_first)[names(marker_all_day_24_first)=="1-step_2"],haystack_gene=haystack_gene)
+
+upset(fromList(listInput), order.by = "freq")
+
+listInput <- list(entropy_genes=ciara_genes,haystack_genes=haystack_gene)
+
+upset(fromList(listInput), order.by = "freq")
+
+
+
+```
+
+
+```{r}
+library(ggplot2)
+res.top <- show_result_haystack(res.haystack = res.pc30, n = 1000)
+# cluster DEGs by their expression pattern in the 2D plot
+genes.top <- row.names(res.top)
+res.hc <- hclust_haystack(x = cordinate_umap_24_update, genes = genes.top, detection = dat.detection)
+res.hc.clusters <- cutree(res.hc, k=5)
+table(res.hc.clusters)
+
+pl <- lapply(1:5, function(cluster) {
+  gene.set <- names(res.hc.clusters)[res.hc.clusters==cluster]
+  plot.title <- paste0("Cluster ", cluster)
+  p <- plot_gene_set_haystack(x = cordinate_umap_24_update, genes = gene.set, detection = dat.detection)
+  p + ggtitle(plot.title) + theme(legend.title = element_text(size = 8))
+})
+pl
+
+```
+
+```{r }
+listInput <- list(marker_2_step_2=as.vector(marker_all_day_24_first)[names(marker_all_day_24_first)=="2-step_2"],marker_1_step_2=as.vector(marker_all_day_24_first)[names(marker_all_day_24_first)=="1-step_2"],haystack_gene_clu_4=names(res.hc.clusters)[res.hc.clusters==4],haystack_gene_clu_3=names(res.hc.clusters)[res.hc.clusters==3])
+
+upset(fromList(listInput), order.by = "freq")
+```
+
+##SAM
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="marker_all_day_24_first.Rda")
+
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="final_cluster_version_sub.Rda")
+```
+
+
+
+```{r}
+sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sorted_sam_genes_mouse.csv")
+sam_genes=sam_genes$X0
+```
+
+
+```{r}
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=markers_cluster
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+test=Test_Fisher(final_cluster_version_sub,marker_all_day_24_first,sam_genes[1:1000])
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>1]
+
+
+```
+##SAM new with clustering
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="marker_all_day_24_first.Rda")
+
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="final_cluster_version_sub.Rda")
+
+
+sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_rank_genes_mouse.csv")
+sam_genes=sam_genes$X0
+
+sam_cluster=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_clustering_mouse.csv")
+sam_cluster=sam_cluster$louvain_clusters
+
+```
+
+```{r}
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=markers_cluster
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+test=Test_Fisher(final_cluster_version_sub,marker_all_day_24_first,sam_genes[1:1000])
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>1]
+
+
+```
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+#load("norm_counts_ane_24_update.Rda")
+#load(file="raw_counts_ane_24_update.Rda")
+#load(file="knn_matrix_ane_24_update.Rda")
+load(file="cordinate_umap_24_update.Rda")
+plot_umap(cordinate_umap_24_update,sam_cluster)
+
+```
+
+# Triku
+```{r}
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load("norm_counts_ane_24_update.Rda")
+load(file="raw_counts_ane_24_update.Rda")
+load(file="knn_matrix_ane_24_update.Rda")
+load(file="cordinate_umap_24_update.Rda")
+load(file="final_cluster_version_sub.Rda")
+load("initial_cluster_24_2.Rda")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="marker_all_day_24_first.Rda")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+#write.table(t(raw_counts_ane_24_update),file="raw_counts_ane_24_update.txt")
+
+
+```
+
+## Comparison with Triku
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+triku_gene_name=read.table("triku_gene_names_ane.txt")
+triku_gene_name=triku_gene_name$V1
+triku_gene_all=read.table("triku_gene_ane.txt")
+triku_distance=triku_gene_all$V3
+triku_gene=triku_gene_all$V5
+
+#triku_gene_name=triku_gene_name[triku_gene=="True"]
+
+names(triku_distance)=triku_gene_name
+
+
+final_sort_triku=names(triku_distance)[order(triku_distance,decreasing = T)]
+
+test=Test_Fisher(final_cluster_version_sub,marker_all_day_24_first,final_sort_triku[1:1000])
+
+
+#Col4a1, Col4a2, Lama1 and Dab2
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>1]
+```
+```{r }
+paper_gene=c("Col4a1", "Col4a2", "Lama1","Dab2","Fbp2")
+p <- list()
+for(i in paper_gene[1:5]) {
+  q <- plot_gene(norm_counts_ane_24_update, cordinate_umap_24_update, i, i)
+  p <- list(p, q)
+}
+p
+```
+
+
+
+```{r }
+p <- list()
+for(i in final_sort_triku[1:4]) {
+  q <- plot_gene(norm_counts_ane_24_update, cordinate_umap_24_update, i, i)
+  p <- list(p, q)
+}
+p
+```
+```{r }
+grep("Gata4",final_sort_triku)
+grep("Gata6",final_sort_triku)
+grep("Zscan4",final_sort_triku)
+
+which(final_sort_triku%in%paper_gene)
+
+```
+```{r }
+#human_data_triku <- cluster_analysis_integrate_rare(raw_counts_ane_24_update, "Human_data", 0.1, 3, 30, feature_genes = final_sort_triku[1:2000])
+
+#plot_umap(cordinate_umap_24_update, human_data_triku$RNA_snn_res.0.1)
+
+
+#find_resolution(human_data_triku, seq(0.01,0.5,0.1))
+```
+
+## Race ID 3
+
+```{r }
+library(RaceID)
+sc <- SCseq(raw_counts_ane_24_update)
+sc <- filterdata(sc,mintotal=100)
+fdata <- getfdata(sc)
+
+sc <- compdist(sc,metric="pearson")
+
+sc <- clustexp(sc,clustnr =5)
+```
+
+```{r }
+plotsaturation(sc,disp=FALSE)
+```
+
+
+
+```{r }
+sc <- clustexp(sc,cln=3,sat=FALSE)
+```
+
+```{r }
+sc <- findoutliers(sc)
+```
+
+```{r }
+
+sc <- compumap(sc)
+
+```
+
+
+```{r }
+plotexpmap(sc,"Gata6",logsc=TRUE,um=TRUE)
+
+plotexpmap(sc,"Zscan4c",logsc=TRUE,um=TRUE)
+
+plotexpmap(sc,"Zscan4a",logsc=TRUE,um=TRUE)
+
+plotexpmap(sc,'Fbp2',logsc=TRUE,um=TRUE)
+
+
+```
+
+
+```{r }
+Plot_umap(sc@umap,sc@cpart)
+```
+
+```{r }
+geni_marker=top_1
+positive_cells=find_positive_cells(norm_counts_ane_24_update,threshold=0,geni_marker)
+
+for (i in levels(factor(sc@cpart))){
+print(i)
+bo=find_jacardi_new(as.vector(sc@cpart),norm_counts_ane_24_update,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+```
+
+```{r }
+geni_marker=top_2
+positive_cells=find_positive_cells(norm_counts_ane_24_update,threshold=0,geni_marker)
+
+for (i in levels(factor(sc@cpart))){
+print(i)
+bo=find_jacardi_new(as.vector(sc@cpart),norm_counts_ane_24_update,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+```
+
+```{r }
+table(sc@cpart)
+```
+```{r }
+Plot_umap(cordinate_umap_24_update,sc@cpart)
+```
+
+
+
+
+```{r}
+for (i in levels(factor(sc@cpart))){
+jacardi=find_jacardi(final_cluster_version_sub,sc@cpart,norm_counts_ane_24_update,"1-step_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(sc@cpart))){
+jacardi=find_jacardi(final_cluster_version_sub,sc@cpart,norm_counts_ane_24_update,"2-step_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+```
+
+
+
+
+
+```{r}
+#vedo=read.table("/Users/gabriele.lubatti/Downloads/E-MTAB-8869.sdrf.txt",sep="\t",header = T)
+```
+
+
+
+
+

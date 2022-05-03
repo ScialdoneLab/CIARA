@@ -19,7 +19,7 @@ You can install the released version of CIARA from [CRAN](https://CRAN.R-project
 
 And the development version from [GitHub](https://github.com/) with:
 
-```devtools::install_github("ScialdoneLab/CIARA/master",auth_token="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",ref="master")```.
+```devtools::install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")```.
 
 ## Getting started 
 The main functions of the package are **CIARA_gene** and **CIARA**

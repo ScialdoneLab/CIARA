@@ -11,7 +11,7 @@ CIARA_gene(
   p_value = 0.001,
   odds_ratio = 2,
   local_region = 1,
-  approximation = FALSE
+  approximation
 )
 }
 \arguments{

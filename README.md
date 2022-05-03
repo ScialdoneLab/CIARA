@@ -27,7 +27,7 @@ The main functions of the package are **CIARA_gene** and **CIARA**
 
 ### CIARA_gene
 
-```CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, odds_ratio=2, local_region = 1, approximation = FALSE)```
+```CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, odds_ratio=2, local_region = 1, approximation)```
 requires as input:
 
 1. **norm_matrix**: Norm count matrix (n_genes x n_cells)
@@ -43,7 +43,7 @@ The output of **CIARA_gene**  is a list with one element corresponding to the p 
 
 ### CIARA
 
-```CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2,local_region = 1, approximation = FALSE) ```
+```CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2,local_region = 1, approximation) ```
 requires as input:
 
 1. **norm_matrix**: Norm count matrix (n_genes x n_cells)

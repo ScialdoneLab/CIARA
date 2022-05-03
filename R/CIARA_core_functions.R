@@ -86,7 +86,7 @@ get_background_full <- function(norm_matrix, threshold = 1, n_cells_low = 3, n_c
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/fisher.test}
 #' @export CIARA_gene
-CIARA_gene <- function(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation = FALSE) {
+CIARA_gene <- function(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation) {
 
 
 
@@ -96,7 +96,10 @@ CIARA_gene <- function(norm_matrix, knn_matrix, gene_expression, p_value = 0.001
   binary_expression[gene_expression > median_genes] <- 1
   binary_expression[gene_expression <= median_genes] <- 0
 
+  if (!(is.logical(approximation))) {
+    stop ("approximation must be a logical value. Try with approximation = TRUE or approximation = FALSE")
 
+  }
   if (approximation == FALSE) {
     sub_feature <- colnames(norm_matrix)
     message("approximation == FALSE")
@@ -163,7 +166,13 @@ CIARA_gene <- function(norm_matrix, knn_matrix, gene_expression, p_value = 0.001
 #'
 #'
 #' @export CIARA
-CIARA <- function(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation = FALSE) {
+CIARA <- function(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation) {
+
+  if (!(is.logical(approximation))) {
+    stop ("approximation must be a logical value. Try with approximation = TRUE or approximation = FALSE")
+
+  }
+
   run_loop_genes = function(i) {
     if (!all(background %in% row.names(norm_matrix))) {
       stop("Some background genes are not present in norm matrix")

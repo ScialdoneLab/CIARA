@@ -141,13 +141,13 @@ load("raw_counts_ane_24_update.Rda")
 
 
 ```{r }
-#load("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project/final_cluster_version_sub.Rda")
+load("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project/final_cluster_version_sub.Rda")
 ```
 
 
 ```{r }
 mayra_seurat_24=cluster_analysis_integrate_rare(raw_counts_ane_24_update,"Mayra_data_24",0.1,5,30)
-a=Plot_qc_cluster(mayra_seurat_24,as.vector(mayra_seurat_24$RNA_snn_res.0.1),"mt-","Rps","Rpl")
+#a=Plot_qc_cluster(mayra_seurat_24,as.vector(mayra_seurat_24$RNA_snn_res.0.1),"mt-","Rps","Rpl")
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_figure_3/sup_fig_3_c.pdf")
 a[[1]]
 dev.off()
@@ -202,19 +202,28 @@ knn_matrix_ane_24_update=as.matrix(mayra_seurat_24_update@graphs$RNA_nn)
 cordinate_umap_24_update=as.data.frame(Embeddings(mayra_seurat_24_update, reduction = "umap")[, 1:2])
 ```
 
+```{r }
+find_resolution(mayra_seurat_24_update,seq(0.1,0.5,0.1))
+```
 
+```{r }
+FindClusters(mayra_seurat_24_update, resolution = 0.2)
+```
 
 ```{r}
 
 initial_cluster_24=as.vector(mayra_seurat_24_update$RNA_snn_res.0.1)
-mayra_seurat_24_update=FindClusters(mayra_seurat_24_update,resolution = 0.2)
-initial_cluster_24_2=as.vector(mayra_seurat_24_update$RNA_snn_res.0.2)
+
+#initial_cluster_24_2=as.vector(mayra_seurat_24_update$RNA_snn_res.0.2)
 
 ```
 ```{r}
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_3/fig_3_a.pdf")
 plot_umap(cordinate_umap_24_update,initial_cluster_24)
 dev.off()
+
+mayra_seurat_24_update=FindClusters(mayra_seurat_24_update,resolution = 0.2)
+plot_umap(cordinate_umap_24_update,mayra_seurat_24_update$RNA_snn_res.0.2)
 ```
 
 ## Start with approx = TRUE and approx = FALSE
@@ -299,6 +308,24 @@ plot_genes_sum(cordinate_umap_24_update,norm_counts_ane_24_update,(ciara_genes),
 
 
 
+```{r }
+plot_interactive_here=function (coordinate_umap, color, text, min_x = NULL, max_x = NULL, 
+    min_y = NULL, max_y = NULL) 
+{
+    if (!requireNamespace("plotly", quietly = TRUE)) {
+        stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
+    }
+    colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
+    fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
+        y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
+        marker = list(size = 5, width = 2), text = ~text, hoverinfo = "text",colors='Blues')
+    if (!is.null(min_x)) {
+        fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
+            max_x)), yaxis = list(range = c(min_y, max_y)))
+    }
+    return(fig)
+}
+```
 
 
 ```{r }
@@ -310,10 +337,28 @@ norm_counts_small = apply(norm_counts_ane_24_update[(ciara_genes), ],
     gene_sum = apply(norm_counts_small, 1, sum)
     
     
+    
 genes_name_text=selection_localized_genes(norm_counts_ane_24_update,ciara_genes,min_number_cells=4,max_number_genes=4)
 plot.elmir=cordinate_umap_24_update
 colnames(plot.elmir)=c("UMAP_1","UMAP_2")
 library(plotly)
+plot_interactive_here(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+
+scale_colour_gradient(low = "white", high = "blue")
+
+colorscale='YlOrRd'
+```
+## Don't run
+```{r }
+#plot_interactive
+gene_sum=rep(0,length(genes_name_text))
+for (i in 1:length(genes_name_text)){
+top_genes=strsplit(genes_name_text[i],"-")[[1]]
+if (all(top_genes%in%colnames(norm_counts_small))){
+  gene_sum[i] = sum(norm_counts_small[i,top_genes])}
+else {gene_sum[i]=0}
+  
+}
 plot_interactive(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 ```
 
@@ -381,9 +426,21 @@ pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_januar
 plot_umap(cordinate_umap_24_update,final_cluster_version_sub)
 dev.off()
 ```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umap_esc_24.pdf",width=8,height = 6)
+p=plot_umap(cordinate_umap_24_update,final_cluster_version_sub)
+p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+dev.off()
+```
+
+
 ```{r}
 DefaultAssay(mayra_seurat_24_update) <- "RNA"
-markers_first_elmir=markers_cluster_seurat(mayra_seurat_24_update,final_cluster_version_sub,names(mayra_seurat_24_update$RNA_snn_res.0.1),20)
+markers_first_elmir=markers_cluster_seurat(mayra_seurat_24_update,final_cluster_version_sub,names(mayra_seurat_24_update$RNA_snn_res.0.1),5)
 ```
 
 
@@ -394,6 +451,37 @@ marker_plot_day_24_first=markers_first_elmir[[1]]
 marker_plot_plot_day_24_first=markers_first_elmir[[2]]
 marker_all_day_24_first=markers_first_elmir[[3]]
 
+```
+
+
+
+
+```{r}
+ markers_mega <- Seurat::FindMarkers(mayra_seurat_24_update, ident.1 = names(mayra_seurat_24_update$RNA_snn_res.0.1)[final_cluster_version_sub == 
+            0], ident.2 = names(mayra_seurat_24_update$RNA_snn_res.0.1)[final_cluster_version_sub != 0], 
+            only.pos = T)
+markers_mega <- markers_mega[markers_mega$p_val <= 0.05, 
+            ]
+        markers_mega <- markers_mega[order(markers_mega$p_val_adj), 
+            ]
+        markers_mega <- row.names(markers_mega)
+
+markers_mega=markers_mega[!markers_mega%in%marker_all_day_24_first]
+names(markers_mega)=rep("0",length(markers_mega))
+marker_all_day_24_first_all=c(marker_all_day_24_first,markers_mega)
+```
+
+
+```{r }
+top_0=white_black_markers(final_cluster_version_sub,0,norm_counts_ane_24_update,marker_all_day_24_first_all,0)
+
+top_0=names(top_0)[top_0]
+
+mean_top_0=apply(norm_counts_ane_24_update[top_0,final_cluster_version_sub==0],1,mean)
+mean_top_0=sort(mean_top_0,decreasing = T)
+
+top_0=names(mean_top_0)
+names(top_0)=rep(0,length(top_0))
 ```
 
 ```{r }
@@ -417,6 +505,16 @@ mean_top_2=sort(mean_top_2,decreasing = T)
 
 top_2=names(mean_top_2)
 names(top_2)=rep("2-step_2",length(top_2))
+```
+
+```{r }
+plot_balloon_marker(norm_counts_ane_24_update,final_cluster_version_sub,c(top_0[1:5],c(top_1[1:4],top_1[8]),top_2[1:5]),5,max_size=5,text_size=10)
+```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/marker_esc_24.pdf",width=8,height = 6)
+plot_balloon_marker(norm_counts_ane_24_update,final_cluster_version_sub,c(top_0[1:5],c(top_1[1:4],top_1[8]),top_2[1:5]),5,max_size=5,text_size=10)
+dev.off()
 ```
 
 
@@ -553,8 +651,250 @@ pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_januar
 upset(fromList(listInput), order.by = "freq")
 
 dev.off()
+```
 
 
+##SCODA algorithm 
+# Start here
+# Day 0
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_0.Rda')
+mayra_seurat_0=cluster_analysis_integrate_rare(mayra_dati_raw_0,"Mayra_data_0",0.1,5,30)
+#norm_counts_ane_0=as.matrix(GetAssayData(mayra_seurat_0, slot = "data",assay="RNA"))
+#knn_matrix_ane_0=as.matrix(mayra_seurat_0@graphs$RNA_nn)
+
+load("knn_matrix_ane_0.Rda")
+load("norm_counts_ane_0.Rda")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+vedo=load("entropy_ane_0.Rda")
+cordinate_umap_0=as.data.frame(Embeddings(mayra_seurat_0, reduction = "umap")[, 1:2])
+```
+
+# Original cluster annotation
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+cluster_mayra=read.csv('LIFcells_leidenClustering.csv')
+cluster_mayra_0=cluster_mayra[as.vector(cluster_mayra$batch)=='0h',]
+row.names(cluster_mayra_0)=as.vector(cluster_mayra_0$cell)
+cell_name=as.vector(cluster_mayra_0$cell)
+cluster_number=(cluster_mayra_0$cluster)
+cluster_number_0=as.character(cluster_number)
+
+cell_name_new=substring(cell_name,1,nchar(cell_name)-4)
+
+norm_counts_ane_0=norm_counts_ane_0[,cell_name_new]
+```
+
+
+
+```{r }
+plot_umap(cordinate_umap_0,cluster_number_0)
+plot_gene(norm_counts_ane_0,cordinate_umap_0,"Gata6","Gata6")
+plot_gene(norm_counts_ane_0,cordinate_umap_0,"Gata4","Gata4")
+
+plot_gene(norm_counts_ane_0,cordinate_umap_0,"Zfp42","Zfp42")
+plot_gene(norm_counts_ane_0,cordinate_umap_0,"Nanog","Nanog")
+```
+
+# Start here 12h
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_12.Rda')
+mayra_seurat_12=cluster_analysis_integrate_rare(mayra_dati_raw_12,"Mayra_data_12",0.1,5,30)
+norm_counts_ane_12=as.matrix(GetAssayData(mayra_seurat_12, slot = "data",assay="RNA"))
+knn_matrix_ane_12=as.matrix(mayra_seurat_12@graphs$RNA_nn)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+#save(norm_counts_ane_12,file="norm_counts_ane_12.Rda")
+#save(knn_matrix_ane_12,file="knn_matrix_ane_12.Rda")
+
+load("knn_matrix_ane_12.Rda")
+load("norm_counts_ane_12.Rda")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load("entropy_ane_12.Rda")
+cordinate_umap_12=as.data.frame(Embeddings(mayra_seurat_12, reduction = "umap")[, 1:2])
+```
+
+
+# Original cluster annotation
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+cluster_mayra=read.csv('LIFcells_leidenClustering.csv')
+cluster_mayra_12=cluster_mayra[as.vector(cluster_mayra$batch)=='12h',]
+row.names(cluster_mayra_12)=as.vector(cluster_mayra_12$cell)
+cell_name=as.vector(cluster_mayra_12$cell)
+cluster_number=(cluster_mayra_12$cluster)
+cluster_number_12=as.character(cluster_number)
+
+cell_name_new=substring(cell_name,1,nchar(cell_name)-5)
+
+norm_counts_ane_12=norm_counts_ane_12[,cell_name_new]
+```
+
+
+
+```{r }
+plot_umap(cordinate_umap_12,cluster_number_12)
+
+plot_gene(norm_counts_ane_12,cordinate_umap_12,"Gata6","Gata6")
+plot_gene(norm_counts_ane_12,cordinate_umap_12,"Gata4","Gata4")
+plot_gene(norm_counts_ane_12,cordinate_umap_12,"Zscan4c","Zscan4c")
+```
+
+# 48 h
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_48.Rda')
+load("knn_matrix_ane_48.Rda")
+load("norm_counts_ane_48.Rda")
+load("entropy_ane.Rda")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_48.Rda')
+mayra_seurat_48=cluster_analysis_integrate_rare(mayra_dati_raw_48,"Mayra_data_48",0.1,5,30)
+cordinate_umap_48=as.data.frame(Embeddings(mayra_seurat_48, reduction = "umap")[, 1:2])
+```
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+cluster_mayra=read.csv('LIFcells_leidenClustering.csv')
+cluster_mayra_48=cluster_mayra[as.vector(cluster_mayra$batch)=='48h',]
+row.names(cluster_mayra_48)=as.vector(cluster_mayra_48$cell)
+cell_name=as.vector(cluster_mayra_48$cell)
+cluster_number_48=(cluster_mayra_48$cluster)
+cluster_number_48=as.character(cluster_number_48)
+cell_name_new=substring(cell_name,1,nchar(cell_name)-5)
+```
+
+
+```{r }
+plot_umap(cordinate_umap_48,cluster_number_48)
+
+plot_gene(norm_counts_ane_48,cordinate_umap_48,"Gata6","Gata6")
+plot_gene(norm_counts_ane_48,cordinate_umap_48,"Gata4","Gata4")
+
+plot_gene(norm_counts_ane_48,cordinate_umap_48,"Zfp42","Zfp42")
+plot_gene(norm_counts_ane_48,cordinate_umap_48,"Nanog","Nanog")
+```
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file="final_cluster_version_sub.Rda")
+load("norm_counts_ane_24_update.Rda")
+load(file="raw_counts_ane_24_update.Rda")
+load(file="knn_matrix_ane_24_update.Rda")
+load(file="cordinate_umap_24_update.Rda")
+load(file="final_cluster_version_sub.Rda")
+load("initial_cluster_24_2.Rda")
+
+plot_gene(norm_counts_ane_24_update,cordinate_umap_24_update,"Zfp42","Zfp42")
+plot_gene(norm_counts_ane_24_update,cordinate_umap_24_update,"Nanog","Nanog")
+plot_gene(norm_counts_ane_24_update,cordinate_umap_24_update,"Sox2","Sox2")
+plot_gene(norm_counts_ane_24_update,cordinate_umap_24_update,"Pou5f1","Pou5f1")
+```
+
+
+##Create input data for SCODA
+```{r }
+
+#summary_0=table(cluster_number_0)
+#summary_12=table(cluster_number_12)
+cluster_number_24=as.vector(final_cluster_version_sub)
+cluster_number_24[cluster_number_24=="1-step_2"]="4"
+cluster_number_24[cluster_number_24=="2-step_2"]="5"
+
+#summary_24=table(final_cluster_version_sub)
+#summary_48=table(cluster_number_48)
+
+load("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project/final_cluster_version_sub.Rda")
+
+full_names=c("0","1","2","3","4","5")
+label_48=rep(0,length(full_names))
+label_48[full_names%in%names(table(cluster_number_48))]=as.vector(table(cluster_number_48))[full_names%in%names(table(cluster_number_48))]
+
+label_0=rep(0,length(full_names))
+label_0[full_names%in%names(table(cluster_number_0))]=as.vector(table(cluster_number_0))
+
+label_12=rep(0,length(full_names))
+label_12[full_names%in%names(table(cluster_number_12))]=as.vector(table(cluster_number_12))
+
+
+label_24=rep(0,length(full_names))
+label_24[full_names%in%names(table(cluster_number_24))]=as.vector(table(cluster_number_24))
+
+label_48=rep(0,length(full_names))
+label_48[full_names%in%names(table(cluster_number_48))]=as.vector(table(cluster_number_48))
+
+
+label_all=data.frame(label_0,label_12,label_24,label_48)
+
+label_all=t(label_all)
+colnames(label_all)=full_names
+
+
+label_new_1=label_all[,1]+label_all[,2]+label_all[,3]
+label_new_2=label_all[,4]+label_all[,5]
+label_new_3=label_all[,6]
+label_all_new=data.frame(label_new_1,label_new_2,label_new_3)
+
+
+label_all_norm=apply(label_all_new,1,function(x){
+  x=x/sum(x)
+})
+
+label_all_norm=t(label_all_norm)
+colnames(label_all_norm)=c("Pluripotent","two_cells","Differentiating")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+write.csv(label_all_norm,file="label_all_norm.csv")
+
+label_all_complete=cbind(label_all_new,row.names(label_all_new))
+colnames(label_all_complete)=c(colnames(label_all_new),"Time")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+write.csv(label_all_complete,file="label_all_complete.csv",row.names = F)
+```
+
+```{r }
+sum_time=apply(label_all_new,1,sum)
+all_time_points=c(rep("Time 0h",sum_time[1]),rep("Time 12h",sum_time[2]),rep("Time 24h",sum_time[3]),rep("Time 48h",sum_time[4]))
+all_time_cluster=c(cluster_number_0,cluster_number_12,cluster_number_24,cluster_number_48)
+all_time_cluster[all_time_cluster==0|all_time_cluster==1|all_time_cluster==2]="ESC"
+all_time_cluster[all_time_cluster==3|all_time_cluster==4]="2CLC"
+all_time_cluster[all_time_cluster==5]="Precursor cells"
+```
+
+```{r}
+
+barplot_cell_cycle=function(cell_cycle,cluster,title,fraction=TRUE){
+dfForPlot <- data.frame(Phases =cell_cycle
+                                ,clu =cluster)
+
+if(fraction==TRUE){
+pnm <-ggplot(dfForPlot, aes(y=cell_cycle,x=cluster))+geom_bar( aes(fill = cell_cycle,y = (..count..)/sum(..count..)),position="fill")+ ggtitle(title)+ylab("Fraction of cells")+xlab("Cluster")+labs(fill="Cluster annotation")+theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1,size=6)) 
+pnm}
+
+if(fraction!=TRUE){
+  pnm <-ggplot(dfForPlot, aes(y=cell_cycle,x=cluster))+geom_bar( aes(fill = cell_cycle,y = (..count..),position="fill"))+ ggtitle(title)+ylab("Number of cells")+xlab("Cluster")+labs(fill="Batch annotation")+theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1,size=6)) 
+pnm
+
+
+}
+return(list(pnm))}
+```
+
+
+##spatial origin ExE mesoderm
+```{r }
+
+library(ggplot2)
+all_time_cluster=factor(all_time_cluster,levels=c("ESC","2CLC","Precursor cells"))
+p=barplot_cell_cycle(all_time_cluster,all_time_points,"mouse ESCs",fraction = F)
+p[[1]]+scale_fill_manual(values=CIARA:::gg_color_hue(3))
+p=barplot_cell_cycle(all_time_cluster,all_time_points,"mouse ESCs",fraction = T)
+p[[1]]+scale_fill_manual(values=CIARA:::gg_color_hue(3))
 
 
 
@@ -562,6 +902,232 @@ dev.off()
 
 
 ```
+##Mouse ESC at day 0
 
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project/result_ane_0.Rda")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_0.Rda')
+mayra_seurat_0=cluster_analysis_integrate_rare(mayra_dati_raw_0,"Mayra_data_0",0.1,5,30)
+#norm_counts_ane_0=as.matrix(GetAssayData(mayra_seurat_0, slot = "data",assay="RNA"))
+#knn_matrix_ane_0=as.matrix(mayra_seurat_0@graphs$RNA_nn)
+
+load("knn_matrix_ane_0.Rda")
+load("norm_counts_ane_0.Rda")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+#vedo=load("entropy_ane_0.Rda")
+cordinate_umap_0=as.data.frame(Embeddings(mayra_seurat_0, reduction = "umap")[, 1:2])
+```
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+#geni_top=row.names(result)[result[,1]==0&result[,2]<0.0001]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+```{r }
+background=row.names(result)
+```
+
+
+```{r }
+library(ggplot2)
+p=list()
+for(i in (geni_top_top)[1:10]){
+  q=plot_gene(norm_counts_ane_0,cordinate_umap_0,i,i)
+  p=list(p,q)
+}
+p
+```
+
+```{r }
+norm_counts_small <- apply(norm_counts_ane_0[ciara_genes, ], 1, function(x) {
+  y <- x/sum(x)
+  return(y)
+  })
+gene_sum <- apply(norm_counts_small, 1, sum)
+    
+    
+genes_name_text <- selection_localized_genes(norm_counts_ane_0, ciara_genes, min_number_cells = 4, max_number_genes = 4)
+colnames(cordinate_umap_0) <- c("UMAP_1","UMAP_2")
+plot_interactive_here(cordinate_umap_0, gene_sum, genes_name_text, min_x=NULL, max_x=NULL, min_y=NULL, max_y=NULL)
+```
+
+
+# Original cluster annotation
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+cluster_mayra=read.csv('LIFcells_leidenClustering.csv')
+cluster_mayra_0=cluster_mayra[as.vector(cluster_mayra$batch)=='0h',]
+row.names(cluster_mayra_0)=as.vector(cluster_mayra_0$cell)
+cell_name=as.vector(cluster_mayra_0$cell)
+cluster_number=(cluster_mayra_0$cluster)
+cluster_number_0=as.character(cluster_number)
+
+cell_name_new=substring(cell_name,1,nchar(cell_name)-4)
+
+norm_counts_ane_0=norm_counts_ane_0[,cell_name_new]
+```
+
+
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umpa_mouse_esc_0_day.pdf",width = 8,height = 6)
+cluster_number_0_letter=cluster_number_0
+cluster_number_0_letter[cluster_number_0==0]="A"
+cluster_number_0_letter[cluster_number_0==1]="B"
+cluster_number_0_letter[cluster_number_0==2]="C"
+cluster_number_0_letter[cluster_number_0==3]="D"
+cluster_number_0_letter[cluster_number_0==4]="E"
+cluster_number_0_letter[cluster_number_0==5]="F"
+cc=rep(0,length(cluster_number_0))
+cl=cluster_number_0_letter
+cc[cl=="A"]="#E69F00"
+cc[cl=="B"]="#56B4E9"
+cc[cl=="C"]="#D62728"
+cc[cl=="D"]="#009E73"
+cc[cl=="E"]="#2ECC71"
+cc[cl=="F"]="#9467BD"
+
+p=plot_umap(cordinate_umap_0,cl)
+p[[1]]+ scale_color_manual(values=c("#E69F00", "#56B4E9", "#D62728","#009E73","#2ECC71","#9467BD"))+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+#plot_gene(norm_counts_ane_0,cordinate_umap_0,"Gata6","Gata6")
+dev.off()
+```
+
+
+
+
+## Dendogram 24h + 48 h
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_48.Rda')
+load("knn_matrix_ane_48.Rda")
+load("norm_counts_ane_48.Rda")
+load("entropy_ane.Rda")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_48.Rda')
+mayra_seurat_48=cluster_analysis_integrate_rare(mayra_dati_raw_48,"Mayra_data_48",0.1,5,30)
+cordinate_umap_48=as.data.frame(Embeddings(mayra_seurat_48, reduction = "umap")[, 1:2])
+```
+
+
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+cluster_mayra=read.csv('LIFcells_leidenClustering.csv')
+cluster_mayra_48=cluster_mayra[as.vector(cluster_mayra$batch)=='48h',]
+row.names(cluster_mayra_48)=as.vector(cluster_mayra_48$cell)
+cell_name=as.vector(cluster_mayra_48$cell)
+cluster_number_48=(cluster_mayra_48$cluster)
+cluster_number_48=as.character(cluster_number_48)
+cell_name_new=substring(cell_name,1,nchar(cell_name)-5)
+```
+
+
+
+```{r }
+cluster_number_48_lett=cluster_number_48
+cluster_number_48_lett[cluster_number_48==0]="A"
+cluster_number_48_lett[cluster_number_48==1]="B"
+cluster_number_48_lett[cluster_number_48==2]="C"
+cluster_number_48_lett[cluster_number_48==3]="D"
+cluster_number_48_lett[cluster_number_48==4]="E"
+cluster_number_48_lett[cluster_number_48==5]="F"
+mayra_seurat_48_small=cluster_analysis_integrate_rare(mayra_dati_raw_48[,cluster_number_48_lett=="C"|cluster_number_48_lett=="D"|cluster_number_48_lett=="F"],"Mayra_data_48",0.1,5,30)
+```
+
+
+```{r }
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mouse/10x_data/Processed_data")
+#load("ips_combined_old.Rda")
+#load("es_combined_old.Rda")
+
+#mayra_seurat_48
+#mayra_seurat_24_update
+livelli_24=levels(factor(final_cluster_version_sub))
+livelli_48=levels(factor(cluster_number_48_lett[cluster_number_48_lett=="C"|cluster_number_48_lett=="D"|cluster_number_48_lett=="F"]))
+livelli_24[livelli_24==0]="Pluri cells"
+livelli_24[livelli_24=="1-step_2"]="2CLC"
+livelli_24[livelli_24=="2-step_2"]="Precursor cells"
+
+livelli_48[livelli_48=="C"]="Pluripotent cells"
+livelli_48[livelli_48=="D"]="2CLC"
+livelli_48[livelli_48=="F"]="Precursor cells"
+
+
+norm_es=as.matrix(GetAssayData(mayra_seurat_48_small, slot = "data",assay="RNA"))
+norm_ips=as.matrix(GetAssayData(mayra_seurat_24_update, slot = "data",assay="RNA"))
+hvg_es=mayra_seurat_48_small@assays$RNA@var.features
+hvg_ips=mayra_seurat_24_update@assays$RNA@var.features
+hvg_all=c(hvg_es,hvg_ips)
+hvg_all=unique(hvg_all)
+find_median_cluster=function(cluster,norm,genes){
+number_cluster=levels(factor(cluster))
+median_es=rep(list(0),length(number_cluster))
+for (i in 1:length(number_cluster)){
+median_es[[i]]=apply(norm[genes,cluster==number_cluster[i]],1,'mean')
+
+}
+return(median_es)}
+
+median_es=find_median_cluster(cluster_number_48_lett[cluster_number_48_lett=="C"|cluster_number_48_lett=="D"|cluster_number_48_lett=="F"],norm_es,hvg_all)
+median_ips=find_median_cluster(final_cluster_version_sub,norm_ips,hvg_all)
+
+
+median_es_matrix <- matrix(unlist(median_es), ncol = length(median_es), byrow = FALSE)
+median_ips_matrix <- matrix(unlist(median_ips), ncol = length(median_ips), byrow = FALSE)
+
+median_all_matrix=cbind(median_es_matrix,median_ips_matrix)
+names_es=rep(0,length(median_es))
+for ( i in 1:length(median_es)){
+  j=i-1
+names_es[i]=paste0("48h-",livelli_48[i])}
+
+names_ips=rep(0,length(median_ips))
+for ( i in 1:length(median_ips)){
+  j=i-1
+names_ips[i]=paste0("24h-",livelli_24[i])}
+
+colnames(median_all_matrix)=c(names_es,names_ips)
+
+
+
+median_all_matrix<-as.matrix(median_all_matrix)
+dissimilarity <- sqrt((1-cor((median_all_matrix), method = "spearman"))/2)
+
+my.dist <- as.dist(dissimilarity) 
+
+#dist_mouse=dist(t(median_all_matrix),method="euclidean",upper=T)
+#dist_mouse=as.matrix(dist_mouse)
+dist_mouse=as.matrix(my.dist)
+#dist_mouse=dist_mouse[grepl("48h-",row.names(dist_mouse)),grepl("24h-",row.names(dist_mouse))]
+
+
+#heatmap(dist_mouse, scale = "none")
+
+
+
+
+library("gplots")
+heatmap.2(dist_mouse, scale = "none", col = bluered(100), 
+          trace = "none", density.info = "none",cexRow = 0.5,cexCol = 0.5,notecex=5)
+
+
+#https://r-graph-gallery.com/31-custom-colors-in-dendrogram.html see here for customization
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/dendogram_24_48.pdf",width=8,height = 6)
+hc <- hclust(my.dist)
+
+
+plot(hc)
+dev.off()
+```
+```{r}
+
+```
 
 

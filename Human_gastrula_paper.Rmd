@@ -35,7 +35,24 @@ library(Seurat)
 library(clustree)
 ```
 
-
+```{r }
+plot_interactive_here=function (coordinate_umap, color, text, min_x = NULL, max_x = NULL, 
+    min_y = NULL, max_y = NULL) 
+{
+    if (!requireNamespace("plotly", quietly = TRUE)) {
+        stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
+    }
+    colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
+    fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
+        y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
+        marker = list(size = 5, width = 2), text = ~text, hoverinfo = "text",colors='Blues')
+    if (!is.null(min_x)) {
+        fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
+            max_x)), yaxis = list(range = c(min_y, max_y)))
+    }
+    return(fig)
+}
+```
 
 
 ## Load input 
@@ -241,11 +258,14 @@ geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
 ```{r }
 
 p=list()
-for(i in (geni_top_top)[1:10]){
+for(i in (geni_top_top)[31:40]){
   q=plot_gene(norm_elmir_5_30,cordinate_umap,i,i)
   p=list(p,q)
 }
 p
+
+plot_gene(norm_elmir_5_30,cordinate_umap,"NANOS3","NANOS3")
+plot_gene(norm_elmir_5_30,cordinate_umap,"TF","TF")
 ```
 
 ```{r }
@@ -273,7 +293,7 @@ norm_counts_small = apply(norm_elmir_5_30[(ciara_genes), ],
 genes_name_text=selection_localized_genes(norm_elmir_5_30,ciara_genes,min_number_cells=4,max_number_genes=4)
 plot.elmir=umap_elmir[,2:3]
 colnames(plot.elmir)=c("UMAP_1","UMAP_2")
-plot_interactive(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+plot_interactive_here(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 ```
 
 
@@ -511,6 +531,21 @@ markers_primitive <- markers_primitive[markers_primitive$p_val_adj <= 0.05,
         markers_primitive <- row.names(markers_primitive)
 ```
 
+
+
+```{r}
+ markers_mega <- Seurat::FindMarkers(elmir_seurat_5, ident.1 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub == 
+            "Hemogenic Endothelial Progenitors_4"], ident.2 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub != "Hemogenic Endothelial Progenitors_4"], 
+            only.pos = T)
+markers_mega <- markers_mega[markers_PGC$p_val_adj <= 0.05, 
+            ]
+        markers_mega <- markers_mega[order(markers_mega$p_val_adj), 
+            ]
+        markers_mega <- row.names(markers_mega)
+
+
+```
+
 ```{r}
 common_pgc_primitive=intersect(markers_primitive,markers_PGC)
 
@@ -553,8 +588,26 @@ write.csv2(marker_extra_emb_mesoderm,file="marker_extra_emb_mesoderm.csv",row.na
 
 
 ```
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/markers_human_gastrula")
+bo=read.csv2(file="marker_megakaryocytes.csv")
+
+#PF4 and GP1BB
+
+which(markers_mega=="GP1BB")
+which(markers_mega=="PF4")
+
+which(markers_mega%in%bo$x)
 
 
+plot_gene(norm_elmir_5_30,cordinate_umap,"PF4","PF4")
+plot_gene(norm_elmir_5_30,cordinate_umap,"GP1BB","GP1BB")
+
+plot_gene(norm_elmir_5_30,cordinate_umap,bo$x[1],bo$x[1])
+
+
+markers_first_elmir_3_final
+```
 
 ```{r}
 white_black_7=white_black_markers(final_cluster_version_sub,"Hemogenic Endothelial Progenitors_4",norm_elmir_5_30,markers_first_elmir_3_final,0)
@@ -2385,7 +2438,7 @@ load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/f
 new_cluster=rep("Other Clusters",length(final_cluster_version_sub))
 new_cluster[final_cluster_version_sub=="PGC"]="PGC"
 p=plot_umap(cordinate_umap,new_cluster)
-pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/pgc_umap.pdf")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/pgc_umap.pdf",width = 8, height = 6)
 p[[1]]+scale_color_manual(values=c("grey","black"))+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
 panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),axis.text.y=element_blank(),
@@ -2401,11 +2454,13 @@ library(CIARA)
 
 
 
-method=factor(c("CIARA","CellSIUS","RaceID","GiniClust2","GiniClust3","SAM","FiRE","singleCellHaystack","Triku"),levels=c(c("CIARA","CellSIUS","RaceID","GiniClust2","GiniClust3","SAM","FiRE","singleCellHaystack","Triku")))
-df=data.frame(c(1,0.17,0.53,0.11,0.44,0.30,0,0,0),method)
+method=factor(c("CIARA","CellSIUS","RaceID","GiniClust2","GiniClust3","SAM","FiRE"),levels=c(c("CIARA","CellSIUS","RaceID","GiniClust2","GiniClust3","SAM","FiRE")))
+df=data.frame(c(1,0.17,0.53,0.11,0.44,0.30,-0.002221461),method)
 colnames(df)=c("MCC","Method")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/bar_plot_mcc_pgc_background.pdf",width = 8, height = 6)
 ggplot(data=df, aes(x=Method, y=MCC)) +
-  geom_bar(stat="identity", width=0.5)+ylim(0,1)+ggtitle("MCC score")
+  geom_bar(stat="identity", width=0.5)+ylim(-0.01,1)+ggtitle("MCC score")
+dev.off()
 #+scale_fill_manual(values=c(CIARA:::gg_color_hue(6)))
 ```
 

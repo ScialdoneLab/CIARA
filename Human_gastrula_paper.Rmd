@@ -512,6 +512,21 @@ markers_first_elmir_1_final=markers_first_elmir_final[[1]]
 markers_first_elmir_3_final=markers_first_elmir_final[[3]]
 ```
 ```{r}
+mega_marker=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Hemogenic Endothelial Progenitors_4"]
+
+endo_marker=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Endoderm_2"]
+
+
+```
+
+```{r}
+geni_top_top[1:30][geni_top_top[1:30]%in%mega_marker]
+which(geni_top_top[1:30]%in%mega_marker)
+geni_top_top[1:30][geni_top_top[1:30]%in%endo_marker]
+which(geni_top_top[1:30]%in%endo_marker)
+```
+
+```{r}
  markers_PGC <- Seurat::FindMarkers(elmir_seurat_5, ident.1 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub == 
             "PGC"], ident.2 = names(elmir_seurat_5$RNA_snn_res.0.1)[final_cluster_version_sub != "PGC"], 
             only.pos = T)
@@ -968,6 +983,24 @@ plot_umap(diff_map_elmir,sub_cluster_diff)
 
 ```
 
+```{r }
+
+raw_elmir_blood=raw_elmir[!grepl("ERCC",row.names(raw_elmir)),cell_diff]
+cluster_blood=clu_spe
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#write.csv(cordinate_umap,file='cordinate_umap_esc.csv',row.names = F,col.names = F)
+write.table(cluster_blood,file='cluster_blood.txt',col.names = F,row.names = F)
+color_blood=cluster_blood
+for ( i in 1:length(cluster_blood)){
+livelli_blood=levels(factor(cluster_blood))
+color_blood[cluster_blood==livelli_blood[i]]=MitoHEAR:::gg_color_hue(6)[i]
+}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+write.table(color_blood,file='color_blood.txt',col.names = F,row.names = F)
+write.csv(raw_elmir_blood,file="raw_elmir_blood.csv")
+
+
+```
 
 
 ##Trajectory analysis
@@ -2524,3 +2557,263 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),a
         axis.ticks.y=element_blank())+theme(text = element_text(size=18))+scale_color_manual(values=c(gg_color_hue(10)[1],gg_color_hue(10)[2],gg_color_hue(10)[3],gg_color_hue(10)[4],gg_color_hue(10)[5],gg_color_hue(10)[6],"brown4",gg_color_hue(10)[8],gg_color_hue(10)[9],gg_color_hue(10)[10],"black"))
 dev.off()
 ```
+
+
+
+
+
+```{r}
+
+
+original_sub=as.vector(umap_elmir$cluster_id)
+#original_sub[original_sub=="Blood Progenitors"]="MEP"
+original_sub[grep("Hemogenic Endothelial Progenitors_4",final_cluster_version_sub)]="MEP1"
+#original_sub[original_sub=="YS Endoderm"]="YSE"
+original_sub[grep("Endoderm_2",final_cluster_version_sub)]="YSE1"
+
+p=plot_umap(cordinate_umap,(umap_elmir$cluster_id))
+p[[1]]+scale_colour_manual(values=c('#4E9C6D',"#84584E",'#58BDCC','#B6BD6E','#EF8635','#3C76AF',
+                                                 '#C53933', '#9D48F3','#D57DBF','#B3C6E5','#f4aeae'))
+p=plot_umap(cordinate_umap,original_sub)
+
+original_sub=factor(original_sub,levels=c(levels(factor(umap_elmir$cluster_id)),"YSE1","MEP1"))
+
+p=plot_umap(cordinate_umap,original_sub)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/cluster_umap_antonio.pdf",width = 8,height = 6)
+p[[1]]+scale_colour_manual(values=c('#4E9C6D',"#84584E",'#58BDCC','#B6BD6E','#EF8635','#3C76AF',
+                                                '#C53933','#9D48F3','#D57DBF','#B3C6E5','#f4aeae',"black","red"))+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+dev.off()
+
+
+
+
+
+```
+
+
+```{r}
+original_all=as.vector(umap_elmir$cluster_id)
+original_sub=as.vector(umap_elmir$sub_cluster)
+original_sub[original_sub=="Blood Progenitors"]="MEP"
+original_sub[grep("Hemogenic Endothelial Progenitors_4",final_cluster_version_sub)]="MEP1"
+original_sub[original_sub=="YS Endoderm"]="YSE"
+original_sub[grep("Endoderm_2",final_cluster_version_sub)]="YSE1"
+```
+
+
+```{r}
+select_endo=which(as.vector(umap_elmir$cluster_id=="Endoderm"))
+DefaultAssay(elmir_seurat_5) <- "RNA"
+markers_first_elmir_final=markers_cluster_seurat(elmir_seurat_5[,select_endo],original_sub[select_endo],names(elmir_seurat_5$RNA_snn_res.0.1)[select_endo],5)
+
+markers_first_elmir_1_final=markers_first_elmir_final[[1]]
+markers_first_elmir_3_final=markers_first_elmir_final[[3]]
+```
+
+
+
+
+
+```{r}
+toMatch=c("Endoderm")
+#names(top_endo)=rep("YSE1",length(top_endo))
+#Plot_balons(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Endoderm_2"],20,max_size=5,text_size=10)
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_endo_human.pdf",width = 8, height = 6)
+plot_balloon_marker(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+dev.off()
+```
+
+```{r}
+select_blood=which(as.vector(umap_elmir$cluster_id=="Hemogenic Endothelial Progenitors"))
+DefaultAssay(elmir_seurat_5) <- "RNA"
+markers_first_elmir_final=markers_cluster_seurat(elmir_seurat_5[,select_blood],original_sub[select_blood],names(elmir_seurat_5$RNA_snn_res.0.1)[select_blood],5)
+
+markers_first_elmir_1_final=markers_first_elmir_final[[1]]
+markers_first_elmir_3_final=markers_first_elmir_final[[3]]
+```
+
+```{r}
+toMatch=c("Hemogenic Endothelial Progenitors")
+#names(top_endo)=rep("YSE1",length(top_endo))
+#Plot_balons(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Endoderm_2"],20,max_size=5,text_size=10)
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_blood_human.pdf",width = 8, height = 6)
+plot_balloon_marker(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+dev.off()
+```
+
+# Endoderm spatial origin
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+spatial_annotation=read.table("spatial_annotation.txt")
+
+#spatial_annotation=read.table(system.file("extdata", "spatial_annotation.txt", package ="CIARA"))
+origin_space=spatial_annotation[,2]
+
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+
+df=data.frame(original_sub[select_endo],origin_space[select_endo])
+colnames(df)=c("cluster","origin_space")
+p<-ggplot(df, aes(x=cluster,y=origin_space, fill=origin_space)) +
+  geom_bar(stat="identity")+theme_minimal()
+p
+```
+
+
+```{r}
+
+barplot_cell_cycle=function(cell_cycle,cluster,title,fraction=TRUE){
+dfForPlot <- data.frame(Phases =cell_cycle
+                                ,clu =cluster)
+
+if(fraction==TRUE){
+pnm <-ggplot(dfForPlot, aes(y=cell_cycle,x=cluster))+geom_bar( aes(fill = cell_cycle,y = (..count..)/sum(..count..)),position="fill")+ ggtitle(title)+ylab("Fraction of cells")+xlab("Cluster")+labs(fill="Spatial origin")+theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1,size=6)) 
+pnm}
+
+if(fraction!=TRUE){
+  pnm <-ggplot(dfForPlot, aes(y=cell_cycle,x=cluster))+geom_bar( aes(fill = cell_cycle,y = (..count..),position="fill"))+ ggtitle(title)+ylab("Number of cells")+xlab("Cluster")+labs(fill="Spatial origin")+theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1,size=6)) 
+pnm
+
+
+}
+return(list(pnm))}
+```
+
+
+##spatial origin endoderm
+```{r }
+
+library(ggplot2)
+barplot_cell_cycle(df[,2],df[,1],"ExE mesoderm - spatial origin",fraction = F)
+p=barplot_cell_cycle(df[,2],df[,1],"Endoderm - spatial origin",fraction = T)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/spatial_origin_endoderm.pdf",width = 8, height = 6)
+p[[1]]+theme(text = element_text(size=14),axis.text.x = element_text(size=14,angle = 45, vjust = 1, hjust = 1))
+dev.off()
+
+
+
+
+```
+
+
+```{r }
+diff_map_elmir_endo=diff_map_endo[,2:4]
+diff_map_elmir_endo=diff_map_elmir_endo[,-2]
+
+umap_elmir_diff=umap_elmir
+row.names(umap_elmir_diff)=umap_elmir$cell_name
+
+cells_endo=as.vector(umap_elmir$cell_name[umap_elmir$cluster_id=="Endoderm"])
+
+original_sub_cluster_diff=umap_elmir_diff[cells_endo,]$sub_cluster
+plot_umap(diff_map_elmir_endo,original_sub_cluster_diff) 
+
+
+
+clu_endo=as.vector(umap_elmir$sub_cluster)
+clu_endo[as.vector(umap_elmir$sub_cluster)=="YS Endoderm"]="YSE"
+clu_endo[final_cluster_version_sub=="Endoderm_2"]="YSE1"
+data_diff=data.frame(clu_endo,colnames(norm_elmir_5_30))
+
+row.names(data_diff)=colnames(norm_elmir_5_30)
+sub_cluster_diff=data_diff[cells_endo,1]
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/diff_map_endo_cluster.pdf",width = 8,height = 6)
+p=plot_umap(diff_map_elmir_endo,sub_cluster_diff)
+p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))+xlab("DC1")+ylab("DC3")
+dev.off()
+
+
+#data_diff=data.frame(original_sub,colnames(norm_elmir_5_30))
+#row.names(data_diff)=colnames(norm_elmir_5_30)
+#sub_cluster_diff=data_diff[cells_endo,1]
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_d.pdf")
+#plot_umap(diff_map_elmir_endo,sub_cluster_diff) 
+#dev.off()
+
+
+
+
+
+
+
+
+```
+```{r }
+
+raw_elmir=as.matrix(GetAssayData(elmir_seurat_5, slot = "counts",assay="RNA"))
+raw_elmir=raw_elmir[!grepl("ERCC",row.names(raw_elmir)),]
+
+raw_endo=raw_elmir[,cells_endo]
+
+batch_1 <- CreateSeuratObject(counts = raw_endo, project = "Endoderm")
+    batch_1 <- subset(batch_1, subset = nFeature_RNA > 0)
+    batch_1 <- NormalizeData(batch_1, verbose = FALSE)
+    batch_1 <- FindVariableFeatures(batch_1, selection.method = "vst", 
+        nfeatures = 2000)
+    hvg_endo=batch_1@assays$RNA@var.features
+    
+    raw_endo_sub=raw_endo[hvg_endo,]
+    
+    norm_endo=as.matrix(GetAssayData(batch_1, slot = "data",assay="RNA"))
+    norm_endo_sub=norm_endo[hvg_endo,]
+    dm <- DiffusionMap(t(norm_endo_sub))
+#diff_map_endo <- as.data.frame(cbind(DC1 = dm$DC1, DC2 = dm$DC2))
+
+
+#plot_umap(diff_map_endo, sub_cluster_diff) 
+
+
+
+```
+## Dpt for endoderm cluster
+```{r }
+dpt <- DPT(dm)
+#str(dpt)
+tips(dpt)
+plot(dpt)
+plot(dpt, col_by = 'DPT116')
+time_endo=dpt$DPT116
+
+ umap_plot <- ggplot2::ggplot(diff_map_elmir_endo, ggplot2::aes(diff_map_elmir_endo[, 
+        1], diff_map_elmir_endo[, 2])) + ggplot2::geom_point(ggplot2::aes(colour = time_endo)) + 
+        ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Cluster")+ scale_colour_gradientn(colours = rainbow(2))
+ 
+ ggplot2::ggplot(diff_map_elmir_endo, ggplot2::aes(diff_map_elmir_endo[, 
+        1], diff_map_elmir_endo[, 2])) + ggplot2::geom_point(ggplot2::aes(colour = time_endo)) + 
+        ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "DPT")+ scale_colour_gradient(low="midnight blue",high="white")+xlab("DC1")+ylab("DC3")
+ 
+ 
+ pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/diff_map_endo_dpt.pdf",width = 8,height = 6)
+ ggplot2::ggplot(diff_map_elmir_endo, ggplot2::aes(diff_map_elmir_endo[, 
+        1], diff_map_elmir_endo[, 2])) + ggplot2::geom_point(ggplot2::aes(colour = time_endo)) + 
+        ggplot2::xlab("DC1") + ggplot2::ylab("DC3") + ggplot2::labs(col = "DPT")+ scale_color_gradient2(
+    low = "grey", 
+    mid = "grey", 
+    high  = "brown", 
+    midpoint = .02
+  )+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))+xlab("DC1")+ylab("DC3")
+ 
+ dev.off()
+ 
+```
+
+```{r }
+df_plot=data.frame(sub_cluster_diff,time_endo)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/boxplot_dpt_endo.pdf",width = 8,height = 6)
+ggplot(df_plot, aes(x=sub_cluster_diff, y=time_endo, color=sub_cluster_diff)) +
+  geom_boxplot()+labs(color="Cluster")+ylab("DPT")+xlab(NULL)+theme(text = element_text(size=14),axis.text.x = element_text(size=14,angle = 45, vjust = 1, hjust = 1))
+dev.off()
+```
+

@@ -36,23 +36,111 @@ library(clustree)
 ```
 
 ```{r }
-plot_interactive_here=function (coordinate_umap, color, text, min_x = NULL, max_x = NULL, 
-    min_y = NULL, max_y = NULL) 
-{
+detect_localized_genes=function(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,top_number){
+list_intersect=rep(list(0),length(colnames(knn_matrix_ane_24_update)))
+rank_intersect=rep(0,length(colnames(knn_matrix_ane_24_update)))
+for ( i in 1:length(colnames(knn_matrix_ane_24_update))){
+  knn_name=names(which(knn_matrix_ane_24_update[i,]==1))
+  geni_select=geni_top_top[1:top_number]
+  sum_knn=apply(norm_counts_ane_24_update[geni_select,knn_name],2,function(x){
+    somma=geni_select[which(x>1)]
+    return(somma)
+  })
+    rank_intersect[i]=sum(duplicated(as.vector(unlist(sum_knn))))
+    list_intersect[[i]]=unique(as.vector(unlist(sum_knn))[duplicated(as.vector(unlist(sum_knn)))])
+
+}
+return(list(list_intersect,rank_intersect))
+}
+```
+
+```{r }
+
+selection_localized_genes_here=function (list_intersect, geni_top_top, 
+    max_number_genes = 5){ 
+text=rep(0,length(list_intersect))
+
+for (i in 1:length(list_intersect)){
+  if (length(list_intersect[[i]])==0){
+    localized_genes="No specific genes"
+    text[i] <- "No specific genes"
+   
+  }
+  else {
+  localized_genes=geni_top_top[which(geni_top_top %in% list_intersect[[i]])]
+  
+  max_genes=min(max_number_genes,length(localized_genes))
+  if (max_genes<max_number_genes){
+    warning("max_number bigger than length of localized_genes. Set max_number_genes = length(localized_genes) ")
+  }
+  localized_genes=localized_genes[1:max_genes]
+  text[i]=paste(localized_genes, collapse = "-")
+  
+  
+  }
+}
+return(text)
+}
+
+
+```
+
+```{r }
+plot_interactive_here=function (coordinate_umap, norm_counts,color, text,ramp_list, min_x = NULL, max_x = NULL, 
+    min_y = NULL, max_y = NULL)
+  {
+  
+  
+  index_sort <- order(color)
+  text=text[index_sort]
+    row.names(coordinate_umap) <- colnames(norm_counts)
+    coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], 
+        ]
+    color <- sort(color)
+    
+
     if (!requireNamespace("plotly", quietly = TRUE)) {
         stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
     }
     colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
     fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
         y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
-        marker = list(size = 5, width = 2), text = ~text, hoverinfo = "text",colors='Blues')
+        marker = list(size = 5, width = 2), text = ~text, hoverinfo = "text",colors=ramp_list)
+   fig <- fig %>% 
+layout(plot_bgcolor='#e5ecf6')
+    
     if (!is.null(min_x)) {
         fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
-            max_x)), yaxis = list(range = c(min_y, max_y)))
+            max_x)), yaxis = list(range = c(min_y, max_y))) %>% 
+layout(plot_bgcolor='rgb(254, 247, 234)') %>% 
+layout(paper_bgcolor='rgb(254, 247, 234)')
     }
     return(fig)
-}
+    }
+    
 ```
+
+```{r }
+plot_genes_sum_here=function (coordinate_umap, norm_counts, color_cell, name_title) 
+{
+    index_sort <- order(color_cell)
+    row.names(coordinate_umap) <- colnames(norm_counts)
+    coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], 
+        ]
+    color_cell <- sort(color_cell)
+    
+    umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 
+        1], coordinate_umap[, 2])) + ggplot2::geom_point(ggplot2::aes(colour = color_cell)) + 
+        ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Number of localized genes") + 
+        ggplot2::scale_colour_gradient(low = "white",high = "blue4") + 
+        ggplot2::ggtitle(name_title)
+    return((umap_plot))
+}
+
+
+
+```
+
 
 
 ## Load input 
@@ -279,7 +367,7 @@ plot_genes_sum(cordinate_umap,norm_elmir_5_30,(ciara_genes),"Sum from top CIARA 
 
 ```
 
-
+## OLD SKIP
 ```{r }
 norm_counts_small = apply(norm_elmir_5_30[(ciara_genes), ], 
         1, function(x) {
@@ -297,10 +385,38 @@ plot_interactive_here(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,
 ```
 
 
+```{r }
+color_somma=apply(norm_elmir_5_30[geni_top_top[1:100], ], 
+        2, function(x) {
+            somma=sum(x>1)
+            return(somma)
+        })
+plot_interactive_here(plot.elmir,color_somma,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+```
 
 
 
+##STOP SKIP OLD
 
+```{r }
+localized_genes_mouse=detect_localized_genes(knn_matrix_elmir_5_30,norm_elmir_5_30,geni_top_top,100)  
+
+ramp <- colorRamp(c("white", "blue4"))
+ 
+
+
+ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
+
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+
+genes_name_text=selection_localized_genes_here(list_intersect ,geni_top_top,max_number_genes=5)
+
+plot_interactive_here(cordinate_umap,norm_elmir_5_30,rank_intersect,genes_name_text,ramp.list,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+
+plot_genes_sum_here(cordinate_umap,norm_elmir_5_30,rank_intersect,"Top genes CIARA")
+
+```
 
 
 
@@ -1703,6 +1819,8 @@ plot_umap(diff_map_elmir_endo,original_sub_cluster_diff)
 clu_endo=as.vector(umap_elmir$sub_cluster)
 clu_endo[as.vector(umap_elmir$sub_cluster)=="YS Endoderm"]="YSE"
 clu_endo[final_cluster_version_sub=="Endoderm_2"]="YSE1"
+clu_endo[clu_endo=="DE(P)"]="DE1"
+clu_endo[clu_endo=="DE(NP)"]="DE2"
 data_diff=data.frame(clu_endo,colnames(norm_elmir_5_30))
 
 row.names(data_diff)=colnames(norm_elmir_5_30)
@@ -2601,6 +2719,8 @@ original_sub[original_sub=="Blood Progenitors"]="MEP"
 original_sub[grep("Hemogenic Endothelial Progenitors_4",final_cluster_version_sub)]="MEP1"
 original_sub[original_sub=="YS Endoderm"]="YSE"
 original_sub[grep("Endoderm_2",final_cluster_version_sub)]="YSE1"
+original_sub[original_sub=="DE(P)"]="DE1"
+original_sub[original_sub=="DE(NP)"]="DE2"
 ```
 
 
@@ -2613,6 +2733,70 @@ markers_first_elmir_1_final=markers_first_elmir_final[[1]]
 markers_first_elmir_3_final=markers_first_elmir_final[[3]]
 ```
 
+```{r}
+plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_counts[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 0.001)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean log2 norm expression", 
+        size = "Value (fraction cells above 0.001 log2 norm counts)") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
 
 
 
@@ -2623,7 +2807,14 @@ toMatch=c("Endoderm")
 #Plot_balons(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Endoderm_2"],20,max_size=5,text_size=10)
 
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_endo_human.pdf",width = 8, height = 6)
-plot_balloon_marker(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+
+norm_counts_small = apply(norm_elmir_5_30, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
 dev.off()
 ```
 
@@ -2642,7 +2833,7 @@ toMatch=c("Hemogenic Endothelial Progenitors")
 #Plot_balons(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Endoderm_2"],20,max_size=5,text_size=10)
 
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_blood_human.pdf",width = 8, height = 6)
-plot_balloon_marker(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
 dev.off()
 ```
 
@@ -2703,6 +2894,9 @@ dev.off()
 
 
 ```{r }
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+diff_map_endo=read.csv("endo_diffmap.csv")
 diff_map_elmir_endo=diff_map_endo[,2:4]
 diff_map_elmir_endo=diff_map_elmir_endo[,-2]
 
@@ -2719,6 +2913,8 @@ plot_umap(diff_map_elmir_endo,original_sub_cluster_diff)
 clu_endo=as.vector(umap_elmir$sub_cluster)
 clu_endo[as.vector(umap_elmir$sub_cluster)=="YS Endoderm"]="YSE"
 clu_endo[final_cluster_version_sub=="Endoderm_2"]="YSE1"
+clu_endo[clu_endo=="DE(P)"]="DE1"
+clu_endo[clu_endo=="DE(NP)"]="DE2"
 data_diff=data.frame(clu_endo,colnames(norm_elmir_5_30))
 
 row.names(data_diff)=colnames(norm_elmir_5_30)

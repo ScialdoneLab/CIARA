@@ -105,9 +105,10 @@ plot_interactive_here=function (coordinate_umap, norm_counts,color, text,ramp_li
     colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
     fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
         y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
-        marker = list(size = 5, width = 2), text = ~text, hoverinfo = "text",colors=ramp_list)
+        marker = list(size = 5, width = 2,line = list(color = "black",
+                                         width = 0.5)), text = ~text, hoverinfo = "text",colors=ramp_list)
    fig <- fig %>% 
-layout(plot_bgcolor='#e5ecf6')
+layout(plot_bgcolor='white')
     
     if (!is.null(min_x)) {
         fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
@@ -118,6 +119,10 @@ layout(paper_bgcolor='rgb(254, 247, 234)')
     return(fig)
     }
     
+
+#line = list(color = 'rgba(152, 0, 0, .8)',
+                                         #width = 2)
+#'#e5ecf6'
 ```
 
 ```{r }
@@ -404,15 +409,26 @@ localized_genes_mouse=detect_localized_genes(knn_matrix_elmir_5_30,norm_elmir_5_
 ramp <- colorRamp(c("white", "blue4"))
  
 
-
-ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
-
 rank_intersect=localized_genes_mouse[[2]]
 list_intersect=localized_genes_mouse[[1]]
+ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
+
+index_color=round(length(ramp.list)/2,0)
+ramp.list[index_color]
+
+
+breaks = seq(0,max(rank_intersect),length.out=1000)
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.25))), "#FFFFFF",ramp.list[index_color])
+
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), ramp.list[index_color], "#00008B" )
+
+
+hm.colors = c(gradient1,gradient2)
+
 
 genes_name_text=selection_localized_genes_here(list_intersect ,geni_top_top,max_number_genes=5)
 
-plot_interactive_here(cordinate_umap,norm_elmir_5_30,rank_intersect,genes_name_text,ramp.list,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+plot_interactive_here(cordinate_umap,norm_elmir_5_30,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 
 plot_genes_sum_here(cordinate_umap,norm_elmir_5_30,rank_intersect,"Top genes CIARA")
 

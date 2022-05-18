@@ -26,6 +26,111 @@ library(Seurat)
 library(clustree)
 ```
 
+```{r }
+detect_localized_genes=function(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,top_number){
+list_intersect=rep(list(0),length(colnames(knn_matrix_ane_24_update)))
+rank_intersect=rep(0,length(colnames(knn_matrix_ane_24_update)))
+for ( i in 1:length(colnames(knn_matrix_ane_24_update))){
+  knn_name=names(which(knn_matrix_ane_24_update[i,]==1))
+  geni_select=geni_top_top[1:top_number]
+  sum_knn=apply(norm_counts_ane_24_update[geni_select,knn_name],2,function(x){
+    somma=geni_select[which(x>1)]
+    return(somma)
+  })
+    rank_intersect[i]=sum(duplicated(as.vector(unlist(sum_knn))))
+    list_intersect[[i]]=unique(as.vector(unlist(sum_knn))[duplicated(as.vector(unlist(sum_knn)))])
+
+}
+return(list(list_intersect,rank_intersect))
+}
+```
+
+```{r }
+
+selection_localized_genes_here=function (list_intersect, geni_top_top, 
+    max_number_genes = 5){ 
+text=rep(0,length(list_intersect))
+
+for (i in 1:length(list_intersect)){
+  if (length(list_intersect[[i]])==0){
+    localized_genes="No specific genes"
+    text[i] <- "No specific genes"
+   
+  }
+  else {
+  localized_genes=geni_top_top[which(geni_top_top %in% list_intersect[[i]])]
+  
+  max_genes=min(max_number_genes,length(localized_genes))
+  if (max_genes<max_number_genes){
+    warning("max_number bigger than length of localized_genes. Set max_number_genes = length(localized_genes) ")
+  }
+  localized_genes=localized_genes[1:max_genes]
+  text[i]=paste(localized_genes, collapse = "-")
+  
+  
+  }
+}
+return(text)
+}
+
+
+```
+
+```{r }
+plot_interactive_here=function (coordinate_umap, norm_counts,color, text,ramp_list, min_x = NULL, max_x = NULL, 
+    min_y = NULL, max_y = NULL)
+  {
+  
+  
+  index_sort <- order(color)
+  text=text[index_sort]
+    row.names(coordinate_umap) <- colnames(norm_counts)
+    coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], 
+        ]
+    color <- sort(color)
+    
+
+    if (!requireNamespace("plotly", quietly = TRUE)) {
+        stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
+    }
+    colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
+    fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
+        y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
+        marker = list(size = 5, width = 2), text = ~text, hoverinfo = "text",colors=ramp_list)
+   fig <- fig %>% 
+layout(plot_bgcolor='#e5ecf6')
+    
+    if (!is.null(min_x)) {
+        fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
+            max_x)), yaxis = list(range = c(min_y, max_y))) %>% 
+layout(plot_bgcolor='rgb(254, 247, 234)') %>% 
+layout(paper_bgcolor='rgb(254, 247, 234)')
+    }
+    return(fig)
+    }
+    
+```
+
+```{r }
+plot_genes_sum_here=function (coordinate_umap, norm_counts, color_cell, name_title) 
+{
+    index_sort <- order(color_cell)
+    row.names(coordinate_umap) <- colnames(norm_counts)
+    coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], 
+        ]
+    color_cell <- sort(color_cell)
+    
+    umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 
+        1], coordinate_umap[, 2])) + ggplot2::geom_point(ggplot2::aes(colour = color_cell)) + 
+        ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Number of localized genes") + 
+        ggplot2::scale_colour_gradient(low = "white",high = "blue4") + 
+        ggplot2::ggtitle(name_title)
+    return((umap_plot))
+}
+
+
+
+```
 
 ```{r }
 
@@ -308,59 +413,62 @@ plot_genes_sum(cordinate_umap_24_update,norm_counts_ane_24_update,(ciara_genes),
 
 
 
-```{r }
-plot_interactive_here=function (coordinate_umap, color, text, min_x = NULL, max_x = NULL, 
-    min_y = NULL, max_y = NULL) 
-{
-    if (!requireNamespace("plotly", quietly = TRUE)) {
-        stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
-    }
-    colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
-    fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
-        y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
-        marker = list(size = 5, width = 2), text = ~text, hoverinfo = "text",colors='Blues')
-    if (!is.null(min_x)) {
-        fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
-            max_x)), yaxis = list(range = c(min_y, max_y)))
-    }
-    return(fig)
-}
-```
+
+
+
+
+
 
 
 ```{r }
-norm_counts_small = apply(norm_counts_ane_24_update[(ciara_genes), ], 
-        1, function(x) {
-            y = x/sum(x)
-            return(y)
-        })
-    gene_sum = apply(norm_counts_small, 1, sum)
-    
-    
-    
-genes_name_text=selection_localized_genes(norm_counts_ane_24_update,ciara_genes,min_number_cells=4,max_number_genes=4)
-plot.elmir=cordinate_umap_24_update
-colnames(plot.elmir)=c("UMAP_1","UMAP_2")
-library(plotly)
-plot_interactive_here(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+localized_genes_mouse=detect_localized_genes(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,100)  
 
-scale_colour_gradient(low = "white", high = "blue")
+ramp <- colorRamp(c("white", "blue4"))
+ 
 
-colorscale='YlOrRd'
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+
+#ramp.list <- rgb( ramp(seq(0, 1, length = length(rank_intersect)), max = 255))
+
+ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
+
+index_color=round(length(ramp.list)/2,0)
+#index_color=index_color*9
+
+
+breaks = seq(0,max(rank_intersect),length.out=1000)
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.25))), "#FFFFFF",ramp.list[index_color])
+
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), ramp.list[index_color], "#00008B" )
+
+
+hm.colors = c(gradient1,gradient2)
+
+
+
+
+genes_name_text=selection_localized_genes_here(list_intersect ,geni_top_top,max_number_genes=5)
+
+plot_interactive_here(cordinate_umap_24_update,norm_counts_ane_24_update,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+
+plot_genes_sum_here(cordinate_umap_24_update,norm_counts_ane_24_update,rank_intersect,"Top genes CIARA")
+
 ```
-## Don't run
+
+## Old
 ```{r }
-#plot_interactive
-gene_sum=rep(0,length(genes_name_text))
-for (i in 1:length(genes_name_text)){
-top_genes=strsplit(genes_name_text[i],"-")[[1]]
-if (all(top_genes%in%colnames(norm_counts_small))){
-  gene_sum[i] = sum(norm_counts_small[i,top_genes])}
-else {gene_sum[i]=0}
-  
-}
-plot_interactive(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+
+plot_genes_sum(cordinate_umap_24_update,norm_counts_ane_24_update,(ciara_genes),"Sum from top ciara genes")
+
 ```
+
+
+
+
+
+
+
 
 
 
@@ -909,7 +1017,7 @@ load("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_proje
 setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
 load(file='mayra_dati_raw_0.Rda')
 mayra_seurat_0=cluster_analysis_integrate_rare(mayra_dati_raw_0,"Mayra_data_0",0.1,5,30)
-#norm_counts_ane_0=as.matrix(GetAssayData(mayra_seurat_0, slot = "data",assay="RNA"))
+norm_counts_ane_0=as.matrix(GetAssayData(mayra_seurat_0, slot = "data",assay="RNA"))
 #knn_matrix_ane_0=as.matrix(mayra_seurat_0@graphs$RNA_nn)
 
 load("knn_matrix_ane_0.Rda")
@@ -918,6 +1026,8 @@ load("norm_counts_ane_0.Rda")
 #vedo=load("entropy_ane_0.Rda")
 cordinate_umap_0=as.data.frame(Embeddings(mayra_seurat_0, reduction = "umap")[, 1:2])
 ```
+
+
 ```{r }
 ciara_genes=row.names(result)[result[,1]<1]
 #geni_top=row.names(result)[result[,1]==0&result[,2]<0.0001]
@@ -939,18 +1049,99 @@ for(i in (geni_top_top)[1:10]){
 p
 ```
 
+
 ```{r }
-norm_counts_small <- apply(norm_counts_ane_0[ciara_genes, ], 1, function(x) {
-  y <- x/sum(x)
-  return(y)
-  })
-gene_sum <- apply(norm_counts_small, 1, sum)
-    
-    
-genes_name_text <- selection_localized_genes(norm_counts_ane_0, ciara_genes, min_number_cells = 4, max_number_genes = 4)
-colnames(cordinate_umap_0) <- c("UMAP_1","UMAP_2")
-plot_interactive_here(cordinate_umap_0, gene_sum, genes_name_text, min_x=NULL, max_x=NULL, min_y=NULL, max_y=NULL)
+localized_genes_mouse=detect_localized_genes(knn_matrix_ane_0,norm_counts_ane_0,geni_top_top,100) 
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+
+ramp <- colorRamp(c("white", "blue4"))
+
+
+
+
+ramp <- colorRamp(c("white", "blue4"))
+ 
+
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+
+
+ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
+
+index_color=round(length(ramp.list)/2,0)
+
+
+breaks = seq(0,max(rank_intersect),length.out=1000)
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.25))), "#FFFFFF",ramp.list[index_color])
+
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), ramp.list[index_color], "#00008B" )
+
+
+hm.colors = c(gradient1,gradient2)
+ 
+
+
+
+
+
+genes_name_text=selection_localized_genes_here(list_intersect ,geni_top_top,max_number_genes=5)
+
+plot_interactive_here(cordinate_umap_0,norm_counts_ane_0,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+
+plot_genes_sum_here(cordinate_umap_0,norm_counts_ane_0,rank_intersect,"Top 100 genes CIARA")
+
 ```
+
+
+
+
+
+
+
+```{r }
+mayra_0_ciara=cluster_analysis_integrate_rare(mayra_dati_raw_0,"Mayra data",0.1,5,30,(ciara_genes))
+
+#mayra_0_ciara=cluster_analysis_integrate_rare(mayra_dati_raw_0,"Mayra data",0.1,5,30,NULL)
+
+```
+
+```{r }
+
+find_resolution(mayra_0_ciara,seq(0.01,1,0.1))
+
+```
+
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umap_cluster_ane_day_0.pdf",width = 8,height = 6)
+plot_umap(cordinate_umap_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1))
+dev.off()
+
+```
+
+```{r}
+table(as.vector(mayra_0_ciara$RNA_snn_res.0.1),cluster_number_0)
+```
+
+```{r}
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/day_0_ane_gata6.pdf",width = 8,height = 6)
+plot_gene(norm_counts_ane_0,cordinate_umap_0,"Gata6","Gata6")
+dev.off()
+cluster_2=as.vector(mayra_0_ciara$RNA_snn_res.0.1)
+cluster_2[as.vector(mayra_0_ciara$RNA_snn_res.0.1)!=2]="Other cluster"
+
+ind_1=which(cluster_2=="Other cluster")
+ind_2=which(cluster_2==2)
+ind_all=c(ind_1,ind_2)
+cordinate_umap_0_new=cordinate_umap_0[ind_all,]
+cluster_2_new=cluster_2[ind_all]
+p=plot_umap(cordinate_umap_0_new,cluster_2_new)
+p[[1]]+scale_color_manual(values=c("black", "white"))
+
+```
+
+
 
 
 # Original cluster annotation

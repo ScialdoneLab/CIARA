@@ -245,6 +245,43 @@ cordinate_umap=umap_elmir[,2:3]
 ```
 
 
+```{r }
+plot_gene(norm_elmir_5_30,cordinate_umap,"NANOS3","NANOS3")
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/dppa5.pdf",width = 8,height = 6)
+plot_gene(norm_elmir_5_30,cordinate_umap,"DPPA5","DPPA5")+theme(text = element_text(size=18))
+dev.off()
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/nanos3.pdf",width = 8,height = 6)
+plot_gene(norm_elmir_5_30,cordinate_umap,"NANOS3","NANOS3")+theme(text = element_text(size=18))
+dev.off()
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/cluster_low.pdf",width = 8,height = 6)
+p=plot_umap(cordinate_umap,general_cluster_version_elmir)
+
+p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+dev.off()
+
+elmir_seurat_5=FindClusters(elmir_seurat_5,resolution = 1)
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/cluster_high.pdf",width = 8,height = 6)
+p=plot_umap(cordinate_umap,elmir_seurat_5$seurat_clusters)
+p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+dev.off()
+
+
+
++theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+
+```
 
 
 ## Cluster provided by Tyser et al, 2020
@@ -432,6 +469,109 @@ plot_interactive_here(cordinate_umap,norm_elmir_5_30,rank_intersect,genes_name_t
 
 plot_genes_sum_here(cordinate_umap,norm_elmir_5_30,rank_intersect,"Top genes CIARA")
 
+```
+
+```{r }
+localized_genes_mouse=detect_localized_genes(knn_matrix_elmir_5_30,norm_elmir_5_30,geni_top_top,length(ciara_genes))
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+names(rank_intersect)=colnames(norm_elmir_5_30)
+names(list_intersect)=colnames(norm_elmir_5_30)
+rare_cells=names(rank_intersect)[rank_intersect>=20]
+list_intersect_rare=list_intersect[rare_cells]
+
+
+
+bo=crossprod(table(stack(list_intersect_rare)))
+bo_2=apply(bo,1,function(x){
+  index_cell=which(x>=20)
+  
+  common_cells=colnames(norm_elmir_5_30)[index_cell]
+  
+  return(common_cells)
+})
+
+bo_3=crossprod(table(stack((bo_2))))
+
+#bo_3[1,][bo_3[1,]>=3]
+
+cluster_list=list(0)
+i=1
+while(i>0) {
+
+  
+  if (sum(bo_3[i,]>=3)>=3){
+bo_4=apply(bo_3[,which(bo_3[i,]>=3)],2,function(x){
+  max_x=max(x)
+  if (all((which(x==max_x)%in%which(bo_3[i,]>=3)))){
+  return(TRUE)
+  }
+  else{
+    return(FALSE)
+  }
+  })
+cluster_rare=names(which(bo_3[i,]>=3)[bo_4])
+cluster_rare=list(cluster_rare)
+if (length(cluster_rare)>0){
+  cluster_list=append(cluster_list,cluster_rare)
+  print(cluster_rare)
+  bo_3=bo_3[-c(as.vector(which(bo_3[i,]>=3)[bo_4])),-c(as.vector(which(bo_3[i,]>=3)[bo_4]))]
+  #bo_3=bo_3[-i,-c(as.vector(which(bo_3[i,]>=3)[bo_4]))]
+}
+
+if (dim(bo_3)[1]>2){
+  
+    i=1
+    print(i)
+  }
+if (dim(bo_3)[1]<=2){
+    break
+  }
+
+  }
+  if (sum(bo_3[i,]>=3)<3 & i<=dim(bo_3)[1]){
+    print(i)
+    i=i+1
+    if (i>dim(bo_3)[1]){
+    break
+  }
+  }
+  
+  
+  
+  
+  
+  
+
+
+}
+
+cluster_final=rep("Other",length(colnames(norm_elmir_5_30)))
+cluster_list=cluster_list[-1]
+
+for (i in 1:length(cluster_list)){
+  cluster_final[colnames(norm_elmir_5_30)%in%cluster_list[[i]]]=i
+}
+
+
+plot_umap(cordinate_umap,cluster_final)
+
+plot_umap(cordinate_umap,final_cluster_version_sub)
+
+
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+
+all(colnames(norm_elmir_5_30)[final_cluster_version_sub=="PGC"]%in%rare_cells)
+
+
+
+pgc_cells=colnames(norm_elmir_5_30)[final_cluster_version_sub=="PGC"]
+mega_cells=colnames(norm_elmir_5_30)[final_cluster_version_sub=="Hemogenic Endothelial Progenitors_4"]
+
+
+table(umap_elmir$sub_cluster,cluster_final)
+
+table(final_cluster_version_sub,cluster_final)
 ```
 
 
@@ -1710,9 +1850,10 @@ startRes_3_up=startRes_3_up[order(startRes_3_up$waldStat_lineage3,decreasing = T
 #t_1 <- as.numeric(pseudotime[,1])
 t_3=as.numeric(sim_es$slingPseudotime_3)
 topgenes_3 <- row.names(startRes_3_up)[1:40]
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/trajectory_marker_mega.pdf",width = 8,height = 6)
 heatmap_markers_time(topgenes_3,topgenes_3,t_3,sim_es$GMM,norm_mega)
-
-sum(ciara_genes_old%in%topgenes_3)
+dev.off()
+#sum(ciara_genes_old%in%topgenes_3)
 topgenes_3_ciara=topgenes_3[topgenes_3%in%ciara_genes_old]
 
 p=list()
@@ -1736,8 +1877,9 @@ p
 #t_1 <- as.numeric(pseudotime[,1])
 t_4=as.numeric(sim_es$slingPseudotime_4)
 topgenes_4 <- row.names(startRes_4_up)[1:40]
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/trajectory_marker_mega_2.pdf",width = 8,height = 6)
 heatmap_markers_time(topgenes_4,topgenes_4,t_4,sim_es$GMM,norm_mega)
-
+dev.off()
 sum(ciara_genes_old%in%topgenes_4)
 topgenes_4_ciara=topgenes_4[topgenes_4%in%ciara_genes_old]
 
@@ -2777,12 +2919,13 @@ plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_nu
         gene_values_0 <- apply(norm_counts[unlist(all_markers, 
             use.names = FALSE), cluster == livelli[i]], 1, mean)
         all_markers_values[[i]] <- gene_values_0
+        all_markers_values[[i]]=gene_values_0/max(gene_values_0)
     }
     values <- rep(list(0), length(livelli))
     for (i in 1:length(livelli)) {
         valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
             cluster == livelli[i]], 1, function(x) {
-            sum(x > 0.001)/length(x)
+            sum(x > 1)/length(x)
         })
         values[[i]] <- valore
     }
@@ -2806,7 +2949,7 @@ plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_nu
                 fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
         ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
             na.value = NA) + ggplot2::labs(colour = "Mean log2 norm expression", 
-        size = "Value (fraction cells above 0.001 log2 norm counts)") + 
+        size = "Value (fraction cells above 1 log2 norm counts)") + 
         ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
         ggplot2::theme(text = ggplot2::element_text(size = text_size), 
             axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
@@ -2831,6 +2974,9 @@ norm_counts_small = apply(norm_elmir_5_30,
         })
 norm_counts_small=t(norm_counts_small)
 plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_endo_human_new.pdf",width = 8, height = 6)
+plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
 dev.off()
 ```
 
@@ -2850,6 +2996,9 @@ toMatch=c("Hemogenic Endothelial Progenitors")
 
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_blood_human.pdf",width = 8, height = 6)
 plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_blood_human_new.pdf",width = 8, height = 6)
+plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
 dev.off()
 ```
 

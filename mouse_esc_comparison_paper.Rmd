@@ -22,6 +22,73 @@ library(circlize)
 library(Seurat)
 library(EntropyMixingR)
 ```
+
+
+```{r}
+plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_counts[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 0.001)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean log2 norm expression", 
+        size = "Value (fraction cells above 0.001 log2 norm counts)") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
 ```{r }
 Test_Fisher=function(entropy_cluster,method_cluster){
 level=levels(as.factor(entropy_cluster))
@@ -332,6 +399,44 @@ plot_umap(cordinate_umap_24_update,Final_Clusters)
 plot_umap(cordinate_umap_24_update,cluster_id)
 ```
 
+## Start cluster and baloon plot analysis 
+```{r}
+DefaultAssay(mayra_seurat_24_update) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(mayra_seurat_24_update,Final_Clusters,names(mayra_seurat_24_update$RNA_snn_res.0.1),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_counts_ane_24_update, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+plot_balloon_marker_norm(norm_counts_small,Final_Clusters,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_counts_ane_24_update,Final_Clusters,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+#plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(to#Match,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+```
+
+```{r }
+plot_umap(cordinate_umap_24_update,sc@cpart)
+```
+
+## End cluster and baloon plot analysis
+
 ```{r }
 geni_marker=top_1
 positive_cells_1=find_positive_cells(norm_counts_ane_24_update,threshold=0,geni_marker)
@@ -574,6 +679,50 @@ upset(fromList(listInput), order.by = "freq")
 
 ```
 
+## Start cluster and baloon plot analysis 
+```{r}
+DefaultAssay(mayra_seurat_24_update) <- "RNA"
+cell_select=colnames(norm_filter)
+index_select=colnames(norm_counts_ane_24_update)%in%cell_select
+cell_new_sort=colnames(norm_counts_ane_24_update)[index_select]
+meta_clu=data.frame(cell_select,finalCluster)
+row.names(meta_clu)=cell_select
+meta_clu=meta_clu[cell_new_sort,2]
+markers_first_elmir=markers_cluster_seurat(mayra_seurat_24_update[,index_select],meta_clu,names(mayra_seurat_24_update$RNA_snn_res.0.1)[index_select],5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_counts_ane_24_update, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+plot_balloon_marker_norm(norm_counts_small[,index_select],meta_clu,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_counts_ane_24_update[,index_select],meta_clu,marker_all_day_24_first,4,max_size=5,text_size=10)
+
+#plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(to#Match,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+```
+
+
+```{r }
+plot_umap(cordinate_umap_24_update[index_select,],meta_clu)
+```
+
+##End cluster analysis and baloon plot
 
 ## Giniclust3 from python script giniclust3
 
@@ -592,6 +741,39 @@ Plot_umap(cordinate_umap_24_update,final_gini)
 Plot_umap(cordinate_umap_24_update,only_gini)
 ```
 
+## Plot umap and baloon plot of cluster from Gini3
+
+```{r}
+DefaultAssay(mayra_seurat_24_update) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(mayra_seurat_24_update,final_gini,names(mayra_seurat_24_update$RNA_snn_res.0.1),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_counts_ane_24_update, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+plot_balloon_marker_norm(norm_counts_small,final_gini,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_counts_ane_24_update,final_gini,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+#plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(to#Match,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+```
+## Stp cluster anlysis and baloon plot
 
 ```{r }
 geni_marker=top_1
@@ -851,6 +1033,38 @@ load(file="cordinate_umap_24_update.Rda")
 plot_umap(cordinate_umap_24_update,sam_cluster)
 
 ```
+## Cluster analysis and baloon plots with SALMON
+```{r}
+DefaultAssay(mayra_seurat_24_update) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(mayra_seurat_24_update,sam_cluster,names(mayra_seurat_24_update$RNA_snn_res.0.1),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_counts_ane_24_update, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+plot_balloon_marker_norm(norm_counts_small,sam_cluster,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_counts_ane_24_update,sam_cluster,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+#plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(to#Match,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+```
+
 
 # Triku
 ```{r}
@@ -985,6 +1199,43 @@ plotexpmap(sc,'Fbp2',logsc=TRUE,um=TRUE)
 Plot_umap(sc@umap,sc@cpart)
 ```
 
+## Cluster and baloon plot
+```{r}
+DefaultAssay(mayra_seurat_24_update) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(mayra_seurat_24_update,sc@cpart,names(mayra_seurat_24_update$RNA_snn_res.0.1),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_counts_ane_24_update, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+plot_balloon_marker_norm(norm_counts_small,sc@cpart,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_counts_ane_24_update,sc@cpart,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+#plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(to#Match,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+```
+
+```{r }
+plot_umap(cordinate_umap_24_update,sc@cpart)
+```
+
+## end cluster and baloon plot
 ```{r }
 geni_marker=top_1
 positive_cells=find_positive_cells(norm_counts_ane_24_update,threshold=0,geni_marker)

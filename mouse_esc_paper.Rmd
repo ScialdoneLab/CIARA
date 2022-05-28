@@ -76,6 +76,8 @@ return(text)
 
 ```
 
+
+
 ```{r }
 plot_interactive_here=function (coordinate_umap, norm_counts,color, text,ramp_list, min_x = NULL, max_x = NULL, 
     min_y = NULL, max_y = NULL)
@@ -96,9 +98,10 @@ plot_interactive_here=function (coordinate_umap, norm_counts,color, text,ramp_li
     colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
     fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
         y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
-        marker = list(size = 5, width = 2), text = ~text, hoverinfo = "text",colors=ramp_list)
+        marker = list(size = 5, width = 2,line = list(color = "black",
+                                         width = 0.5)), text = ~text, hoverinfo = "text",colors=ramp_list)
    fig <- fig %>% 
-layout(plot_bgcolor='#e5ecf6')
+layout(plot_bgcolor='white')
     
     if (!is.null(min_x)) {
         fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
@@ -109,6 +112,10 @@ layout(paper_bgcolor='rgb(254, 247, 234)')
     return(fig)
     }
     
+
+#line = list(color = 'rgba(152, 0, 0, .8)',
+                                         #width = 2)
+#'#e5ecf6'
 ```
 
 ```{r }
@@ -1114,8 +1121,12 @@ find_resolution(mayra_0_ciara,seq(0.01,1,0.1))
 
 
 ```{r }
+p=plot_umap(cordinate_umap_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1))
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umap_cluster_ane_day_0.pdf",width = 8,height = 6)
-plot_umap(cordinate_umap_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1))
+p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
 dev.off()
 
 ```

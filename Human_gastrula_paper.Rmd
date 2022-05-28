@@ -1341,7 +1341,12 @@ colData(sim)$GMM <- clu_spe
 
 ```{r}
 q=plot_umap(as.data.frame(diff_map_elmir),clu_spe)
-q[[1]]+ylab("DC2")+xlab("DC1")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/blood_diff_map_torino.pdf",width = 8,height = 6)
+q[[1]]+ylab("DC2")+xlab("DC1")+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+dev.off()
 ```
 
 ###Don't run
@@ -2770,6 +2775,14 @@ pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_januar
 ggplot(data=df, aes(x=Method, y=MCC)) +
   geom_bar(stat="identity", width=0.5)+ylim(-0.01,1)+ggtitle("MCC score")
 dev.off()
+
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/bar_plot_mcc_pgc_background_conference.pdf",width = 8, height = 6)
+ggplot(data=df, aes(x=Method, y=MCC)) +
+  geom_bar(stat="identity", width=0.5)+ylim(-0.01,1)+ggtitle("MCC score")+ggplot2::theme(text = ggplot2::element_text(size = 18), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+dev.off()
 #+scale_fill_manual(values=c(CIARA:::gg_color_hue(6)))
 ```
 
@@ -2978,6 +2991,18 @@ plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),ori
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_endo_human_new.pdf",width = 8, height = 6)
 plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
 dev.off()
+
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load(file="top_endo.Rda")
+#load(file="top_hemo.Rda")
+#load(file="top_meso.Rda")
+names(top_endo)=rep("YSE1",length(top_endo))
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_endo_conference.pdf",width = 8, height = 6)
+plot_balloon_marker_here(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],top_endo,10,max_size=8,text_size=18)
+dev.off()
+#markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="YSE1"]
 ```
 
 ```{r}
@@ -3000,6 +3025,23 @@ plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),ori
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_blood_human_new.pdf",width = 8, height = 6)
 plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
 dev.off()
+
+
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_endo_conference.pdf",width = 8, height = 6)
+plot_balloon_marker(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],top_endo,5,max_size=5,text_size=12)
+dev.off()
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load(file="top_hemo.Rda")
+#load(file="top_hemo.Rda")
+#load(file="top_meso.Rda")
+names(top_hemo)=rep("MEP1",length(top_hemo))
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_hemo_conference.pdf",width = 8, height = 6)
+plot_balloon_marker_here(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],top_hemo,10,max_size=8,text_size=16)
+dev.off()
+
 ```
 
 # Endoderm spatial origin

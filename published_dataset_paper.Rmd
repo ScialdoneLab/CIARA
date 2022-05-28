@@ -381,7 +381,7 @@ plot_gene(norm_gini_entropy,cordinate_gini_entropy,"Zscan4d","Zscan4d")
 
 
 cluster_vedo=rep("Others",length(cluster_entropy))
-cluster_vedo[cluster_entropy==6]="2CLC"
+cluster_vedo[cluster_entropy==5]="2CLC"
 
 
 plot_umap(cordinate_gini,cluster_vedo)
@@ -459,8 +459,12 @@ library(CIARA)
 method=factor(c("CIARA","GiniClust"),levels=c(c("CIARA","GiniClust")))
 df=data.frame(c(0.87,0.87),method)
 colnames(df)=c("MCC","Method")
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/mcc_score_1.pdf",width = 8,height = 6)
 ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
   geom_bar(stat="identity", width=0.5)+ylim(0,1)+ggtitle("MCC score")+scale_fill_manual(values=c(CIARA:::gg_color_hue(2)))
+dev.off()
+#+theme(text = element_text(size=18))
 ```
 
 
@@ -742,8 +746,10 @@ library(CIARA)
 method=factor(c("CIARA","GiniClust"),levels=c(c("CIARA","GiniClust")))
 df=data.frame(c(0.74,0.66),method)
 colnames(df)=c("MCC","Method")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/mcc_score_2.pdf",width = 8,height = 6)
 ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
   geom_bar(stat="identity", width=0.5)+ylim(0,1)+ggtitle("MCC score")+scale_fill_manual(values=c(CIARA:::gg_color_hue(2)))
+dev.off()
 ```
 
 ## Other rare clusters present
@@ -1140,8 +1146,10 @@ library(CIARA)
 method=factor(c("CIARA","FiRE"),levels=c(c("CIARA","FiRE")))
 df=data.frame(c(0.95,0.74),method)
 colnames(df)=c("MCC","Method")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/mcc_score_3.pdf",width = 8,height = 6)
 ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
   geom_bar(stat="identity", width=0.5)+ylim(0,1)+ggtitle("MCC score")+scale_fill_manual(values=c(CIARA:::gg_color_hue(2)))
+dev.off()
 ```
 
 
@@ -1444,8 +1452,10 @@ library(CIARA)
 method=factor(c("CIARA","CellSIUS"),levels=c(c("CIARA","CellSIUS")))
 df=data.frame(c(1,1),method)
 colnames(df)=c("MCC","Method")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/mcc_score_4.pdf",width = 8,height = 6)
 ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
   geom_bar(stat="identity", width=0.5)+ylim(0,1)+ggtitle("MCC score")+scale_fill_manual(values=c(CIARA:::gg_color_hue(2)))
+dev.off()
 ```
 
 
@@ -2821,8 +2831,10 @@ library(CIARA)
 method=factor(c("CIARA","GiniClust2"),levels=c(c("CIARA","GiniClust2")))
 df=data.frame(c(0.7398754,0.7398754),method)
 colnames(df)=c("MCC","Method")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/mcc_score_5.pdf",width = 8,height = 6)
 ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
   geom_bar(stat="identity", width=0.5)+ylim(0,1)+ggtitle("MCC score")+scale_fill_manual(values=c(CIARA:::gg_color_hue(2)))
+dev.off()
 ```
 
 ```{r }
@@ -2831,8 +2843,10 @@ library(CIARA)
 method=factor(c("CIARA","GiniClust2"),levels=c(c("CIARA","GiniClust2")))
 df=data.frame(c(0.8911083,0.7019264),method)
 colnames(df)=c("MCC","Method")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/mcc_score_6.pdf",width = 8,height = 6)
 ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
   geom_bar(stat="identity", width=0.5)+ylim(0,1)+ggtitle("MCC score")+scale_fill_manual(values=c(CIARA:::gg_color_hue(2)))
+dev.off()
 ```
 
 ## End GiniClust2

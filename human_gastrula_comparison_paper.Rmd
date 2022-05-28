@@ -168,7 +168,7 @@ table(final_cluster_version_sub,finalCluster)
 setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
 vedo=load("experiment_name_StatisticsTable_afterLOESS_elmir.RData")
 load("experiment_name_FinalClustering_elmir.RData")
-load("CELLSIUS_elmir.Rda")
+vedo=load("CELLSIUS_elmir.Rda")
 CELLSIUS_elmir=result
 
 #vedo=load(system.file("extdata", "experiment_name_StatisticsTable_afterLOESS_elmir.RData", package ="EntropyMixingR"))
@@ -429,6 +429,39 @@ bo=find_jacardi_new(as.character(finalCluster),norm_elmir_5_30,i,positive_cells)
 
 ```{r }
 plot_umap(cordinate_umap,as.character(finalCluster))
+```
+
+
+## Start cluster and baloon plot analysis 
+```{r}
+DefaultAssay(elmir_seurat_5) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(elmir_seurat_5,finalCluster,names(elmir_seurat_5$RNA_snn_res.0.1),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_elmir_5_30, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+plot_balloon_marker_norm(norm_counts_small,finalCluster,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_elmir_5_30,finalCluster,marker_all_day_24_first,5,max_size=3,text_size=8)
+
+#plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(to#Match,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
 ```
 
 ```{r}
@@ -723,12 +756,51 @@ gini3_genes_names=read.table("gini3_genes_name.txt")
 row.names(gini3_genes)=gini3_genes_names$V1
 gini3_geni=row.names(gini3_genes)[gini3_genes$V2=="True"]
 
-which(geni_pgc%in%gini3_geni)
+#which(geni_pgc%in%gini3_geni)
 
 only_gini=only_gini$V1
 Plot_umap(cordinate_umap,final_gini)
 Plot_umap(cordinate_umap,only_gini)
 ```
+
+
+## Start cluster and baloon plot analysis 
+```{r}
+DefaultAssay(elmir_seurat_5) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(elmir_seurat_5,final_gini,names(elmir_seurat_5$RNA_snn_res.0.1),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_elmir_5_30, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+plot_balloon_marker_norm(norm_counts_small,final_gini,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_elmir_5_30,final_gini,marker_all_day_24_first,3,max_size=3,text_size=6)
+
+#plot_balloon_marker_norm(norm_counts_small[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(to#Match,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+```
+
+
+
+
+
+
 ## New approach with positive cells
 ```{r }
 
@@ -861,6 +933,20 @@ final_sort_triku=names(triku_distance)[order(triku_distance,decreasing = T)]
 ```
 
 ```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+vedo=load("elmir.Rda")
+ciara_genes=row.names(result)[result[,1]<1]
+#geni_top_top_old=row.names(result)[order(as.numeric(result[,1]))]
+
+final_sort_triku=final_sort_triku[final_sort_triku%in%geni_top_top]
+
+```
+
+
+
+
+
+```{r}
 setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
 load(file="markers_first_elmir_final.Rda")
 marker_elmir_all=markers_first_elmir_final[[3]]
@@ -974,7 +1060,7 @@ find_resolution(human_data_triku, seq(0.01,0.5,0.1))
 ```{r}
 library(CellSIUS)
 
-#CELLSIUS_elmir=result
+CELLSIUS_elmir=result
 
 #Below the changed version of cellsius for detecting PGC (in this way we don't detect any more sub endo 2 and hemo_4)
  setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
@@ -982,7 +1068,7 @@ library(CellSIUS)
  general_cluster_version=umap_elmir$cluster_id
  cluster_id=general_cluster_version
 names(cluster_id)=colnames(raw_elmir_5_30)
- Final_Clusters = CellSIUS_final_cluster_assignment(CellSIUS.out=CellSIUS_elmir_new, group_id=cluster_id, min_n_genes = 3)
+ Final_Clusters = CellSIUS_final_cluster_assignment(CellSIUS.out=CELLSIUS_elmir, group_id=cluster_id, min_n_genes = 3)
  #Standard version with standard parameters (we don't detect PGC)
  #Final_Clusters = CellSIUS_final_cluster_assignment(CellSIUS.out=CellSIUS_elmir, group_id=cluster_id, min_n_genes = 3)
 
@@ -990,9 +1076,50 @@ names(cluster_id)=colnames(raw_elmir_5_30)
 
 ```{r }
 plot_umap(cordinate_umap,Final_Clusters)
+plot_umap(cordinate_umap,Final_Clusters_new)
 plot_umap(cordinate_umap,cluster_id)
 ```
+## Start cluster and baloon plot analysis 
+```{r}
+DefaultAssay(elmir_seurat_5) <- "RNA"
 
+excluded=names(table(Final_Clusters)[table(Final_Clusters)<3])
+index_select=!(Final_Clusters%in%excluded)
+
+#levels(Final_Clusters)=seq(1,length(unique(Final_Clusters)))
+Final_Clusters_new=Final_Clusters
+for ( i in 1:length(unique(Final_Clusters))){
+  Final_Clusters_new[Final_Clusters==unique(Final_Clusters)[i]]=i
+}
+markers_first_elmir=markers_cluster_seurat(elmir_seurat_5[,index_select],Final_Clusters_new[index_select],names(elmir_seurat_5$RNA_snn_res.0.1)[index_select],5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_elmir_5_30, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+#plot_balloon_marker_norm(norm_counts_small,Final_Clusters,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_elmir_5_30[,index_select],Final_Clusters_new[index_select],marker_all_day_24_first,5,max_size=2,text_size=4)
+
+
+```
+##End cluster and baloon
 ```{r }
 
 
@@ -1329,7 +1456,7 @@ fdata <- getfdata(sc)
 
 sc <- compdist(sc,metric="pearson")
 
-sc <- clustexp(sc,clustnr =30)
+#sc <- clustexp(sc,clustnr =30)
 ```
 
 
@@ -1354,6 +1481,44 @@ sc <- findoutliers(sc)
 
 ```{r }
 Plot_umap(cordinate_umap,sc@cpart)
+```
+## Start with cluster and baloon plot
+```{r}
+Final_Clusters=as.vector(sc@cpart)
+DefaultAssay(elmir_seurat_5) <- "RNA"
+
+excluded=names(table(Final_Clusters)[table(Final_Clusters)<3])
+index_select=!(Final_Clusters%in%excluded)
+
+#levels(Final_Clusters)=seq(1,length(unique(Final_Clusters)))
+
+markers_first_elmir=markers_cluster_seurat(elmir_seurat_5[,index_select],Final_Clusters[index_select],names(elmir_seurat_5$RNA_snn_res.0.1)[index_select],5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_elmir_5_30, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+#plot_balloon_marker_norm(norm_counts_small,Final_Clusters,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_elmir_5_30[,index_select],Final_Clusters[index_select],marker_all_day_24_first,2,max_size=2,text_size=6)
+
+
 ```
 
 
@@ -1571,17 +1736,25 @@ marker_pgc=c("NANOS3","NANOG","SOX17","DPPA5")
 index_sc=match(marker_pgc,top_values)
 index_ciara=match(marker_pgc,geni_top_top)
 index_triku=match(marker_pgc,final_sort_triku)
+#index_triku_old=match(marker_pgc,final_sort_triku)
 index_sam=match(marker_pgc,sam_genes)
 
 
 index_dist=data.frame(index_ciara,index_sc,index_triku,index_sam)
+index_dist=index_dist[order(index_ciara),]
 index_dist_log=log(index_dist)
 row.names(index_dist)=marker_pgc
 colnames(index_dist)=c("CIARA","sCH","Triku","SAM")
 index_dist=as.matrix(index_dist)
+my_palette <- colorRampPalette(c("lightblue1", "black"))(n = 1000)
+#my_palette <- colorRampPalette(c("", "#3182bd"))(n = 1000)
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/heatmap_rank_4_pgc.pdf",width=8,height = 6)
-heatmap.2(log(index_dist), scale = "none",col = bluered(100), 
+#heatmap.2(log(index_dist), scale = "none",col = bluered(100), 
+          #trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1)
+
+heatmap.2(log(index_dist), scale = "none",col = my_palette, 
           trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1)
+
 dev.off()
 ```
 
@@ -1598,6 +1771,7 @@ index_sam=match(marker_pgc_full,sam_genes)
 
 index_dist=data.frame(index_ciara,index_sc,index_triku, index_sam)
 row.names(index_dist)=marker_pgc_full
+index_dist=index_dist[order(index_ciara),]
 colnames(index_dist)=c("CIARA","sCH","Triku","SAM")
 index_dist=as.matrix(index_dist)
 ```
@@ -1609,8 +1783,10 @@ heatmap.2(index_dist_log, scale = "none", col = bluered(100),
           trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1,labRow=FALSE)
 
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/heatmap_rank_all_pgc.pdf",width=8,height = 6)
-heatmap.2(index_dist_log, scale = "none", col = bluered(100), 
-          trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1)
+#heatmap.2(index_dist_log, scale = "none", col = bluered(100), 
+          #trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1)
+my_palette <- colorRampPalette(c("lightblue1", "black"))(n = 1000)
+heatmap.2(index_dist_log, scale = "none", col = my_palette, trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1,labRow=FALSE)
 dev.off()
 
 #heatmap.2(index_dist, scale = "none", 
@@ -1862,6 +2038,48 @@ which(sam_genes=="DPPA5")
 ```{r}
 plot_umap(cordinate_umap,sam_cluster)
 ```
+## Start with cluster and baloon plot
+```{r}
+DefaultAssay(elmir_seurat_5) <- "RNA"
+
+excluded=names(table(sam_cluster)[table(sam_cluster)<3])
+index_select=!(sam_cluster%in%excluded)
+
+#levels(Final_Clusters)=seq(1,length(unique(Final_Clusters)))
+
+markers_first_elmir=markers_cluster_seurat(elmir_seurat_5[,index_select],sam_cluster[index_select],names(elmir_seurat_5$RNA_snn_res.0.1)[index_select],5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+norm_counts_small = apply(norm_elmir_5_30, 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+norm_counts_small=t(norm_counts_small)
+
+
+#plot_balloon_marker_norm(norm_counts_small,Final_Clusters,marker_all_day_24_first,5,max_size=5,text_size=10)
+
+plot_balloon_marker(norm_elmir_5_30[,index_select],sam_cluster[index_select],marker_all_day_24_first,5,max_size=3,text_size=6)
+
+
+```
+
+
+
+
+
 ```{r }
 library("mltools")
 #mcc()

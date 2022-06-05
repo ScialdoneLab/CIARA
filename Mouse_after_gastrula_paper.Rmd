@@ -34,10 +34,144 @@ library(Seurat)
 
 
 
+```{r }
+detect_localized_genes=function(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,top_number){
+list_intersect=rep(list(0),length(colnames(knn_matrix_ane_24_update)))
+rank_intersect=rep(0,length(colnames(knn_matrix_ane_24_update)))
+for ( i in 1:length(colnames(knn_matrix_ane_24_update))){
+  knn_name=names(which(knn_matrix_ane_24_update[i,]==1))
+  geni_select=geni_top_top[1:top_number]
+  sum_knn=apply(norm_counts_ane_24_update[geni_select,knn_name],2,function(x){
+    somma=geni_select[which(x>1)]
+    return(somma)
+  })
+    #rank_intersect[i]=sum(duplicated(as.vector(unlist(sum_knn))))
+    list_intersect[[i]]=unique(as.vector(unlist(sum_knn))[duplicated(as.vector(unlist(sum_knn)))])
+    rank_intersect[i]=length(list_intersect[[i]])
+
+}
+return(list(list_intersect,rank_intersect))
+}
+```
+
+##old implementation
+```{r }
+detect_localized_genes_old=function(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,top_number){
+list_intersect=rep(list(0),length(colnames(knn_matrix_ane_24_update)))
+rank_intersect=rep(0,length(colnames(knn_matrix_ane_24_update)))
+for ( i in 1:length(colnames(knn_matrix_ane_24_update))){
+  knn_name=names(which(knn_matrix_ane_24_update[i,]==1))
+  geni_select=geni_top_top[1:top_number]
+  sum_knn=apply(norm_counts_ane_24_update[geni_select,knn_name],2,function(x){
+    somma=geni_select[which(x>1)]
+    return(somma)
+  })
+    rank_intersect[i]=sum(duplicated(as.vector(unlist(sum_knn))))
+    list_intersect[[i]]=unique(as.vector(unlist(sum_knn))[duplicated(as.vector(unlist(sum_knn)))])
+
+}
+return(list(list_intersect,rank_intersect))
+}
+```
+
+```{r }
+
+selection_localized_genes_here=function (list_intersect, geni_top_top, 
+    max_number_genes = 5){ 
+text=rep(0,length(list_intersect))
+
+for (i in 1:length(list_intersect)){
+  if (length(list_intersect[[i]])==0){
+    localized_genes="No specific genes"
+    text[i] <- "No specific genes"
+   
+  }
+  else {
+  localized_genes=geni_top_top[which(geni_top_top %in% list_intersect[[i]])]
+  
+  max_genes=min(max_number_genes,length(localized_genes))
+  if (max_genes<max_number_genes){
+    warning("max_number bigger than length of localized_genes. Set max_number_genes = length(localized_genes) ")
+  }
+  localized_genes=localized_genes[1:max_genes]
+  text[i]=paste(localized_genes, collapse = "-")
+  
+  
+  }
+}
+return(text)
+}
+
+
+```
 
 
 
+```{r }
+plot_interactive_here=function (coordinate_umap, norm_counts,color, text,ramp_list, min_x = NULL, max_x = NULL, 
+    min_y = NULL, max_y = NULL)
+  {
+  
+  
+  index_sort <- order(color)
+  text=text[index_sort]
+    row.names(coordinate_umap) <- colnames(norm_counts)
+    coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], 
+        ]
+    color <- sort(color)
+    
 
+    if (!requireNamespace("plotly", quietly = TRUE)) {
+        stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
+    }
+    colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
+    fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
+        y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
+        marker = list(size = 5, width = 2,line = list(color = "black",
+                                         width = 0.5)), text = ~text, hoverinfo = "text",colors=ramp_list)
+   #fig <- fig %>% 
+#layout(plot_bgcolor='white')
+    
+    if (!is.null(min_x)) {
+        fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
+            max_x)), yaxis = list(range = c(min_y, max_y))) %>% 
+layout(plot_bgcolor='rgb(254, 247, 234)') %>% 
+layout(paper_bgcolor='rgb(254, 247, 234)')
+    }
+    return(fig)
+    }
+    
+
+#line = list(color = 'rgba(152, 0, 0, .8)',
+                                         #width = 2)
+#'#e5ecf6'
+```
+
+```{r }
+plot_genes_sum_here=function (coordinate_umap, norm_counts, color_cell, name_title,hm.colors) 
+{
+    index_sort <- order(color_cell)
+    row.names(coordinate_umap) <- colnames(norm_counts)
+    coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], 
+        ]
+    color_cell <- sort(color_cell)
+    
+    umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 
+        1], coordinate_umap[, 2])) + ggplot2::geom_point(ggplot2::aes(colour = color_cell),size = 1) +
+        ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Number of localized genes") + 
+        #ggplot2::scale_colour_gradient(low = "white",high = "blue4") + 
+      scale_colour_gradientn(colours = hm.colors)+
+        ggplot2::ggtitle(name_title)
+    return((umap_plot))
+}
+
+#"#FFFFFF",ramp.list[index_color])
+
+#gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), #ramp.list[index_color], "#00008B" )
+#hm.colors
+#geom_point(size = 1.5, alpha = 0.5, na.rm = T, shape = 21, colour = "black",stroke=0.1)
+
+```
 
 ```{r }
 geni_ortogoli_unique=function(rabbit_id,name_mouse){
@@ -233,6 +367,72 @@ plot.elmir=umap_cordinate_heart_small
 colnames(plot.elmir)=c("UMAP_1","UMAP_2")
 plot_interactive(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 ```
+
+
+##new part interactive plot
+
+```{r }
+
+
+
+
+localized_genes_mouse=detect_localized_genes(knn_matrix_heart_new,norm_data_heart,geni_top_top,100) 
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+
+ramp <- colorRamp(c("white", "blue4"))
+
+
+
+
+ramp <- colorRamp(c("white", "blue4"))
+ 
+
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+
+
+ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
+
+index_color=round(length(ramp.list)/2,0)
+
+
+breaks = seq(0,max(rank_intersect),length.out=1000)
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.25))), "#FFFFFF",ramp.list[index_color])
+
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), ramp.list[index_color], "#00008B" )
+
+
+hm.colors = c(gradient1,gradient2)
+ 
+
+
+
+
+
+genes_name_text=selection_localized_genes_here(list_intersect ,geni_top_top,max_number_genes=5)
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/interactive_plot")
+p=plot_interactive_here(umap_cordinate_heart_small,norm_data_heart,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+htmlwidgets::saveWidget(p, file = "mouse_after_gastrula.html")
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/interactive_plot/mouse_after_gastrula.pdf",width = 8,height = 6)
+p=plot_genes_sum_here(umap_cordinate_heart_small,norm_data_heart,rank_intersect,"Top 100 genes CIARA",hm.colors)
+p+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=12))+geom_point( alpha = 0.3, na.rm = T, shape = 21, colour = "black",stroke=0.1)
+dev.off()
+
+
+
+
+
+
+```
+
+
+
 
 ## Cluster analysis using ciara of mixing (step 2)
 ```{r }

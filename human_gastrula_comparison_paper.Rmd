@@ -952,17 +952,18 @@ load(file="markers_first_elmir_final.Rda")
 marker_elmir_all=markers_first_elmir_final[[3]]
 ```
 
-
-
+```{r }
+genes_important=Get_background(norm_elmir,6,0.5)
+```
 ```{r}
-Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top,background){
 level=levels(as.factor(entropy_cluster))
 p_value=rep(0,length(level))
 odds_ratio=rep(0,length(level))
 set_1=marker_top
 for (i in 1:length(level)){
   set_2=markers_cluster[names(markers_cluster)==level[i]]
-set_all=markers_cluster
+set_all=background
 show=Function_fisher(set_1,set_2,set_all)
 
 p_value[i]=as.numeric(show$p.value)
@@ -972,14 +973,19 @@ names(odds_ratio)[i]=level[i]
 }
 return(list(p_value,odds_ratio))
 }
-test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,triku_gene_name)
+```
 
-test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,final_sort_triku[1:1000])
+```{r}
+
+
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,final_sort_triku[1:1000],genes_important)
+
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,geni_top_top[1:1000],genes_important)
 
 ```
 
 ```{r}
-test[[2]][test[[1]]<0.05&test[[2]]>2]
+test[[2]][test[[1]]<0.01&test[[2]]>2]
 ```
 
 ```{r}
@@ -1684,17 +1690,18 @@ load(file="markers_first_elmir_final.Rda")
 marker_elmir_all=markers_first_elmir_final[[3]]
 ```
 
-
-
+```{r }
+genes_important=Get_background(norm_elmir,6,0.5)
+```
 ```{r}
-Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top,background){
 level=levels(as.factor(entropy_cluster))
 p_value=rep(0,length(level))
 odds_ratio=rep(0,length(level))
 set_1=marker_top
 for (i in 1:length(level)){
   set_2=markers_cluster[names(markers_cluster)==level[i]]
-set_all=markers_cluster
+set_all=background
 show=Function_fisher(set_1,set_2,set_all)
 
 p_value[i]=as.numeric(show$p.value)
@@ -1704,8 +1711,12 @@ names(odds_ratio)[i]=level[i]
 }
 return(list(p_value,odds_ratio))
 }
+```
+
+```{r}
+
 load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
-test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,top_values[1:1000])
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,top_values[1:1000],genes_important)
 
 ```
 
@@ -1743,7 +1754,7 @@ index_sam=match(marker_pgc,sam_genes)
 index_dist=data.frame(index_ciara,index_sc,index_triku,index_sam)
 index_dist=index_dist[order(index_ciara),]
 index_dist_log=log(index_dist)
-row.names(index_dist)=marker_pgc
+row.names(index_dist)=marker_pgc[order(index_ciara)]
 colnames(index_dist)=c("CIARA","sCH","Triku","SAM")
 index_dist=as.matrix(index_dist)
 my_palette <- colorRampPalette(c("lightblue1", "black"))(n = 1000)
@@ -1952,6 +1963,7 @@ return(list(p_value,odds_ratio))
 }
 test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,sam_genes[1:2000])
 
+
 ```
 
 ```{r}
@@ -2000,15 +2012,29 @@ sam_cluster=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_libr
 sam_cluster=sam_cluster$louvain_clusters
 ```
 
+```{r }
+Get_background=function(norm_matrix,min_cells,min_counts){
+genes_filter=apply(norm_matrix,1,function(x){
+x=x[x>min_counts]
+if (length(x)>min_cells){return(TRUE)}
+else{return(FALSE)}
+})
+genes_important=row.names(norm_matrix)[genes_filter]
+return(genes_important)}
+```
+
+```{r }
+genes_important=Get_background(norm_elmir,6,0.5)
+```
 ```{r}
-Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top,background){
 level=levels(as.factor(entropy_cluster))
 p_value=rep(0,length(level))
 odds_ratio=rep(0,length(level))
 set_1=marker_top
 for (i in 1:length(level)){
   set_2=markers_cluster[names(markers_cluster)==level[i]]
-set_all=markers_cluster
+set_all=background
 show=Function_fisher(set_1,set_2,set_all)
 
 p_value[i]=as.numeric(show$p.value)
@@ -2018,12 +2044,34 @@ names(odds_ratio)[i]=level[i]
 }
 return(list(p_value,odds_ratio))
 }
+```
+
+
+```{r}
 load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
-test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,sam_genes[1:1000])
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,sam_genes[1:1000],genes_important)
+
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,geni_top_top[1:1000],genes_important)
 
 ```
 
 ```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+
+
+```{r }
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,sam_genes[1:1000],genes_important)
+
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+
+
+```
+
+```{r}
+
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,geni_top_top[1:1000],genes_important)
 test[[2]][test[[1]]<0.05&test[[2]]>2]
 ```
 

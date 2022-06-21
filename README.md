@@ -23,7 +23,7 @@ And the development version from [GitHub](https://github.com/) with:
 
 ```r
 devtools::install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")
-```.
+```
 
 ## Getting started 
 The main functions of the package are **CIARA_gene** and **CIARA**
@@ -114,6 +114,12 @@ localized_genes_human=detect_localized_genes(knn_human_data,norm_human_data,ciar
 list_intersect=localized_genes_human[[1]]
 rank_intersect=localized_genes_human[[2]]
 ```
+
+```r
+genes_name_text=names_localized_genes(list_intersect ,ciara_genes_top,max_number = 5)
+```
+
+Below the vector of colors is defined.
 ```r
 ramp <- colorRamp(c("white", "blue4"))
 ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
@@ -127,9 +133,7 @@ gradient2 = gplots::colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.1
 hm.colors = c(gradient1,gradient2)
 ```
 
-```r
-genes_name_text=names_localized_genes(list_intersect ,ciara_genes_top,max_number = 5)
-```
+
 
 ```r
 plot_localized_genes_interactive(coordinate_umap_human,norm_human_data,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)

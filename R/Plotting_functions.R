@@ -281,7 +281,7 @@ plot_localized_genes_interactive = function (coordinate_umap, norm_matrix,rank_i
   }
   colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
   fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
-                         y = ~UMAP_2, color ~ rank_intersect, type = "scatter", mode = "markers", 
+                         y = ~UMAP_2, color = ~ rank_intersect, type = "scatter", mode = "markers", 
                          marker = list(size = 5, width = 2,line = list(color = "black",
                                                                        width = 0.5)), text = ~text, hoverinfo = "text",colors=ramp_list)
   

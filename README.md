@@ -72,7 +72,7 @@ An example of input could be:
 ```r
 load(file = "raw_counts_human_data.Rda")
 human_data_seurat <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_data", 0.1, 5, 30)
-norm_counts <- as.matrix(GetAssayData(human_data_seurat, slot = "data",assay="RNA"))
+norm_matrix <- as.matrix(GetAssayData(human_data_seurat, slot = "data",assay="RNA"))
 knn_matrix <- as.matrix(human_data_seurat@graphs$RNA_nn)
 background <- get_background_full(norm_matrix, threshold = 1, n_cells_low = 3, n_cells_high = 20)
 result <- CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation = FALSE)

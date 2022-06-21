@@ -12,7 +12,7 @@
   * [Getting started](#getting-started)
     + [CIARA_gene](#CIARA-gene)
     + [CIARA](#CIARA)
-  * [Visualization of highly localized genes](#visualization-of-highly-localized-genes)
+  * [Visualization of rare cell markers](#visualization-of-rare-cell-markers)
   * [Cluster analysis based on CIARA for rare cell types identification](#cluster-analysis-based-on-CIARA-for-rare-cell-types-identification)
   * [Vignette](#vignette)
   * [Citation](#Citation)
@@ -93,7 +93,7 @@ The input file *raw_counts_human_data.Rda* can be downloaded [here](https://hmgu
 
 In the next two sections (**Visualization of highly localized genes** and **Cluster analysis based on CIARA for the identification of extremely rare population of cells**) it is shown the analysis of the scRNA seq data from human embryo at the gastrulation state from [Tyser *et al.*, 2020](https://www.biorxiv.org/content/10.1101/2020.07.21.213512v1)
 
-### Visualization of highly localized genes
+### Visualization of rare cell markers
 
  We can visualize the highly localized genes identified with CIARA with the functions **plot_gene**, **plot_genes_sum** and even in an interactive way with the function 
 **plot_interactive**. For more exhaustive information about the functions offered by CIARA for visualization  see **Tutorials section** below and the help page of the single functions. (*?function_name*).
@@ -169,7 +169,7 @@ This approach consists of four steps:
 5. **Identification of cell sub-types**: For each of the cluster identified at step 3, a Fisher test is performed to see if there is a statistically significant enrichment between the HVGs in the cluster and the highly localized genes (function **test_hvg**). For all the clusters where there is an enrichment, a sub cluster analysis starting from the original cluster is performed using as features  HVGs (function **cluster_analysis_sub**)
 
 An example is the following:
-```
+```r
 # step 1
 human_embryo_analysis <- cluster_analysis_integrate_rare(raw_counts = raw_counts_human_data, project_name = "Human_Embryo_data", resolution = 0.1, neighbors=5, max_dimension = 30)
 human_embryo_cluster <- as.vector(human_embryo_analysis$seurat_clusters)
@@ -178,16 +178,16 @@ original_cluster <- as.vector(meta_info$cluster_id)
 human_embryo_cluster <- original_cluster
 ```
 
-```
+```r
 # step 2
 human_embryo_analysis_ciara <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_Embryo_data", 0.01, 5, 30, ciara_genes)
 ```
-```
+```r
 # step 3
 final_cluster <- merge_cluster(original_cluster, human_embryo_analysis_ciara$seurat_clusters, max_number = 20)
 final_cluster[grep("step_2",final_cluster)] <- "PGC"
 ```
-```
+```r
 # step 4
 result_test <- test_hvg(raw_counts_human_data,final_cluster, ciara_genes, background, number_hvg = 100, min_p_value = 0.001)
 result_test[[2]]
@@ -204,7 +204,7 @@ names(final_cluster) <- colnames(raw_counts_human_data)
 final_cluster_version_sub <- merge_cluster(final_cluster, all_sub_cluster)
 ```
 
-```
+```r
 plot_umap(coordinate_umap, final_cluster_version_sub)
 ```
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/entropy_cluster.png" width="700" height="500">
@@ -218,7 +218,7 @@ For more exhaustive information about the functions offered by CIARA for the ide
 The following vignette is available and completely reproducible. It uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.nature.com/articles/s41586-021-04158-y). The raw count matrix was downloaded from  [http://human-gastrula.net].
 An extremely rare population of primordial germ cells (PGCs-7 cells) is easily identified with CIARA.
 It can be accessed within R with:
-```
+```r
 utils::vignette("CIARA")
 ```
 

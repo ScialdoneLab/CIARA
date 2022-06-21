@@ -9,7 +9,7 @@ plot_heatmap_marker(
   marker_all_cluster,
   cluster,
   condition,
-  norm_counts,
+  norm_matrix,
   text_size
 )
 }
@@ -25,7 +25,7 @@ assignment.}
 \item{condition}{Vector or length equal to the number of cells, specifying
 the condition of the cells (i.e. batch, dataset of origin..)}
 
-\item{norm_counts}{Norm count matrix (genes X cells).}
+\item{norm_matrix}{Norm count matrix (n_genes X n_cells).}
 
 \item{text_size}{Size of the text in the heatmap plot.}
 }

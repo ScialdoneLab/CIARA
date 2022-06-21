@@ -7,7 +7,7 @@
 white_black_markers(
   cluster,
   single_cluster,
-  norm_counts,
+  norm_matrix,
   marker_list,
   threshold = 0
 )
@@ -18,7 +18,7 @@ assignment.}
 
 \item{single_cluster}{Character. Label of one specify cluster}
 
-\item{norm_counts}{Norm count matrix (genes X cells).}
+\item{norm_matrix}{Norm count matrix (n_genes X n_cells).}
 
 \item{marker_list}{Third element of the output list as returned by the
 function \emph{markers_cluster_seurat}}

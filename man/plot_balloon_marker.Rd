@@ -5,7 +5,7 @@
 \title{plot_balloon_marker}
 \usage{
 plot_balloon_marker(
-  norm_counts,
+  norm_matrix,
   cluster,
   marker_complete,
   max_number,
@@ -14,7 +14,7 @@ plot_balloon_marker(
 )
 }
 \arguments{
-\item{norm_counts}{Norm count matrix (genes X cells).}
+\item{norm_matrix}{Norm count matrix (n_genes X n_cells).}
 
 \item{cluster}{Vector of length equal to the number of cells, with cluster
 assignment.}

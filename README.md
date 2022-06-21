@@ -160,7 +160,7 @@ This approach consists of four steps:
 An example is the following:
 ```
 # step 1
-human_embryo_analysis <- cluster_analysis_integrate_rare(raw_counts = raw_counts, project_name = "Human_Embryo_data", resolution = 0.1, neighbors=5, max_dimension = 30)
+human_embryo_analysis <- cluster_analysis_integrate_rare(raw_counts = raw_counts_human_data, project_name = "Human_Embryo_data", resolution = 0.1, neighbors=5, max_dimension = 30)
 human_embryo_cluster <- as.vector(human_embryo_analysis$seurat_clusters)
 # or we can also use the original cluster annotation provided by Tyser et al,2020
 original_cluster <- as.vector(meta_info$cluster_id)
@@ -169,28 +169,27 @@ human_embryo_cluster <- original_cluster
 
 ```
 # step 2
-human_embryo_analysis_ciara <- cluster_analysis_integrate_rare(raw_counts,"Human_Embryo_data",0.01,5,30,ciara_genes)
+human_embryo_analysis_ciara <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_Embryo_data", 0.01, 5, 30, ciara_genes)
 ```
 ```
 # step 3
-final_cluster <- merge_cluster(original_cluster,human_embryo_analysis_ciara$seurat_clusters,max_number = 20)
+final_cluster <- merge_cluster(original_cluster, human_embryo_analysis_ciara$seurat_clusters, max_number = 20)
 final_cluster[grep("step_2",final_cluster)] <- "PGC"
 ```
 ```
 # step 4
-result_test <- test_hvg(raw_counts,final_cluster, ciara_genes, background, number_hvg = 100, min_p_value = 0.05)
+result_test <- test_hvg(raw_counts_human_data,final_cluster, ciara_genes, background, number_hvg = 100, min_p_value = 0.001)
 result_test[[2]]
- "Endoderm"  "Hemogenic Endothelial Progenitors". "ExE Mesoderm"
-# We need to do sub cluster in the above three clusters
-raw_endoderm <- raw_counts[, human_embryo_cluster == "Endoderm"]
-raw_emo <- raw_elmir[, human_embryo_cluster == "Hemogenic Endothelial Progenitors"]
-raw_exe_meso=raw_elmir[, human_embryo_cluster == "ExE Mesoderm"]
-combined_endoderm <- Cluster_analysis_sub(raw_endoderm, 0.2, 5, 30, "Endoderm")
-combined_exe_meso <- Cluster_analysis_sub(raw_exe_meso, 0.5, 5, 30, "ExE Mesoderm")
-combined_emo <- Cluster_analysis_sub(raw_emo, 0.6, 5, 30, "Hemogenic Endothelial Progenitors")
+ "Endoderm"  "Hemogenic Endothelial Progenitors"
+# We need to do sub cluster in the above two clusters
+raw_endoderm <- raw_counts_human_data[, human_embryo_cluster == "Endoderm"]
+raw_emo <- raw_counts_human_data[, human_embryo_cluster == "Hemogenic Endothelial Progenitors"]
+combined_endoderm <- cluster_analysis_sub(raw_endoderm, 0.2, 5, 30, "Endoderm")
+combined_emo <- cluster_analysis_sub(raw_emo, 0.6, 5, 30, "Hemogenic Endothelial Progenitors")
 
 
-all_sub_cluster <- c(combined_endoderm$seurat_clusters, combined_emo$seurat_clusters, combined_exe_meso$seurat_clusters)
+all_sub_cluster <- c(combined_endoderm$seurat_clusters, combined_emo$seurat_clusters)
+names(final_cluster) <- colnames(raw_counts_human_data)
 final_cluster_version_sub <- merge_cluster(final_cluster, all_sub_cluster)
 ```
 
@@ -206,7 +205,7 @@ For more exhaustive information about the functions offered by CIARA for the ide
 ## Vignette
 
 The following vignette is available and completely reproducible. It uses single cell RNA seq from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.nature.com/articles/s41586-021-04158-y). The raw count matrix was downloaded from  [http://human-gastrula.net].
-An extremely rare population of primordial germ cells (PGCs-7 cells) is easily identified with entropy of mixing.
+An extremely rare population of primordial germ cells (PGCs-7 cells) is easily identified with CIARA.
 It can be accessed within R with:
 ```
 utils::vignette("CIARA")

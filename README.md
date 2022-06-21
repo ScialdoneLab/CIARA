@@ -7,6 +7,17 @@
 
 <!-- badges: end -->
 
+- [CIARA](#ciara)
+  * [Installation](#installation)
+  * [Getting started](#getting-started)
+    + [CIARA_gene](#CIARA-gene)
+    + [CIARA](#CIARA)
+  * [Visualization of highly localized genes](#visualization-of-highly-localized-genes)
+  * [Cluster analysis based on CIARA for the identification of extremely rare population of cells] (#cluster-analysis-based-on-CIARA-for-the-identification-of-extremely-rare population-of-cells)
+  * [Vignette](#vignette)
+  * [Citation](#Citation)
+  * [Contributions and Support](#contributions-and-support)
+  * 
 # CIARA
 CIARA (Cluster Independent Algorithm for the identification of RAre cell types) is an R package that identifies potential markers of rare cell types looking at genes whose expression is confined in small regions of the expression space. 
 It is possible to use these highly localized genes as features in standard cluster algorithm (i.e. Louvain), for identifying extremely rare population(3/4 cells from thousand of cells)
@@ -211,7 +222,7 @@ It can be accessed within R with:
 utils::vignette("CIARA")
 ```
 
-## How to cite
+## Citation
 To cite package **CIARA** in publications use:
 ```
 Gabriele Lubatti (2022). CIARA: Cluster Independent Algorithm for Rare Cell Types
@@ -228,4 +239,10 @@ A BibTeX entry for LaTeX users is
   }
 
 ```
+
+## Contributions and Support
+Contributions in the form of feedback, comments, code and bug report are welcome.
+* For any contributions, feel free to fork the source code and [submit a pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork).
+* Please report any issues or bugs here: https://github.com/ScialdoneLab/CIARA/issues.
+Any questions and requests for support can also be directed to the package maintainer (gabriele[dot]lubatti[at]helmholtz-muenchen[dot]de).
 

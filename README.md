@@ -99,8 +99,8 @@ p
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/entropy_new_new1.png" width="700" height="500">
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/entropy_new_new_2.png" width="700" height="500">
 
-We can visualize which are the genes highly localized in a particular region of the umap plot with the function **plot_localized_genes** and in an interactive way with **plot_localized_genes_interactive**.
-Each cell is coloured according to the sum of the normalized expression of the highly localized genes identified with CIARA.
+We can visualize which are the rare cell markers expressed in a particular region of the umap plot with the function **plot_localized_genes** and in an interactive way with **plot_localized_genes_interactive**.
+Each cell is coloured according to the number of expressed rare cell markers shared with neighboring cells.
 ```
 localized_genes_human=detect_localized_genes(knn_human_data,norm_human_data,ciara_genes_top,100)  
 list_intersect=localized_genes_human[[1]]

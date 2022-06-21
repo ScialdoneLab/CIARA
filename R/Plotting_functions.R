@@ -25,44 +25,6 @@ gg_color_hue <- function(n) {
 
 
 
-#' plot_genes_sum
-#'
-#' The sum of each gene in \emph{genes_relevant} across all cells is first
-#' normalized to 1. Then for each cell, the sum from the (normalized) genes
-#' expression is computed and shown in the output plot.
-#'
-#' @param norm_counts Norm count matrix (genes X cells).
-#' @param genes_relevant Vector with gene names for which we want to visualize
-#' the sum in each cell.
-#' @param name_title Character value.
-#' @inheritParams plot_umap
-#' @return ggplot2 object.
-#' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
-#' @seealso \url{ https://CRAN.R-project.org/package=ggplot2}
-#'
-#' @export plot_genes_sum
-plot_genes_sum <- function(coordinate_umap, norm_counts, genes_relevant, name_title){
-
-  norm_counts_small <- apply(norm_counts[genes_relevant, ], 1, function(x){
-    y <- x/sum(x)
-    return(y)
-  })
-
-
-  gene_sum <- apply(norm_counts_small, 1, sum)
-
-
-
-  index_sort <- order(gene_sum)
-  row.names(coordinate_umap) <- colnames(norm_counts)
-  coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], ]
-  gene_sum <- sort(gene_sum)
-  umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +
-    ggplot2::geom_point(ggplot2::aes(colour = (gene_sum)))  + ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Log norm counts") +
-    ggplot2::scale_colour_gradient(low = "white",  high = "blue") +
-    ggplot2::ggtitle(name_title)
-  return((umap_plot))
-}
 
 
 
@@ -74,20 +36,20 @@ plot_genes_sum <- function(coordinate_umap, norm_counts, genes_relevant, name_ti
 #'
 #' @param gene_id Character name of the gene.
 #' @param title_name Character name.
-#' @inheritParams plot_genes_sum
+#' @inheritParams get_background_full
 #' @inheritParams plot_umap
 #' @return ggplot2 object.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://CRAN.R-project.org/package=ggplot2}
 #'
 #' @export plot_gene
-plot_gene <- function(norm_counts, coordinate_umap, gene_id, title_name){
+plot_gene <- function(norm_matrix, coordinate_umap, gene_id, title_name){
 
 
-  gene_expr <- as.vector(norm_counts[gene_id, ])
+  gene_expr <- as.vector(norm_matrix[gene_id, ])
   index_sort <- order(gene_expr)
-  row.names(coordinate_umap) <- colnames(norm_counts)
-  coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], ]
+  row.names(coordinate_umap) <- colnames(norm_matrix)
+  coordinate_umap <- coordinate_umap[colnames(norm_matrix)[index_sort], ]
   gene_expr <- sort(gene_expr)
   umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 1], coordinate_umap[, 2] )) +
     ggplot2::geom_point(ggplot2::aes(colour = (gene_expr)))  + ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Log norm counts")+
@@ -113,13 +75,13 @@ plot_gene <- function(norm_counts, coordinate_umap, gene_id, title_name){
 #' the condition of the cells (i.e. batch, dataset of origin..)
 #' @param text_size Size of the text in the heatmap plot.
 #' @inheritParams test_hvg
-#' @inheritParams plot_genes_sum
+#' @inheritParams get_background_full
 #' @return Heatmap class object.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://www.rdocumentation.org/packages/ComplexHeatmap/versions/1.10.2/topics/Heatmap}
 #'
 #' @export plot_heatmap_marker
-plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, condition, norm_counts, text_size){
+plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, condition, norm_matrix, text_size){
   if (!(requireNamespace("ComplexHeatmap", quietly = TRUE) & requireNamespace("circlize", quietly = TRUE))) {
     stop("Package ComplexHeatmap and circlize needed for this function to work. Please install them: BiocManager::install('ComplexHeatmap') and install.packages('circlize')")
   }
@@ -136,7 +98,7 @@ plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, conditi
     condition_unique[[i]] <- condition[index[[i]]]
   }
 
-  cell_all_day <- colnames(norm_counts)
+  cell_all_day <- colnames(norm_matrix)
   cell_unique <- as.list(rep(0, length(unique(cluster))))
   for (i in 1:length(cluster_unique)){
     cell_unique[[i]] <- cell_all_day[index[[i]]]
@@ -152,9 +114,9 @@ plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, conditi
   good_finale <- unlist(cell_unique)
   medium_finale <- unlist(condition_unique)
 
-  norm_counts_plot <- norm_counts[marker_top, good_finale]
+  norm_matrix_plot <- norm_matrix[marker_top, good_finale]
 
-  row.names(norm_counts_plot)<-marker_all_cluster
+  row.names(norm_matrix_plot)<-marker_all_cluster
 
   color_cluster <- rep(0, length(unique(cluster)))
 
@@ -185,9 +147,9 @@ plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, conditi
 
                              , show_legend = T)
 
-  ht21 <- ComplexHeatmap::Heatmap(as.matrix(norm_counts_plot)
+  ht21 <- ComplexHeatmap::Heatmap(as.matrix(norm_matrix_plot)
                  ,cluster_rows = FALSE
-                 , col = circlize::colorRamp2(c(0, round(max(norm_counts_plot))), c("white", "red"))
+                 , col = circlize::colorRamp2(c(0, round(max(norm_matrix_plot))), c("white", "red"))
                  , name = "log norm counts"
                  , cluster_columns = F
                  , top_annotation = haCol1
@@ -208,126 +170,160 @@ plot_heatmap_marker <- function(marker_top, marker_all_cluster, cluster, conditi
 
 
 
+#' detect_localized_genes
+#'
+#' @param genes_sort vector of genes names sorted according to the p value given by the output of 
+#' \emph{CIARA}.
+#' @param top_number Number of \emph{genes_sort} to consider.
+#' @inheritParams CIARA_gene
+#' @inheritParams get_background_full
+#' @return List with two elements. 
+#' \item{list_intersect}{The first element is a list with length equal to the number of cells in \emph{norm_matrix}. 
+#' Each entry contains the name of \emph{genes_sort} expressed in at least two neighboring cells.}
+#' \item{rank_intersect}{The second element is a vector with length equal to the number of cells in \emph{norm_matrix}.Each entry contains the number 
+#' of \emph{genes_sort} expressed in at least two neighboring cells.}
+
+#' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
+#'
+#' @export detect_localized_genes
+
+detect_localized_genes=function(knn_matrix, norm_matrix, genes_sort, top_number, threshold = 1 ){
+  list_intersect <- rep(list(0), length(colnames(knn_matrix)))
+  rank_intersect <- rep(0, length(colnames(knn_matrix)))
+  for ( i in 1:length(colnames(knn_matrix))){
+    knn_name=names(which(knn_matrix[i,] == 1))
+    genes_select <- genes_sort[1:top_number]
+    sum_knn <- apply(norm_matrix[genes_select, knn_name], 2, function(x){
+      somma <- genes_select[which(x > threshold)]
+      return(somma)
+    })
+    list_intersect[[i]] <- unique(as.vector(unlist(sum_knn))[duplicated(as.vector(unlist(sum_knn)))])
+    rank_intersect[i] <- length(list_intersect[[i]])
+    
+  }
+  return(list(list_intersect,rank_intersect))
+}
 
 
+#' names_localized_genes
+#' 
+#' @param list_intersect first element of the list given as output from \emph{detect_localized_genes}.
+#' @param max_number maximum number of genes in \emph{list_intersect} to show for each cell.
+#' @return A vector with length equal to \emph{list_intersect}. Each entry contains the top \emph{max_number} names of genes from \emph{list_intersect}.
+#' @inheritParams detect_localized_genes
+#' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
+#' 
+#' 
+#' @export names_localized_genes
+names_localized_genes=function (list_intersect, genes_sort, max_number = 5){ 
+  text <- rep(0,length(list_intersect))
+  
+  for (i in 1:length(list_intersect)) {
+    if (length(list_intersect[[i]]) == 0){
+      localized_genes <- "No specific genes"
+      text[i] <- "No specific genes"
+      
+    }
+    else {
+      localized_genes <- genes_sort[which(genes_sort %in% list_intersect[[i]])]
+      
+      max_genes <- min(max_number, length(localized_genes))
+      if (max_genes < max_number){
+        warning("max_number bigger than length of localized_genes. Set max_number = length(localized_genes) ")
+      }
+      localized_genes <- localized_genes[1:max_genes]
+      text[i] <- paste(localized_genes, collapse = "-")
+      
+      
+    }
+  }
+  return(text)
+}
 
 
-
-#' plot_interactive
+#' plot_localized_genes_interactive
 #'
 #' It shows in an interactive plot which are the highly localized genes in each
 #' cell. It is based on plotly library
-#' @param color vector of length equal to n_rows in coordinate_umap.Each cell
+#' @param rank_intersect second element of the list given as output from \emph{detect_localized_genes}.
+#' @param ramp_list vector of length equal to n_rows in coordinate_umap.Each cell
 #' will be coloured following a gradient according to the corresponding value
 #' of this vector.
 #' @param text Character vector specifying the highly localized genes in each
-#' cell. It is the output from \emph{selection_localized_genes}.
+#' cell. It is the output from \emph{names_localized_genes}.
+#' @param ramp_list \emph{colors} parameter for the funnction \emph{plot_ly} from R package \emph{plotly}.
 #' @param min_x Set the min limit on the x axis.
 #' @param max_x Set the max limit on the x axis.
 #' @param min_y Set the min limit on the y axis.
 #' @param max_y Set the min limit on the y axis.
 #' @inheritParams plot_umap
+#' @inheritParams get_background_full
 #' @return plotly object given by \emph{plot_ly function} (from library \emph{plotly}).
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @seealso \url{https://plotly.com/r/}
-#' @export plot_interactive
-plot_interactive <- function(coordinate_umap, color, text, min_x = NULL, max_x = NULL, min_y = NULL, max_y = NULL){
-  if (! requireNamespace("plotly", quietly = TRUE)) {
+#' @export plot_localized_genes_interactive
+
+plot_localized_genes_interactive = function (coordinate_umap, norm_matrix,rank_intersect, text,ramp_list, min_x = NULL, max_x = NULL, 
+                                min_y = NULL, max_y = NULL)
+{
+  
+  
+  index_sort <- order(rank_intersect)
+  text=text[index_sort]
+  row.names(coordinate_umap) <- colnames(norm_matrix)
+  coordinate_umap <- coordinate_umap[colnames(norm_matrix)[index_sort], 
+                                     ]
+  rank_intersect <- sort(rank_intersect)
+  
+  
+  if (!requireNamespace("plotly", quietly = TRUE)) {
     stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
   }
   colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
-  fig <- plotly::plot_ly(data = coordinate_umap,
-                 x = ~UMAP_1, y = ~UMAP_2,
-                 color = ~color,
-                 type = "scatter",
-                 mode = "markers",
-                 marker = list(size = 5, width = 2),
-                 text = ~text,
-                 hoverinfo = "text"
-  )
-
-  if(!is.null(min_x)){
-    fig <- fig %>% plotly::layout(
-      xaxis = list(range = c(min_x, max_x)),
-      yaxis = list(range = c(min_y, max_y)))
-
-
+  fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
+                         y = ~UMAP_2, color ~ rank_intersect, type = "scatter", mode = "markers", 
+                         marker = list(size = 5, width = 2,line = list(color = "black",
+                                                                       width = 0.5)), text = ~text, hoverinfo = "text",colors=ramp_list)
+  
+  
+  
+  if (!is.null(min_x)) {
+    fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
+                                                         max_x)), yaxis = list(range = c(min_y, max_y))) %>% 
+      plotly::layout(plot_bgcolor='rgb(254, 247, 234)') %>% 
+      plotly::layout(paper_bgcolor='rgb(254, 247, 234)')
   }
-
   return(fig)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-#' selection_localized_genes
+#' plot_localized_genes
 #'
-#' @param localized_genes vector of highly localized genes as provided by the
-#' last element of the list given as output from \emph{CIARA_mixing_final}.
-#' @param min_number_cells Minimum number of cells where a genes must be
-#' expressed (> 0).
-#' @param max_number_genes Maximum number of genes to show for each cell in the
-#' interactive plot from \emph{plot_interactive}.
-#' @inheritParams plot_genes_sum
-#' @inheritParams test_hvg
-#' @return Character vector where each entry contains the name of the top
-#' \emph{max_number_genes} for the corresponding cell.
+#'
+#' @param colors  \emph{colours} parameter for the function scale_colour_gradientn from R package \emph{ggplot2}.
+#' the sum in each cell.
+#' @param name_title Character value.
+#' @inheritParams plot_umap
+#' @inheritParams get_background_full
+#' @inheritParams plot_localized_genes_interactive
+#' @return ggplot2 object.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
+#' @seealso \url{ https://CRAN.R-project.org/package=ggplot2}
 #'
-#' @export selection_localized_genes
-selection_localized_genes <- function (norm_counts, localized_genes, min_number_cells = 4,
-                                           max_number_genes = 10) {
-  norm_counts_CIARA <- norm_counts[(localized_genes), ]
-  logic_CIARA <- apply(norm_counts_CIARA, 1, function(x) {
-    y = as.list(x)
-    return(y)
-  })
-  logic_CIARA_greater <- lapply(logic_CIARA, function(x) {
-    y <- x[!all(x == 0)]
-    if (length(y) > 0) {
-      return(y)
-    }
-    else {
-      return(NULL)
-    }
-  })
-  index <- rep(0, length(logic_CIARA_greater))
-  for (i in 1:length(logic_CIARA_greater)) {
-    index[i] <- sum(logic_CIARA_greater[[i]] > 0)
-  }
-  localized_genes <- localized_genes[index > min_number_cells]
-  top_genes <- apply(norm_counts[localized_genes, ], 2, function(x) {
-    y <- sort(x, decreasing = T)
-    if (max_number_genes>length(localized_genes)) {
-      max_number_genes <- length(localized_genes)
-      warning("max_number bigger than length of localized_genes. Set max_number_genes = length(localized_genes) ")
-      }
-    z <- y[1:max_number_genes]
-    k <- localized_genes[order(x, decreasing = T)][1:max_number_genes]
-    return(list(z, k))
-    })
-  sum_loc_genes <- rep(0, length(top_genes))
-  for (i in 1:length(top_genes)) {
-    sum_loc_genes[i] <- sum(as.numeric(top_genes[[i]][[1]]) > 0)
-    }
-  text <- rep("NO", length(colnames(norm_counts)))
-  for (i in 1:length(top_genes)) {
-    text[i] <- paste(top_genes[[i]][[2]], collapse = "-")
-  }
-  text[sum_loc_genes == 0] <- "No specific genes"
-  return(text)
-}
+#' @export plot_localized_genes
 
+plot_localized_genes = function (coordinate_umap, norm_matrix, rank_intersect, name_title, colors) {
+  index_sort <- order(rank_intersect)
+  row.names(coordinate_umap) <- colnames(norm_matrix)
+  coordinate_umap <- coordinate_umap[colnames(norm_matrix)[index_sort],]
+  rank_intersect <- sort(rank_intersect)
+  umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 1], coordinate_umap[, 2])) + 
+    ggplot2::geom_point(ggplot2::aes(colour = rank_intersect),size = 1) +
+    ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Number of localized genes") + 
+    ggplot2::scale_colour_gradientn(colours = colors)+
+    ggplot2::ggtitle(name_title)
+  return((umap_plot))
+}
 
 
 
@@ -338,13 +334,13 @@ selection_localized_genes <- function (norm_counts, localized_genes, min_number_
 #' @param max_number Integer. Maximum number of markers for each cluster for
 #' which we want to plot the expression.
 #' @param max_size Integer. Size of the dots to be plotted.
-#' @inheritParams plot_genes_sum
 #' @inheritParams test_hvg
 #' @inheritParams plot_heatmap_marker
+#' @inheritParams get_background_full
 #' @return ggplot2 object showing balloon plot.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #' @export plot_balloon_marker
-plot_balloon_marker <- function (norm_counts, cluster, marker_complete,
+plot_balloon_marker <- function (norm_matrix, cluster, marker_complete,
                           max_number, max_size = 5, text_size = 7) {
   livelli <- levels(factor(cluster))
   all_markers_plot <- rep(list(0), length(livelli))
@@ -366,12 +362,12 @@ plot_balloon_marker <- function (norm_counts, cluster, marker_complete,
   })
   all_markers_values <- rep(list(0), length(livelli))
   for (i in 1:length(livelli)) {
-    gene_values_0 <- apply(norm_counts[unlist(all_markers, use.names = FALSE), cluster == livelli[i]], 1, mean)
+    gene_values_0 <- apply(norm_matrix[unlist(all_markers, use.names = FALSE), cluster == livelli[i]], 1, mean)
     all_markers_values[[i]] <- gene_values_0
   }
   values <- rep(list(0), length(livelli))
   for (i in 1:length(livelli)) {
-    valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), cluster == livelli[i]], 1, function(x) {
+    valore <- apply(norm_matrix[unlist(all_markers, use.names = FALSE), cluster == livelli[i]], 1, function(x) {
       sum(x > 1)/length(x)
       })
     values[[i]] <- valore

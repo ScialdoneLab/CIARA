@@ -357,15 +357,15 @@ markers_cluster_seurat <- function(seurat_object, cluster, cell_names, number_to
 #' consider as a white-black marker for \emph{single_cluster}
 #' @inheritParams test_hvg
 #' @inheritParams cluster_analysis_integrate_rare
-#' @inheritParams plot_genes_sum
+#' @inheritParams get_background_full
 #' @return Logical vector of length equal to \emph{marker_list}, with
 #' TRUE/FALSE if the gene is/is not a white-black marker for
 #' \emph{single_cluster}.
 #' @author Gabriele Lubatti \email{gabriele.lubatti@@helmholtz-muenchen.de}
 #'
 #' @export white_black_markers
-white_black_markers <- function(cluster, single_cluster, norm_counts, marker_list, threshold = 0) {
-  white_black <- apply(norm_counts[marker_list[names(marker_list) == single_cluster], ], 1, function(x) {
+white_black_markers <- function(cluster, single_cluster, norm_matrix, marker_list, threshold = 0) {
+  white_black <- apply(norm_matrix[marker_list[names(marker_list) == single_cluster], ], 1, function(x) {
   mean_one <- median(x[cluster == single_cluster])
   mean_different <- rep(0, length(levels(factor(cluster[cluster!=single_cluster]))))
   for ( i in 1:length(levels(factor(cluster[cluster!=single_cluster])))) {

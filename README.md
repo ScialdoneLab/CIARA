@@ -79,7 +79,7 @@ Return a dataframe with n_rows equal to the length of **background** . Each row 
 The vector of genes for which the function **CIARA_gene** is run can be obtained with the function **Get_background_full**.
 This function gives as output a vector with all genes expressed at a level higher than **threshold** in a number of cells between **n_cells_low** and **n_cells_high**
 
-An example of input could be:
+Below an example of input using the development version of **CIARA** from GitHub
 ```r
 load(file = "raw_counts_human_data.Rda")
 human_data_seurat <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_data", 0.1, 5, 30)
@@ -120,6 +120,7 @@ p
 
 We can visualize which are the rare cell markers expressed in a particular region of the umap plot with the function **plot_localized_genes** and in an interactive way with **plot_localized_genes_interactive**.
 Each cell is coloured according to the number of expressed rare cell markers shared with neighboring cells.
+These two functions are currently only present in the development version of **CIARA**.
 ```r
 localized_genes_human <-  detect_localized_genes(knn_matrix,norm_matrix,ciara_genes_top,100)  
 list_intersect <-  localized_genes_human[[1]]

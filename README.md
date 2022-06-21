@@ -13,7 +13,7 @@
     + [CIARA_gene](#CIARA-gene)
     + [CIARA](#CIARA)
   * [Visualization of highly localized genes](#visualization-of-highly-localized-genes)
-  * [Cluster analysis based on CIARA for the identification of extremely rare population of cells] (#cluster-analysis-based-on-CIARA-for-the-identification-of-extremely-rare-population-of-cells)
+  * [Cluster analysis based on CIARA for rare cell types identification](#cluster-analysis-based-on-CIARA-for-rare-cell-types-identification)
   * [Vignette](#vignette)
   * [Citation](#Citation)
   * [Contributions and Support](#contributions-and-support)
@@ -158,7 +158,7 @@ plot_localized_genes_interactive(coordinate_umap,norm_matrix,rank_intersect,gene
 
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/plot_localized_genes_interactive_example.png" width="700" height="500">
 
-### Cluster analysis based on CIARA for the identification of extremely rare population of cells
+### Cluster analysis based on CIARA for rare cell types identification
 
 We can use the genes identified by CIARA as features in standard algorithm (i.e. Louvain) for the identification of extremely rare population of cells (3/4 cells from dataset of thousand of cells).
 This approach consists of four steps:

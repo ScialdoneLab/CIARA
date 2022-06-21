@@ -92,7 +92,7 @@ load(system.file("extdata", "result.Rda", package = "CIARA"))
 ciara_genes <- row.names(result)[result[, 1] < 1]
 geni_top <- row.names(result)[order(as.numeric(result[, 1]))]
 coordinate_umap <- as.data.frame(Embeddings(human_data_seurat, reduction = "umap")[, 1:2])
-#In the example below we keep the same umap coordinate used in the original paper
+# In the example below we keep the same umap coordinate used in the original paper
 meta_info <- readRDS(system.file("extdata", "annot_umap.rds", package ="CIARA"))
 cordinate_umap <- meta_info[,2:3]
 
@@ -110,13 +110,13 @@ p
 We can visualize which are the rare cell markers expressed in a particular region of the umap plot with the function **plot_localized_genes** and in an interactive way with **plot_localized_genes_interactive**.
 Each cell is coloured according to the number of expressed rare cell markers shared with neighboring cells.
 ```r
-localized_genes_human=detect_localized_genes(knn_human_data,norm_human_data,ciara_genes_top,100)  
-list_intersect=localized_genes_human[[1]]
-rank_intersect=localized_genes_human[[2]]
+localized_genes_human <-  detect_localized_genes(knn_human_data,norm_human_data,ciara_genes_top,100)  
+list_intersect <-  localized_genes_human[[1]]
+rank_intersect <-  localized_genes_human[[2]]
 ```
 
 ```r
-genes_name_text=names_localized_genes(list_intersect ,ciara_genes_top,max_number = 5)
+genes_name_text <-  names_localized_genes(list_intersect ,ciara_genes_top,max_number = 5)
 ```
 
 Below the vector of colors is defined.
@@ -126,11 +126,11 @@ ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max 
 
 index_color=round(length(ramp.list)/2,0)
 ramp.list[index_color]
-breaks = seq(0,max(rank_intersect),length.out=1000)
+breaks <- seq(0,max(rank_intersect),length.out=1000)
 ## library gplots must be installed for executing the following command
-gradient1 = gplots::colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
-gradient2 = gplots::colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
-hm.colors = c(gradient1,gradient2)
+gradient1 <- gplots::colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
+gradient2 <- gplots::colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
+hm.colors <- c(gradient1,gradient2)
 ```
 
 

@@ -103,27 +103,23 @@ We can visualize which are the genes highly localized in a particular region of 
 Each cell is coloured according to the sum of the normalized expression of the highly localized genes identified with CIARA.
 ```
 localized_genes_human=detect_localized_genes(knn_human_data,norm_human_data,ciara_genes_top,100)  
-
-ramp <- colorRamp(c("white", "blue4"))
- 
 list_intersect=localized_genes_human[[1]]
 rank_intersect=localized_genes_human[[2]]
-
+```
+```
+ramp <- colorRamp(c("white", "blue4"))
 ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
 
 index_color=round(length(ramp.list)/2,0)
 ramp.list[index_color]
 breaks = seq(0,max(rank_intersect),length.out=1000)
-
 ## library gplots must be installed for executing the following command
-
 gradient1 = gplots::colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
-
 gradient2 = gplots::colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
-
-
 hm.colors = c(gradient1,gradient2)
+```
 
+```
 genes_name_text=names_localized_genes(list_intersect ,ciara_genes_top,max_number = 5)
 ```
 

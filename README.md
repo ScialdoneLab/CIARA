@@ -145,7 +145,7 @@ plot_localized_genes(coordinate_umap,norm_matrix,rank_intersect,"Top genes CIARA
 
 ```
 
-<img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/plot_localized_genes_example.png" width="700" height="500">
+<img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/plot_localized_genes_interactive_example.png" width="700" height="500">
 
 ### Cluster analysis based on CIARA for the identification of extremely rare population of cells
 

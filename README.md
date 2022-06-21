@@ -125,9 +125,8 @@ ramp <- colorRamp(c("white", "blue4"))
 ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
 
 index_color=round(length(ramp.list)/2,0)
-ramp.list[index_color]
 breaks <- seq(0,max(rank_intersect),length.out=1000)
-## library gplots must be installed for executing the following command
+# library gplots must be installed for executing the following command
 gradient1 <- gplots::colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
 gradient2 <- gplots::colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
 hm.colors <- c(gradient1,gradient2)

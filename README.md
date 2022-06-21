@@ -94,11 +94,11 @@ geni_top <- row.names(result)[order(as.numeric(result[, 1]))]
 coordinate_umap <- as.data.frame(Embeddings(human_data_seurat, reduction = "umap")[, 1:2])
 # In the example below we keep the same umap coordinate used in the original paper
 meta_info <- readRDS(system.file("extdata", "annot_umap.rds", package ="CIARA"))
-cordinate_umap <- meta_info[,2:3]
+coordinate_umap <- meta_info[,2:3]
 
 p=list()
 for(i in geni_top[1:2]){
-  q <- plot_gene(norm_counts, cordinate_umap, i, i)
+  q <- plot_gene(norm_matrix, coordinate_umap, i, i)
   p <- list(p,q)
 }
 p
@@ -136,13 +136,13 @@ hm.colors <- c(gradient1,gradient2)
 
 
 ```r
-plot_localized_genes_interactive(coordinate_umap_human,norm_matrix,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+plot_localized_genes_interactive(coordinate_umap,norm_matrix,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 ```
 
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/interactive_plot_new.png" width="700" height="500">
 
 ```r
-plot_localized_genes(coordinate_umap_human,norm_matrix,rank_intersect,"Top genes CIARA",hm.colors)
+plot_localized_genes(coordinate_umap,norm_matrix,rank_intersect,"Top genes CIARA",hm.colors)
 
 ```
 

@@ -62,16 +62,15 @@ This function gives as output a vector with all genes expressed at a level highe
 
 An example of input could be:
 ```
-load(file = "norm_matrix.Rda")
-load(file = "knn_matrix.Rda")
+load(file = "raw_counts_human_data.Rda")
+human_data_seurat <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_data", 0.1, 5, 30)
+norm_counts <- as.matrix(GetAssayData(human_data_seurat, slot = "data",assay="RNA"))
+knn_matrix <- as.matrix(human_data_seurat@graphs$RNA_nn)
 background <- get_background_full(norm_matrix, threshold = 1, n_cells_low = 3, n_cells_high = 20)
 result <- CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation = FALSE)
 ```
-The two input files *norm_counts* and *knn_matrix* can be obtained from a seurat object:
-```
-norm_counts <- as.matrix(GetAssayData(seurat_object, slot = "data",assay="RNA"))
-knn_matrix <- as.matrix(seurat_object@graphs$RNA_nn)
-```
+The input file *raw_counts_human_data.Rda* can be downloaded [here](https://hmgubox2.helmholtz-muenchen.de/index.php/s/x83jDLHobM7Qer6)
+
 
 In the next two sections (**Visualization of highly localized genes** and **Cluster analysis based on CIARA for the identification of extremely rare population of cells**) it is shown the analysis of the scRNA seq data from human embryo at the gastrulation state from [Tyser *et al.*, 2020](https://www.biorxiv.org/content/10.1101/2020.07.21.213512v1)
 

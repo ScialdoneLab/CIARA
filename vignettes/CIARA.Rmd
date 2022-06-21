@@ -127,30 +127,48 @@ background <- row.names(result)
 ```
 
 
-
-```{r }
-plot_genes_sum(coordinate_umap_human, norm_human_data_ciara, (ciara_genes), "Sum from top CIARA genes")
-
-```
-
 It is also possible to explore wich genes are highly localized in which cells in an interactive way
 
+```{r, eval = FALSE}
+
+localized_genes_human=detect_localized_genes(knn_human_data,norm_human_data,ciara_genes_top,100)  
+
+ramp <- colorRamp(c("white", "blue4"))
+ 
+list_intersect=localized_genes_human[[1]]
+rank_intersect=localized_genes_human[[2]]
+
+ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
+
+index_color=round(length(ramp.list)/2,0)
+ramp.list[index_color]
+breaks = seq(0,max(rank_intersect),length.out=1000)
+
+## library gplots must be installed for executing the following command
+
+gradient1 = gplots::colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
+
+gradient2 = gplots::colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
 
 
-```{r }
-norm_counts_small <- apply(norm_human_data_ciara, 1, function(x) {
-  y <- x/sum(x)
-  return(y)
-  })
-gene_sum <- apply(norm_counts_small, 1, sum)
-    
-genes_name_text <- selection_localized_genes(norm_human_data_ciara, ciara_genes, min_number_cells = 4, max_number_genes = 4)
-colnames(coordinate_umap_human) <- c("UMAP_1", "UMAP_2")
+hm.colors = c(gradient1,gradient2)
 
-if ((requireNamespace("plotly", quietly = TRUE))) {
-plot_interactive(coordinate_umap_human, gene_sum, genes_name_text, min_x = NULL, max_x = NULL, min_y = NULL, max_y = NULL)
-  }
+
+genes_name_text=names_localized_genes(list_intersect ,ciara_genes_top,max_number = 5)
+
+
+
+plot_localized_genes_interactive(coordinate_umap_human,norm_human_data,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+
+
+
+plot_localized_genes(coordinate_umap_human,norm_human_data,rank_intersect,"Top genes CIARA",hm.colors)
+
+
 ```
+
+
+
 
 ## Cluster analysis using CIARA highly localized genes
 

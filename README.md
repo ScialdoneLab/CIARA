@@ -110,7 +110,7 @@ p
 We can visualize which are the rare cell markers expressed in a particular region of the umap plot with the function **plot_localized_genes** and in an interactive way with **plot_localized_genes_interactive**.
 Each cell is coloured according to the number of expressed rare cell markers shared with neighboring cells.
 ```r
-localized_genes_human <-  detect_localized_genes(knn_human_data,norm_human_data,ciara_genes_top,100)  
+localized_genes_human <-  detect_localized_genes(knn_matrix,norm_matrix,ciara_genes_top,100)  
 list_intersect <-  localized_genes_human[[1]]
 rank_intersect <-  localized_genes_human[[2]]
 ```
@@ -136,13 +136,13 @@ hm.colors <- c(gradient1,gradient2)
 
 
 ```r
-plot_localized_genes_interactive(coordinate_umap_human,norm_human_data,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+plot_localized_genes_interactive(coordinate_umap_human,norm_matrix,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 ```
 
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/interactive_plot_new.png" width="700" height="500">
 
 ```r
-plot_localized_genes(coordinate_umap_human,norm_human_data,rank_intersect,"Top genes CIARA",hm.colors)
+plot_localized_genes(coordinate_umap_human,norm_matrix,rank_intersect,"Top genes CIARA",hm.colors)
 
 ```
 

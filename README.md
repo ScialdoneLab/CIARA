@@ -90,14 +90,14 @@ The pattern expression of the top two genes according to CIARA are shown.
 ```r
 load(system.file("extdata", "result.Rda", package = "CIARA"))
 ciara_genes <- row.names(result)[result[, 1] < 1]
-geni_top <- row.names(result)[order(as.numeric(result[, 1]))]
+ciara_genes_top <- row.names(result)[order(as.numeric(result[, 1]))]
 coordinate_umap <- as.data.frame(Embeddings(human_data_seurat, reduction = "umap")[, 1:2])
 # In the example below we keep the same umap coordinate used in the original paper
 meta_info <- readRDS(system.file("extdata", "annot_umap.rds", package ="CIARA"))
 coordinate_umap <- meta_info[,2:3]
 
 p=list()
-for(i in geni_top[1:2]){
+for(i in ciara_genes_top[1:2]){
   q <- plot_gene(norm_matrix, coordinate_umap, i, i)
   p <- list(p,q)
 }

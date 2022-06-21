@@ -15,11 +15,15 @@ It is possible to use these highly localized genes as features in standard clust
 
 You can install the released version of CIARA from [CRAN](https://CRAN.R-project.org) with:
 
-```install.packages("CIARA")```
+```r
+install.packages("CIARA")
+```
 
 And the development version from [GitHub](https://github.com/) with:
 
-```devtools::install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")```.
+```r
+devtools::install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")
+```.
 
 ## Getting started 
 The main functions of the package are **CIARA_gene** and **CIARA**
@@ -27,7 +31,9 @@ The main functions of the package are **CIARA_gene** and **CIARA**
 
 ### CIARA_gene
 
-```CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, odds_ratio=2, local_region = 1, approximation)```
+```r
+CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, odds_ratio=2, local_region = 1, approximation)
+```
 requires as input:
 
 1. **norm_matrix**: Norm count matrix (n_genes x n_cells)
@@ -43,7 +49,9 @@ The output of **CIARA_gene**  is a list with one element corresponding to the p 
 
 ### CIARA
 
-```CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2,local_region = 1, approximation) ```
+```r
+CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2,local_region = 1, approximation)
+```
 requires as input:
 
 1. **norm_matrix**: Norm count matrix (n_genes x n_cells)
@@ -61,7 +69,7 @@ The vector of genes for which the function **CIARA_gene** is run can be obtained
 This function gives as output a vector with all genes expressed at a level higher than **threshold** in a number of cells between **n_cells_low** and **n_cells_high**
 
 An example of input could be:
-```
+```r
 load(file = "raw_counts_human_data.Rda")
 human_data_seurat <- cluster_analysis_integrate_rare(raw_counts_human_data, "Human_data", 0.1, 5, 30)
 norm_counts <- as.matrix(GetAssayData(human_data_seurat, slot = "data",assay="RNA"))
@@ -79,7 +87,7 @@ In the next two sections (**Visualization of highly localized genes** and **Clus
  We can visualize the highly localized genes identified with CIARA with the functions **plot_gene**, **plot_genes_sum** and even in an interactive way with the function 
 **plot_interactive**. For more exhaustive information about the functions offered by CIARA for visualization  see **Tutorials section** below and the help page of the single functions. (*?function_name*).
 The pattern expression of the top two genes according to CIARA are shown.
-```
+```r
 load(system.file("extdata", "result.Rda", package = "CIARA"))
 ciara_genes <- row.names(result)[result[, 1] < 1]
 geni_top <- row.names(result)[order(as.numeric(result[, 1]))]
@@ -101,12 +109,12 @@ p
 
 We can visualize which are the rare cell markers expressed in a particular region of the umap plot with the function **plot_localized_genes** and in an interactive way with **plot_localized_genes_interactive**.
 Each cell is coloured according to the number of expressed rare cell markers shared with neighboring cells.
-```
+```r
 localized_genes_human=detect_localized_genes(knn_human_data,norm_human_data,ciara_genes_top,100)  
 list_intersect=localized_genes_human[[1]]
 rank_intersect=localized_genes_human[[2]]
 ```
-```
+```r
 ramp <- colorRamp(c("white", "blue4"))
 ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
 
@@ -119,17 +127,17 @@ gradient2 = gplots::colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.1
 hm.colors = c(gradient1,gradient2)
 ```
 
-```
+```r
 genes_name_text=names_localized_genes(list_intersect ,ciara_genes_top,max_number = 5)
 ```
 
-```
+```r
 plot_localized_genes_interactive(coordinate_umap_human,norm_human_data,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 ```
 
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/interactive_plot_new.png" width="700" height="500">
 
-```
+```r
 plot_localized_genes(coordinate_umap_human,norm_human_data,rank_intersect,"Top genes CIARA",hm.colors)
 
 ```

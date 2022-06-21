@@ -13,7 +13,7 @@
     + [CIARA_gene](#CIARA-gene)
     + [CIARA](#CIARA)
   * [Visualization of highly localized genes](#visualization-of-highly-localized-genes)
-  * [Cluster analysis based on CIARA for the identification of extremely rare population of cells] (#cluster-analysis-based-on-CIARA-for-the-identification-of-extremely-rare population-of-cells)
+  * [Cluster analysis based on CIARA for the identification of extremely rare population of cells] (#cluster-analysis-based-on-CIARA-for-the-identification-of-extremely-rare-population-of-cells)
   * [Vignette](#vignette)
   * [Citation](#Citation)
   * [Contributions and Support](#contributions-and-support)

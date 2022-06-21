@@ -132,17 +132,17 @@ gradient2 <- gplots::colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.
 hm.colors <- c(gradient1,gradient2)
 ```
 
+```r
+plot_localized_genes(coordinate_umap,norm_matrix,rank_intersect,"Top genes CIARA",hm.colors)
+
+```
+
+
+<img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/plot_localized_genes_example.png" width="700" height="500">
 
 
 ```r
 plot_localized_genes_interactive(coordinate_umap,norm_matrix,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
-```
-
-<img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/plot_localized_genes_example.png" width="700" height="500">
-
-```r
-plot_localized_genes(coordinate_umap,norm_matrix,rank_intersect,"Top genes CIARA",hm.colors)
-
 ```
 
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/plot_localized_genes_interactive_example.png" width="700" height="500">

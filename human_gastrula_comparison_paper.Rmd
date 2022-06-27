@@ -592,7 +592,7 @@ Function_fisher(ciara_genes,GeneList.final,union(row.names(ExprM.Stat2),backgrou
 #vedo=load("elmir_hyper_old.Rda")
 
 
-ciara_genes=row.names(result)[result[,2]<1]
+ciara_genes=row.names(result)[result[,1]<1]
 
 max_gini=ExprM.Stat2$log2.Maxs
 gini_value=ExprM.Stat2$Gini
@@ -604,9 +604,19 @@ label_all=c(rep("No Gini gene",length(max_gini)))
 label_all[row.names(ExprM.Stat2)%in%Genelist.top_pvalue]="Gini gene"
 
 mtcars=data.frame(label_all,gini_value,max_gini)
-ggplot(mtcars, aes(x=max_gini, y=gini_value, color=label_all)) +
-  geom_point()+xlab("log2 (Max Expression Level)")+ylab("Gini")+labs(color="Label")
+row.names(mtcars)=row.names(ExprM.Stat2)
 
+top_pgc_marker=c("NANOS3","NANOG","SOX17","DPPA5")
+y_max=max(mtcars[,2][row.names(mtcars)%in%top_pgc_marker])
+y_min=min(mtcars[,2][row.names(mtcars)%in%top_pgc_marker])
+x_max=max(mtcars[,3][row.names(mtcars)%in%top_pgc_marker])
+x_min=min(mtcars[,3][row.names(mtcars)%in%top_pgc_marker])
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/gini_select.pdf",width = 8,height = 6)
+ggplot(mtcars, aes(x=max_gini, y=gini_value, color=label_all)) +
+  geom_point()+xlab("log2 (Max Expression Level)")+ylab("Gini index")+labs(color="Type")+geom_rect(aes(ymin = y_min , ymax = y_max, xmin = x_min , xmax = x_max ),
+               fill = "transparent", color = "black")+theme(text = element_text(size=16))
+dev.off()
 
 
 label_all=c(rep("No CIARA gene",length(max_gini)))
@@ -615,8 +625,17 @@ label_all[row.names(ExprM.Stat2)%in%ciara_genes]="CIARA gene"
 mtcars=data.frame(label_all,gini_value,max_gini)
 row.names(mtcars)=row.names(ExprM.Stat2)
 mtcars=mtcars[c(row.names(ExprM.Stat2)[!row.names(ExprM.Stat2)%in%ciara_genes],row.names(ExprM.Stat2)[row.names(ExprM.Stat2)%in%ciara_genes]),]
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/ciara_select.pdf",width = 8,height = 6)
 ggplot(mtcars, aes(x=max_gini, y=gini_value, color=label_all)) +
-  geom_point()+xlab("log2 (Max Expression Level)")+ylab("Gini")+labs(color="Label")
+  geom_point()+xlab("log2 (Max Expression Level)")+ylab("Gini index")+labs(color="Type")+geom_rect(aes(ymin = y_min , ymax = y_max, xmin = x_min , xmax = x_max ),
+               fill = "transparent", color = "black")+theme(text = element_text(size=16))
+
+
+dev.off()
+
+  
+
 
 
 ```

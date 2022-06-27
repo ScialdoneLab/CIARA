@@ -202,7 +202,7 @@ level=levels(as.factor(cluster))
 p_value=rep(0,length(level))
 odds_ratio=rep(0,length(level))
 for (i in 1:length(level)){
-show=build_fisher_test(marker_all_cluster[names(marker_all_cluster)==level[i]],marker_specific,background)
+show=CIARA:::build_fisher_test(marker_all_cluster[names(marker_all_cluster)==level[i]],marker_specific,background)
 p_value[i]=as.numeric(show$p.value)
 names(p_value)[i]=level[i]
 odds_ratio[i]=as.numeric(show$estimate)
@@ -398,9 +398,9 @@ index_color=round(length(ramp.list)/2,0)
 
 
 breaks = seq(0,max(rank_intersect),length.out=1000)
-gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.25))), "#FFFFFF",ramp.list[index_color])
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
 
-gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), ramp.list[index_color], "#00008B" )
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
 
 
 hm.colors = c(gradient1,gradient2)
@@ -481,14 +481,16 @@ dev.off()
 
 ```
 
+
 ```{r }
 
 final_cluster_heart_new=final_cluster_heart
-final_cluster_heart_new[final_cluster_heart=="2-step_2"]="Rare Endoderm"
-final_cluster_heart_new[final_cluster_heart=="En1"]="Endoderm1"
-final_cluster_heart_new[final_cluster_heart=="En2"]="Endoderm2"
+final_cluster_heart_new[final_cluster_heart=="2-step_2"]="YSE1"
+final_cluster_heart_new[final_cluster_heart=="En1"]="En1"
+final_cluster_heart_new[final_cluster_heart=="En2"]="En2"
 
-pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umap_endoderm_conference.pdf",width = 8, height = 6)
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umap_endoderm_conference.pdf",width = 8, height = 6)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/umap_endoderm_mouse.pdf",width = 8, height = 6)
 p=plot_umap(umap_cordinate_heart_small,final_cluster_heart_new)
 p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
 panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
@@ -530,7 +532,7 @@ names(top_heart)=rep("2-step_2",length(top_heart))
 plot_balloon_marker(norm_data_heart,final_cluster_heart,marker_heart_top,10,max_size=2,text_size=9)
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_f.pdf")
 
-plot_balloon_marker(norm_data_heart,final_cluster_heart,top_heart,40,max_size=2,text_size=9)
+plot_balloon_marker(norm_data_heart,final_cluster_heart,top_heart,10,max_size=2,text_size=9)
 dev.off()
 ```
 
@@ -639,19 +641,96 @@ plot_balloon_marker_here=function (norm_counts, cluster, marker_complete, max_nu
 }
 ```
 
+```{r}
+plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste( genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_counts[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+        all_markers_values[[i]]=gene_values_0/max(gene_values_0)
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
 
 ```{r }
-names(geni_comuni)=rep("Rare Endoderm",length(geni_comuni))
-pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/marker_endoderm_conference.pdf",width = 8, height = 6)
-plot_balloon_marker_here(norm_data_heart,final_cluster_heart_new,geni_comuni,10,max_size=8,text_size=18)
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load(file="top_endo.Rda")
+
+#names(top_heart)=rep("YSE1",length(top_heart))
+#names(top_endo)=rep("YSE1",length(top_endo))
+#geni_comuni=intersect(top_heart,top_endo)
+
+names(geni_comuni)=rep("YSE1",length(geni_comuni))
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/marker_endoderm_conference.pdf",width = 8, height = 6)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/markers_endo_mouse.pdf",width = 8, height = 6)
+#plot_balloon_marker_here(norm_data_heart,final_cluster_heart_new,geni_comuni,10,max_size=12,text_size=25)
+plot_balloon_marker_norm(norm_data_heart,final_cluster_heart_new,geni_comuni,10,max_size=12,text_size=25)
 dev.off()
 ```
 
 
 ```{r }
 
-listInput <- list(mouse_rare_endoderm=marker_heart[names(marker_heart)=="2-step_2"],human_rare_endoderm=marker_endoderm_2)
-pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_g.pdf")
+listInput <- list(YSE1_mouse=marker_heart[names(marker_heart)=="2-step_2"],YSE1_human=marker_endoderm_2)
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_g.pdf")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/enrichment_mouse_endo.pdf",width = 8, height = 6)
 upset(fromList(listInput), order.by = "freq")
 dev.off()
 
@@ -682,3 +761,71 @@ p
 ```
 
 
+##Mega comprsion with mouse and human
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("markers_first_elmir_final.Rda")
+#load(system.file("extdata", "markers_first_elmir_final.Rda", package ="CIARA"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/ciara_of_mixing_library/elmir_data")
+#load(file="markers_first_elmir_final.Rda")
+marker_elmir_all=markers_first_elmir_final[[3]]
+marker_mega_human=marker_elmir_all[names(marker_elmir_all)=="Hemogenic Endothelial Progenitors_4"]
+
+
+
+
+
+```
+
+
+```{r}
+#setwd('/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data')
+gene_id=row.names(raw_data_heart)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data")
+#write.table(gene_id,file="geni_heart.txt",row.names = F,quote=F)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+name_mouse=read.csv("/Users/gabriele.lubatti/Downloads/mega_convert_human.csv")
+mega_mouse=name_mouse$ortholog_name
+mega_mouse_small=mega_mouse[mega_mouse!="N/A"&mega_mouse!=""]
+
+
+
+
+```
+
+
+```{r }
+
+listInput <- list(MEP1_mouse=mega_mouse_small,MEP1_human=marker_mega_human)
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_g.pdf")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/enrichment_mouse_mega.pdf",width = 8, height = 6)
+upset(fromList(listInput), order.by = "freq")
+dev.off()
+
+#listInput <- list(ciara_mixing_rare_2=marker_2_small,giniclust2_rare_2=marker_2_original)
+
+#upset(fromList(listInput), order.by = "freq")
+
+
+
+
+
+
+
+
+
+```
+```{r }
+cluster_test=names(marker_elmir_all)
+result=Test_Fisher(marker_elmir_all,mega_mouse_small,as.vector(marker_elmir_all),cluster_test)
+
+
+
+
+names(result[[1]])[result[[1]]<0.05&result[[2]]>2]
+
+geni_comuni=intersect(marker_mega_human,mega_mouse_small)
+```

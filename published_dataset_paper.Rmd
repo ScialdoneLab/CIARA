@@ -429,7 +429,7 @@ load(file="knn_matrix_gini_5_30.Rda")
 
 ```{r }
 library(gplots)
-localized_genes_mouse=detect_localized_genes(knn_matrix_gini_5_30,norm_gini,geni_top_top,100)  
+localized_genes_mouse=detect_localized_genes(knn_matrix_gini_5_30,norm_gini,geni_top_top,10)  
 
 ramp <- colorRamp(c("white", "blue4"))
  
@@ -443,9 +443,9 @@ ramp.list[index_color]
 
 
 breaks = seq(0,max(rank_intersect),length.out=1000)
-gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.25))), "#FFFFFF",ramp.list[index_color])
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
 
-gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), ramp.list[index_color], "#00008B" )
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
 
 
 hm.colors = c(gradient1,gradient2)
@@ -474,7 +474,7 @@ dev.off()
 
 library(CIARA)
 p=list()
-for(i in (geni_top_top)[1:10]){
+for(i in (geni_top_top)[10:20]){
   q=plot_gene(norm_gini,cordinate_gini,i,i)
   p=list(p,q)
 }
@@ -502,9 +502,217 @@ plot_genes_sum(cordinate_gini,norm_gini,ciara_genes,"Sum from top entropy genes"
 
 
 
+
+##Skip below (just a try for figure 1)
+```{r }
+
+gini_normal=cluster_analysis_integrate_rare(test_data_1,"24h",0.1,3,30)
+
+
+```
+
+```{r }
+library(clustree)
+#find_resolution(gini_normal,seq(0.0001,0.0002,0.0001))
+```
+
+```{r }
+
+norm_gini_normal=as.matrix(GetAssayData(gini_normal, slot = "data",assay="RNA"))
+
+#norm_gini_normal=norm_gini_normal[,1:2484]
+
+knn_matrix__gini_normal=as.matrix(gini_normal@graphs$RNA_nn)
+
+cordinate_gini_normal=as.data.frame(Embeddings(gini_normal, reduction = "umap")[, 1:2])
+
+#cordinate_gini_normal=cordinate_gini_normal[1:2484,]
+#gini_normal=FindClusters(gini_normal,resolution = 0.000000000000001)
+cluster_normal=as.vector(gini_normal$RNA_snn_res.0.01)
+#cluster_normal=cluster_normal[1:2484]
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+save(norm_gini_normal,file="norm_gini_normal.Rda")
+save(knn_matrix__gini_normal,file="knn_matrix__gini_normal.Rda")
+
+```
+
+#/home/linuxbrew/.linuxbrew/Cellar/r/4.0.2_1/bin/R
+```{r}
+library(parallel)
+source("CIARA_core_functions.R")
+setwd("/nas_storage/gabriele.lubatti/ciara_2clc")
+load(file="norm_gini_normal.Rda")
+load(file="knn_matrix__gini_normal.Rda")
+
+
+norm_matrix=norm_gini_normal
+knn_matrix=knn_matrix__gini_normal
+
+background <- get_background_full(norm_matrix, threshold = 1, n_cells_low = 3, n_cells_high = 20)
+result <- CIARA(norm_matrix, knn_matrix, background, cores_number = 10, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation = FALSE)
+result_gini_normal=result
+save(result_gini_normal,file="result_gini_normal.Rda")
+
+
+```
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+load("result_gini_normal.Rda")
+```
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+background=row.names(result)
+```
+
+```{r }
+library(gplots)
+localized_genes_mouse=detect_localized_genes(knn_matrix__gini_normal,norm_gini_normal,geni_top_top,10)  
+
+ramp <- colorRamp(c("white", "blue4"))
+ 
+
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
+
+index_color=round(length(ramp.list)/2,0)
+ramp.list[index_color]
+
+
+breaks = seq(0,max(rank_intersect),length.out=1000)
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
+
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
+
+
+hm.colors = c(gradient1,gradient2)
+
+
+genes_name_text=selection_localized_genes_here(list_intersect ,geni_top_top,max_number_genes=5)
+
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/interactive_plot")
+p=plot_interactive_here(cordinate_gini_normal,norm_gini_normal,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+
+htmlwidgets::saveWidget(p, file = "gini_2clc.html")
+
+p=plot_genes_sum_here(cordinate_gini_normal,norm_gini_normal,rank_intersect,"Top genes CIARA",hm.colors)
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/interactive_plot/gini_2clc.pdf",width = 8,height = 6)
+p+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=12))+geom_point( alpha = 0.3, na.rm = T, shape = 21, colour = "black",stroke=0.1)
+dev.off()
+
+```
+
+
+```{r }
+
+Plot_qc_cluster=function(seurat_object,cluster,mit_prefix,rib_prefix_1,rib_prefix_2){
+
+raw_counts<- (GetAssayData(seurat_object, slot = "counts",assay="RNA"))
+sum_umi=apply(raw_counts,2,sum)
+sum_geni=apply(raw_counts,2,function(x){
+  x=x[x!=0]
+  return(length(x))
+})
+
+
+frac_mito=apply(raw_counts,2,function(x){
+  #return(sum(x[grep("MT-",row.names(raw_counts))])/sum(x))
+  return(sum(x[grep(mit_prefix,row.names(raw_counts))])/sum(x))
+  
+  
+  
+})
+
+
+frac_ribo=apply(raw_counts,2,function(x){
+  #frac_ribo_s=x[grep("RPS",row.names(raw_counts))]
+  #frac_ribo_l=x[grep("RPL",row.names(raw_counts))]
+  frac_ribo_s=x[grep(rib_prefix_1,row.names(raw_counts))]
+  frac_ribo_l=x[grep(rib_prefix_2,row.names(raw_counts))]
+  frac_ribo_all=c(frac_ribo_s,frac_ribo_l)
+  return(sum(frac_ribo_all)/sum(x))
+
+
+
+})
+
+
+Cluster=as.factor(cluster)
+
+data_plot=data.frame(as.numeric(frac_mito),as.numeric(sum_geni),as.numeric(sum_umi),as.numeric(frac_ribo),Cluster)
+
+library(ggplot2)
+
+plot_1=ggplot(data_plot, aes(x=Cluster, y=frac_mito,fill=Cluster)) + 
+  geom_boxplot()+xlab("clusters")+ylab("frac mitochindrial reads")+ggtitle("Frac mito reads")
+
+
+plot_2=ggplot(data_plot, aes(x=Cluster, y=sum_umi,fill=Cluster)) + 
+  geom_boxplot()+xlab("clusters")+ylab("UMI counts")+ggtitle("UMI counts")
+
+plot_3=ggplot(data_plot, aes(x=Cluster, y=sum_geni,fill=Cluster)) + 
+  geom_boxplot()+xlab("clusters")+ylab("Number of genes")+labs(color="Cluster")+ggtitle("Number of genes")
+
+plot_4=ggplot(data_plot, aes(x=Cluster, y=frac_ribo,fill=Cluster)) + 
+  geom_boxplot()+xlab("clusters")+ylab("Frac ribosomial reads")+labs(color="Cluster")+ggtitle("Frac ribosomial reads")
+return (list(plot_1,plot_2,plot_3,plot_4))
+}
+
+```
+
+```{r }
+plot_umap(cordinate_gini_normal,cluster_normal)
+
+plot_gene(norm_gini_normal,cordinate_gini_normal,"Zscan4d","Zscan4d")
+```
+
+### Plot QC feature
+```{r }
+Plot_qc_cluster(gini_normal,as.vector(as.vector(gini_normal$RNA_snn_res.0.1)),"mt-","Rps","Rpl")
+#Plot_qc_cluster_old(es_combined,as.vector(es_combined$integrated_snn_res.0.1),"mouse")
+```
+
+
+
+```{r }
+norm_gini=as.matrix(GetAssayData(giniclus, slot = "data",assay="RNA"))
+norm_gini=norm_gini[,1:2484]
+
+general_gini=giniclust_seurat$RNA_snn_res.0.1
+general_gini=general_gini[1:2484]
+
+knn_matrix_gini_5_30=as.matrix(giniclust_seurat@graphs$RNA_nn)
+knn_matrix_gini_5_30=knn_matrix_gini_5_30[1:2484,1:2484]
+
+cordinate_gini=as.data.frame(Embeddings(giniclust_seurat, reduction = "umap")[, 1:2])
+cordinate_gini=cordinate_gini[1:2484,]
+```
+
+
+
+##Stop skip
+
+
+
+
+
+
+
+
+##START again
 ```{r }
 
 gini_entropy_24=cluster_analysis_integrate_rare(test_data_1,"24h",0.1,3,30,(ciara_genes))
+
+#gini_entropy_24=cluster_analysis_integrate_rare(test_data_1,"24h",0.1,3,30,geni_top_top[1:10])
 
 
 ```
@@ -514,7 +722,7 @@ gini_entropy_24=cluster_analysis_integrate_rare(test_data_1,"24h",0.1,3,30,(ciar
 
 ```{r }
 library(clustree)
-find_resolution(gini_entropy_24,seq(0.01,0.1,0.01))
+find_resolution(gini_entropy_24,seq(0.01,0.03,0.01))
 ```
 
 
@@ -551,6 +759,8 @@ cluster_vedo[cluster_entropy==5]="2CLC"
 
 
 plot_umap(cordinate_gini,cluster_vedo)
+
+plot_umap(cordinate_gini,cluster_entropy)
 ```
 
 ```{r }
@@ -775,7 +985,7 @@ load("test_data_3.Rda")
 load(file="norm_gini_3.Rda")
 load(file="knn_matrix_gini_5_30_3.Rda")
 load(file="cordinate_gini_3.Rda")
-
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
 gini_cluster_3=read.csv2("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/13059_2016_1010_MOESM11_ESM.csv")
 
 gini_name_3=gini_cluster_3$Cell.ID
@@ -1878,6 +2088,217 @@ plot_umap(cordinate_race,cluster_race_entropy)
 
 ```
 
+
+```{r }
+p=plot_umap(cordinate_race,cluster_race_id)
+p[[1]]+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  theme(text = element_text(size=18))
+  
+```
+
+
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/race_id_umap.pdf",width = 8,height = 6)
+p=plot_umap(cordinate_race,cluster_race_entropy)
+p[[1]]+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  theme(text = element_text(size=18))
+dev.off()
+```
+
+```{r}
+DefaultAssay(race_entropy) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(race_entropy,as.vector(race_entropy$RNA_snn_res.0.2),names(race_entropy$RNA_snn_res.0.2),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+top_1=white_black_markers(as.vector(race_entropy$RNA_snn_res.0.2),6,norm_race,marker_all_day_24_first,0)
+
+top_1=names(top_1)[top_1]
+
+mean_top_1=apply(norm_race[top_1,as.vector(race_entropy$RNA_snn_res.0.2)==1],1,mean)
+mean_top_1=sort(mean_top_1,decreasing = T)
+
+top_1=names(mean_top_1)
+names(top_1)=rep(6,length(top_1))
+```
+
+
+```{r }
+top_2=white_black_markers(as.vector(race_entropy$RNA_snn_res.0.2),7,norm_race,marker_all_day_24_first,0)
+
+top_2=names(top_2)[top_2]
+
+mean_top_2=apply(norm_race[top_2,as.vector(race_entropy$RNA_snn_res.0.2)==2],1,mean)
+mean_top_2=sort(mean_top_2,decreasing = T)
+
+top_2=names(mean_top_2)
+names(top_2)=rep(7,length(top_2))
+```
+
+
+```{r }
+plot_balloon_marker_here=function (norm_matrix, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste( genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_matrix[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_matrix[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 0.5)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "white", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
+```{r }
+
+
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/marker_cluster_6_raceid.pdf",width = 8, height = 6)
+plot_balloon_marker_here(norm_race,as.vector(race_entropy$RNA_snn_res.0.2),c(top_1[1:10]),10,max_size=12,text_size=25)
+dev.off()
+```
+
+```{r }
+#Dclk1, Lrmp, Trpm5
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/marker_cluster_7_raceid.pdf",width = 8,height = 6)
+plot_balloon_marker_here(norm_race,as.vector(race_entropy$RNA_snn_res.0.2),c(top_2[1:7],top_2[33],top_2[38],top_2[40]),10,max_size=12,text_size=25)
+dev.off()
+```
+
+```{r }
+my.clusters_0 <- cutreeHybrid(my.tree
+                            ,distM=as.matrix(my.dist),deepSplit=0
+                            ,minClusterSize = 35)$label#5)$label
+my.clusters_1 <- cutreeHybrid(my.tree
+                            ,distM=as.matrix(my.dist),deepSplit=1
+                            ,minClusterSize = 35)$label#5)$label
+my.clusters_0[my.clusters_0==1]="Win Epi"
+my.clusters_0[my.clusters_0==2]="ExE"
+my.clusters_0[my.clusters_0==3]="Intermediate"
+my.clusters_0[my.clusters_0==4]="Los Epi"
+my.clusters_0[my.clusters_0==5]="VE"
+
+classe_new<-data.frame(deepSplit0 = cluster_race_entropy[cluster_race_entropy==7|cluster_race_entropy==6],deepSplit1=cluster_race_id[cluster_race_entropy==7|cluster_race_entropy==6])
+classe_new$K1=c(rep("RaceID",7))
+classe_new$K2=c(rep("CIARA",7))
+```
+
+```{r }
+library(clustree)
+clustree(classe_new,prefix="deepSplit", node_size = 10,node_label = "algorithm")
+
+
+label_position <- function(labels) {
+    if (length(unique(labels)) == 1) {
+        labels[labels==1]="RaceID"
+        labels[labels==0]="CIARA"
+        position <- as.character(unique(labels))
+    } else {
+        position <- "RaceID"
+    }
+    return(position)
+}
+
+label_position <- function(labels) {
+  if (all(unique(labels=)==6)|all(unique(labels=)==7)){
+    position= cluster
+  }
+  else{
+    position="RaceID"
+  }
+    return(position)
+}
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/clustree_race.pdf",width = 8,height = 6)
+clustree(classe_new, prefix="deepSplit", node_size = 10)
+dev.off()
+
+clustree(classe_new, prefix="deepSplit", node_size = 10,node_label = "algorithm",node_label_aggr = "algorithm")
+
+clustree(classe_new, prefix="deepSplit", node_size = 10,node_label_aggr = "algorithm")
+
+```
+
+
+
+
+
+```{r }
+plot_gene(norm_race,cordinate_race,"Kctd12","Smtn")
+plot_gene(norm_race,cordinate_race,"Atp1a2","Smtn")
+plot_umap(cordinate_race,cluster_race_entropy)
+```
+
 ```{r }
 
 table(cluster_race_entropy,cluster_race_id)
@@ -2823,7 +3244,135 @@ find_resolution(giniclu2_entropy,seq(0.01,1,0.1))
 #mayra_seurat_entropy_24=FindClusters(mayra_seurat_entropy_24,resolution = 0.1)
 
 ```
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/giniclust2_umap.pdf",width = 8, height = 6)
+p=plot_umap(cordinate_umap_gini,as.vector(giniclu2_entropy$RNA_snn_res.0.3))
+p[[1]]+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  theme(text = element_text(size=18))
+dev.off()
+```
 
+```{r}
+DefaultAssay(giniclu2_entropy) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(giniclu2_entropy,as.vector(giniclu2_entropy$RNA_snn_res.0.3),names(giniclu2_entropy$RNA_snn_res.0.3),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+```{r }
+top_1=white_black_markers(as.vector(giniclu2_entropy$RNA_snn_res.0.3),1,norm_gini2,marker_all_day_24_first,0)
+
+top_1=names(top_1)[top_1]
+
+mean_top_1=apply(norm_gini2[top_1,as.vector(giniclu2_entropy$RNA_snn_res.0.3)==1],1,mean)
+mean_top_1=sort(mean_top_1,decreasing = T)
+
+top_1=names(mean_top_1)
+names(top_1)=rep(1,length(top_1))
+```
+
+
+```{r }
+top_2=white_black_markers(as.vector(giniclu2_entropy$RNA_snn_res.0.3),2,norm_gini2,marker_all_day_24_first,0)
+
+top_2=names(top_2)[top_2]
+
+mean_top_2=apply(norm_gini2[top_2,as.vector(giniclu2_entropy$RNA_snn_res.0.3)==2],1,mean)
+mean_top_2=sort(mean_top_2,decreasing = T)
+
+top_2=names(mean_top_2)
+names(top_2)=rep(2,length(top_2))
+```
+
+
+```{r }
+plot_balloon_marker_here=function (norm_matrix, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste( genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_matrix[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_matrix[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "white", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/marker_cluster_1_giniclust2.pdf",width = 8, height = 6)
+plot_balloon_marker_here(norm_gini2,as.vector(giniclu2_entropy$RNA_snn_res.0.3),c(top_1[1:10]),10,max_size=12,text_size=25)
+dev.off()
+```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/marker_cluster_2_giniclust2.pdf",width = 8,height = 6)
+plot_balloon_marker_here(norm_gini2,as.vector(giniclu2_entropy$RNA_snn_res.0.3),c(top_2[1:10]),10,max_size=12,text_size=25)
+dev.off()
+```
 
 ```{r }
 plot_umap(cordinate_umap_gini,as.vector(giniclu2_entropy$RNA_snn_res.0.3))
@@ -3314,22 +3863,64 @@ ggplot(all_data, aes(x=n_cells_all, y=n_time_all,color=label_all)) +
 dev.off()
 
 ```
+##Figures for the paper
+
+##R and pyhton together
+```{r}
+old_ratio=n_time_old_r
+new_ratio=n_time_old_p
+summary_plot=data.frame(old_ratio,new_ratio,n_cells)
+
+n_cells_all=rep(n_cells,2)
+#n_cells_all=n_cells
+n_time_all=c(old_ratio,new_ratio)
+#n_time_all=c(old_ratio)
+label_all=c(rep("R",length(n_cells)),rep("python",length(n_cells)))
+#label_all=c(rep("Tested dataset",length(n_cells)))
+all_data=data.frame(n_cells_all,n_time_all,label_all)
+
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_figure_6/sup_fig_6_a_ratio.pdf")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/running_time_comparison.pdf",height = 6, width = 8)
+ggplot(all_data, aes(x=n_cells_all, y=n_time_all,color=label_all)) +
+  geom_point(size=2)+xlab("Number of cells") + ylab("Running time (minutes)") +ggtitle("CIARA running time: R vs python")+labs(col="setting")+geom_line(aes(colour = label_all), size = 1)+ylim(c(0,11))+scale_y_continuous(breaks=seq(0,11,2),limits = c(0,11))+
+  scale_x_continuous(breaks=seq(10,4000,500),limits = c(0,4500))+xlim(c(0,4000))+theme(text = element_text(size=14))
+dev.off()
+
+  #theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+#panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        #axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        #axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+#dev.off()
+
+```
+
 
 ##Comparison running time
 ```{r}
 old_ratio=n_time_old_r/n_time_old_p
-new_ratio=n_time_new_r/n_time_new_p
+#new_ratio=n_time_new_r/n_time_new_p
 summary_plot=data.frame(old_ratio,new_ratio,n_cells)
 
-n_cells_all=rep(n_cells,2)
-n_time_all=c(old_ratio,new_ratio)
-label_all=c(rep("All local regions",length(n_cells)),rep("Approximation",length(n_cells)))
+#n_cells_all=rep(n_cells,2)
+n_cells_all=n_cells
+#n_time_all=c(old_ratio,new_ratio)
+n_time_all=c(old_ratio)
+#label_all=c(rep("All local regions",length(n_cells)),rep("Approximation",length(n_cells)))
+label_all=c(rep("Tested dataset",length(n_cells)))
 all_data=data.frame(n_cells_all,n_time_all,label_all)
 
-pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_figure_6/sup_fig_6_a_ratio.pdf")
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_figure_6/sup_fig_6_a_ratio.pdf")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/running_time.pdf",height = 6, width = 8)
 ggplot(all_data, aes(x=n_cells_all, y=n_time_all,color=label_all)) +
-  geom_point(size=2)+xlab("Number of cells") + ylab("Ratio") +ggtitle("CIARA: running time - R vs python")+labs(col="setting")+geom_line(aes(colour = label_all), size = 1)+ylim(c(0,11))+scale_y_continuous(breaks=seq(0,11,2),limits = c(0,11))
+  geom_point(size=2)+xlab("Number of cells") + ylab("Ratio") +ggtitle("CIARA running time: R vs python")+labs(col="setting")+geom_line(aes(colour = label_all), size = 1)+ylim(c(0,11))+scale_y_continuous(breaks=seq(0,4,1),limits = c(0,4))+
+  scale_x_continuous(breaks=seq(10,4000,500),limits = c(0,4500))+xlim(c(0,4000))+theme(text = element_text(size=14))+theme(legend.position="none")
 dev.off()
+
+  #theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+#panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        #axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        #axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+#dev.off()
 
 ```
 
@@ -3478,7 +4069,7 @@ Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december
 
 ```
 
-## Running time pyhton
+## Running time pyhton (these are the values used for the plot)
 ```{r}
 ##Giniclust fig3b
 Execution Time CIARA Approx: 25.02s
@@ -3527,7 +4118,7 @@ Execution Time CIARA Approx: 25.42s (100 hign cells)
 
 ```
 
-##Running Time for CIARA
+##Running Time for CIARA (these are the values used for the plot)
 ```{r}
 All time are obtain with 10 cores and 50G memory
 ##RaceID

@@ -17,6 +17,11 @@ rm(list=ls())
 ```
 
 ```{r } 
+devtools::install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")
+```
+
+
+```{r } 
 library(destiny)#Not necessary for IDENTOM
 #library(Biobase)
 #library(Seurat)
@@ -36,6 +41,8 @@ library(clustree)
 ```
 
 ```{r }
+
+
 detect_localized_genes=function(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,top_number){
 list_intersect=rep(list(0),length(colnames(knn_matrix_ane_24_update)))
 rank_intersect=rep(0,length(colnames(knn_matrix_ane_24_update)))
@@ -287,7 +294,7 @@ elmir_seurat_5=cluster_analysis_integrate_rare(raw_elmir_5_30,"Elmir_data",0.1,5
 
 
 ```{r }
-
+library(Seurat)
 norm_elmir_5_30=as.matrix(GetAssayData(elmir_seurat_5, slot = "data",assay="RNA"))
 
 #setwd("/Users/gabriele.lubatti/Downloads")
@@ -519,13 +526,16 @@ list_intersect=localized_genes_mouse[[1]]
 ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
 
 index_color=round(length(ramp.list)/2,0)
+#index_color=2
 ramp.list[index_color]
 
 
 breaks = seq(0,max(rank_intersect),length.out=1000)
-gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.25))), "#FFFFFF",ramp.list[index_color])
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
 
-gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), ramp.list[index_color], "#00008B" )
+#gradient1 = colorpanel( sum( breaks[-1]<=2 ), "#FFFFFF",ramp.list[index_color])
+
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
 
 
 hm.colors = c(gradient1,gradient2)
@@ -535,6 +545,7 @@ genes_name_text=selection_localized_genes_here(list_intersect ,geni_top_top,max_
 
 
 setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/interactive_plot")
+
 p=plot_interactive_here(cordinate_umap,norm_elmir_5_30,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 
 htmlwidgets::saveWidget(p, file = "human_gastrula.html")
@@ -2961,8 +2972,10 @@ dev.off()
 
 ```
 
+##Start here for baloon plots for markers YSE1 and MEP1
 
 ```{r}
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
 original_all=as.vector(umap_elmir$cluster_id)
 original_sub=as.vector(umap_elmir$sub_cluster)
 original_sub[original_sub=="Blood Progenitors"]="MEP"
@@ -2983,6 +2996,8 @@ markers_first_elmir_1_final=markers_first_elmir_final[[1]]
 markers_first_elmir_3_final=markers_first_elmir_final[[3]]
 ```
 
+
+
 ```{r}
 plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_number, 
     max_size = 5, text_size = 7) 
@@ -2996,7 +3011,8 @@ plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_nu
         if (length(genes_4_0) > 0) {
             genes_4_0 <- genes_4_0[1:max_number]
             all_markers[[i]] <- genes_4_0
-            genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste( genes_4_0, sep = "_")
             all_markers_plot[[i]] <- genes_4_0_plot
         }
     }
@@ -3040,8 +3056,8 @@ plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_nu
             panel.border = ggplot2::element_rect(colour = "blue", 
                 fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
         ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
-            na.value = NA) + ggplot2::labs(colour = "Mean log2 norm expression", 
-        size = "Value (fraction cells above 1 log2 norm counts)") + 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
         ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
         ggplot2::theme(text = ggplot2::element_text(size = text_size), 
             axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
@@ -3071,18 +3087,138 @@ pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_januar
 plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
 dev.off()
 
+add_genes_endo=c("SERPIND1","SERPINC1", "SERPINF2", "TF")
+names(add_genes_endo)=rep("YSE1",length(add_genes_endo))
 
+markers_endo_plot=c(markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="DE1"][1:9],markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="DE2"][1:9],markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="YSE"][1:9],c(markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="YSE1"][1:5],add_genes_endo),markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Hypoblast"][1:9])
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/extended_marker_4c.pdf",width = 8, height = 6)
+plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_endo_plot,9,max_size=2,text_size=8)
+dev.off()
+
+```
+
+
+```{r}
+toMatch=c("Endoderm")
 setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
 load(file="top_endo.Rda")
 #load(file="top_hemo.Rda")
 #load(file="top_meso.Rda")
 names(top_endo)=rep("YSE1",length(top_endo))
 
-pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/markers_endo_conference.pdf",width = 8, height = 6)
-plot_balloon_marker_here(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],top_endo,10,max_size=8,text_size=18)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/YSE1_big.pdf",width = 8, height = 6)
+#plot_balloon_marker_here(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch#,collapse="|"),original_all)],top_endo,10,max_size=8,text_size=7)
+
+plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],c(top_endo[1],top_endo[3:11]),10,max_size=12,text_size=25)
 dev.off()
+
+##Other version
+add_genes_endo=c("SERPIND1","SERPINC1", "SERPINF2", "TF")
+names(add_genes_endo)=rep("YSE1",length(add_genes_endo))
+markers_endo_plot=c(markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="YSE1"][6:12],add_genes_endo)
+
+plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_endo_plot,10,max_size=10,text_size=25)
+
+markers_endo_plot=c(markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="YSE1"][1:5])
+plot_balloon_marker_norm(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_endo_plot,5,max_size=10,text_size=16)
+
+
+
+
+
 #markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="YSE1"]
 ```
+#TF
+#TFRC and TFR2
+
+```{r}
+plot_balloon_marker_norm_receptor=function (norm_counts, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- c("DE1","DE2","YSE","YSE1","Hypoblast","Erythroblasts")
+    #livelli <- levels((cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste(genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_counts[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+        all_markers_values[[i]]=gene_values_0/max(gene_values_0)
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = factor(cluster_label_all,levels=livelli), 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
+```{r}
+toMatch=c("Endoderm","Erythroblasts")
+
+receptor_plot=c("TF","TFRC","TFR2")
+names(receptor_plot)=rep("YSE1",length(receptor_plot))
+
+
+
+new_clu_plot=original_sub[grep(paste(toMatch,collapse="|"),original_all)]
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/receptor.pdf",width = 8, height = 6)
+plot_balloon_marker_norm_receptor(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],new_clu_plot,receptor_plot,3,max_size=12,text_size=25)
+dev.off()
+
+#plot_balloon_marker_here(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch#,collapse="|"),original_all)],receptor_plot,3,max_size=8,text_size=10)
+
+```
+
+
+
 
 ```{r}
 select_blood=which(as.vector(umap_elmir$cluster_id=="Hemogenic Endothelial Progenitors"))
@@ -3094,7 +3230,7 @@ markers_first_elmir_3_final=markers_first_elmir_final[[3]]
 ```
 
 ```{r}
-toMatch=c("Hemogenic Endothelial Progenitors")
+toMatch=c("Hemogenic Endothelial Progenitors","Erythroblasts")
 #names(top_endo)=rep("YSE1",length(top_endo))
 #Plot_balons(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),final_cluster)],final_cluster_version_sub[grep(paste(toMatch,collapse="|"),final_cluster)],markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="Endoderm_2"],20,max_size=5,text_size=10)
 
@@ -3122,6 +3258,130 @@ plot_balloon_marker_here(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),origi
 dev.off()
 
 ```
+
+```{r }
+original_sub=as.vector(umap_elmir$sub_cluster)
+original_sub[original_sub=="Blood Progenitors"]="MEP"
+original_sub[grep("Hemogenic Endothelial Progenitors_4",final_cluster_version_sub)]="MEP1"
+original_sub[original_sub=="YS Endoderm"]="YSE"
+original_sub[original_sub=="Hypoblast"]="Hypo"
+original_sub[grep("Endoderm_2",final_cluster_version_sub)]="YSE1"
+original_sub[original_sub=="DE(P)"]="DE1"
+original_sub[original_sub=="DE(NP)"]="DE2"
+original_sub[original_sub=="Erythroblasts"]="Ery"
+original_sub[original_sub=="Erythro-Myeloid Progenitors"]="EMP"
+original_sub[original_sub=="Hemogenic Endothelium"]="HE"
+original_sub[original_sub=="Myeloid Progenitors"]="MP"
+```
+
+```{r}
+select_blood=which(as.vector(umap_elmir$cluster_id=="Hemogenic Endothelial Progenitors"))
+DefaultAssay(elmir_seurat_5) <- "RNA"
+markers_first_elmir_final=markers_cluster_seurat(elmir_seurat_5[,select_blood],original_sub[select_blood],names(elmir_seurat_5$RNA_snn_res.0.1)[select_blood],5)
+
+markers_first_elmir_1_final=markers_first_elmir_final[[1]]
+markers_first_elmir_3_final=markers_first_elmir_final[[3]]
+```
+```{r}
+plot_balloon_marker_norm_blood=function (norm_counts, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- c("EMP","HE" ,"MEP","MEP1","MP","Ery")
+    #livelli <- levels((cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste(genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_counts[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+        all_markers_values[[i]]=gene_values_0/max(gene_values_0)
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = factor(cluster_label_all,levels=livelli), 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
+
+```{r }
+toMatch=c("Hemogenic Endothelial Progenitors","Erythroblasts")
+
+markers_endo_plot=c(markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="MEP1"][1:5])
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/Figure_4/marker_blood.pdf",width = 8, height = 6)
+plot_balloon_marker_norm_blood(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_endo_plot,5,max_size=12,text_size=25)
+dev.off()
+```
+
+
+```{r }
+toMatch=c("Hemogenic Endothelial Progenitors","Erythroblasts")
+add_genes_hemo=c("PPBP","ITGA2B", "GP1BB")
+add_2=c("SLC35D3","TREML1","GP5","GNAZ" )
+names(add_genes_hemo)=rep("MEP1",length(add_genes_hemo))
+names(add_2)=rep("MEP1",length(add_2))
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load(file="top_hemo.Rda")
+names(top_hemo)=rep("MEP1",length(top_hemo))
+markers_endo_plot_big=c(top_hemo[2:4],add_genes_hemo,add_2)
+
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/extended_marker_4h.pdf",width = 8, height = 6)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/hemo_big_mouse.pdf",width = 8, height = 6)
+plot_balloon_marker_norm_blood(norm_elmir_5_30[,grep(paste(toMatch,collapse="|"),original_all)],original_sub[grep(paste(toMatch,collapse="|"),original_all)],markers_endo_plot_big,10,max_size=12,text_size=25)
+dev.off()
+```
+
+
+
+
 
 # Endoderm spatial origin
 ```{r }
@@ -3298,4 +3558,51 @@ ggplot(df_plot, aes(x=sub_cluster_diff, y=time_endo, color=sub_cluster_diff)) +
   geom_boxplot()+labs(color="Cluster")+ylab("DPT")+xlab(NULL)+theme(text = element_text(size=14),axis.text.x = element_text(size=14,angle = 45, vjust = 1, hjust = 1))
 dev.off()
 ```
+
+
+
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+
+
+original_sub=as.vector(umap_elmir$sub_cluster)
+original_sub[original_sub=="Blood Progenitors"]="MEP"
+original_sub[grep("Hemogenic Endothelial Progenitors_4",final_cluster_version_sub)]="MEP1"
+original_sub[original_sub=="YS Endoderm"]="YSE"
+original_sub[original_sub=="Hypoblast"]="Hypo"
+original_sub[grep("Endoderm_2",final_cluster_version_sub)]="YSE1"
+original_sub[original_sub=="DE(P)"]="DE1"
+original_sub[original_sub=="DE(NP)"]="DE2"
+original_sub[original_sub=="Erythroblasts"]="Ery"
+original_sub[original_sub=="Erythro-Myeloid Progenitors"]="EMP"
+original_sub[original_sub=="Hemogenic Endothelium"]="HE"
+original_sub[original_sub=="Myeloid Progenitors"]="MP"
+
+select_all=which(as.vector(umap_elmir$cluster_id!="Hemogenic Endothelial Progenitors")&as.vector(umap_elmir$cluster_id!="Endoderm")&as.vector(umap_elmir$cluster_id!="Erythroblasts"))
+select_endo=which(as.vector(umap_elmir$cluster_id=="Endoderm"))
+select_blood=which(as.vector(umap_elmir$cluster_id=="Hemogenic Endothelial Progenitors"))
+levels(factor(original_sub[select_blood]))
+#select_all=c(select_blood,select_endo)
+original_umap=original_sub
+original_umap[select_all]="Other cluster"
+
+p=plot_umap(cordinate_umap,original_umap)
+
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_b_new.pdf",width = 8,height = 6)
+p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))+scale_colour_manual(breaks = c("EMP","Ery","HE","MEP" ,"MEP1","MP","DE1","DE2","Hypo","YSE","YSE1","Other cluster"),values=c("#F8766D","#B79F00","#00BA38","#00BFC4","#619CFF","#F564E3","#42152C","#AA7EAF","#F2CBBC","#B48371","#FEFD54","grey"))
+dev.off()
+
+
+## Convert rgb to hexcode
+x <- c("66 21 44", "170 126 175","242 203 188","180 131 113","254 253 84")
+sapply(strsplit(x, " "), function(x)
+    rgb(x[1], x[2], x[3], maxColorValue=255))
+
+
+```
+
 

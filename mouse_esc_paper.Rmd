@@ -26,6 +26,73 @@ library(Seurat)
 library(clustree)
 ```
 
+```{r}
+plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_counts[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+        all_markers_values[[i]]=gene_values_0/max(gene_values_0)
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
+
 ```{r }
 detect_localized_genes=function(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,top_number){
 list_intersect=rep(list(0),length(colnames(knn_matrix_ane_24_update)))
@@ -227,7 +294,7 @@ data_plot=data.frame(as.numeric(frac_mito),as.numeric(sum_geni),as.numeric(sum_u
 library(ggplot2)
 
 plot_1=ggplot(data_plot, aes(x=Cluster, y=frac_mito,fill=Cluster)) + 
-  geom_boxplot()+xlab("clusters")+ylab("frac mitochindrial reads")+ggtitle("Frac mito reads")
+  geom_boxplot()+xlab("clusters")+ylab("frac mito reads")+ggtitle("Frac mito reads")
 
 
 plot_2=ggplot(data_plot, aes(x=Cluster, y=sum_umi,fill=Cluster)) + 
@@ -237,7 +304,7 @@ plot_3=ggplot(data_plot, aes(x=Cluster, y=sum_geni,fill=Cluster)) +
   geom_boxplot()+xlab("clusters")+ylab("Number of genes")+labs(color="Cluster")+ggtitle("Number of genes")
 
 plot_4=ggplot(data_plot, aes(x=Cluster, y=frac_ribo,fill=Cluster)) + 
-  geom_boxplot()+xlab("clusters")+ylab("Frac ribosomial reads")+labs(color="Cluster")+ggtitle("Frac ribosomial reads")
+  geom_boxplot()+xlab("clusters")+ylab("Frac ribo reads")+labs(color="Cluster")+ggtitle("Frac ribo reads")
 return (list(plot_1,plot_2,plot_3,plot_4))
 }
 
@@ -303,10 +370,16 @@ load("raw_counts_ane_24_update.Rda")
 load("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project/final_cluster_version_sub.Rda")
 ```
 
+```{r }
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/qc_after_CIARA_1.pdf")
+#a[[1]]+theme(text = element_text(size=18))+xlab("Cluster")
+#dev.off()
+```
+
 
 ```{r }
 mayra_seurat_24=cluster_analysis_integrate_rare(raw_counts_ane_24_update,"Mayra_data_24",0.1,5,30)
-#a=Plot_qc_cluster(mayra_seurat_24,as.vector(mayra_seurat_24$RNA_snn_res.0.1),"mt-","Rps","Rpl")
+a=Plot_qc_cluster(mayra_seurat_24,as.vector(mayra_seurat_24$RNA_snn_res.0.1),"mt-","Rps","Rpl")
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/sup_figure_3/sup_fig_3_c.pdf")
 a[[1]]
 dev.off()
@@ -492,9 +565,9 @@ index_color=round(length(ramp.list)/2,0)
 
 
 breaks = seq(0,max(rank_intersect),length.out=1000)
-gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.25))), "#FFFFFF",ramp.list[index_color])
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
 
-gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), ramp.list[index_color], "#00008B" )
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
 
 
 hm.colors = c(gradient1,gradient2)
@@ -602,6 +675,23 @@ dev.off()
 ```
 
 ```{r }
+a=Plot_qc_cluster(mayra_seurat_24_update,final_cluster_version_sub,"mt-","Rps","Rpl")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/qc_after_CIARA_1.pdf")
+a[[1]]+theme(text = element_text(size=18))+xlab("Cluster")
+dev.off()
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/qc_after_CIARA_2.pdf")
+a[[2]]+theme(text = element_text(size=18))+xlab("Cluster")
+dev.off()
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/qc_after_CIARA_3.pdf")
+a[[3]]+theme(text = element_text(size=18))+xlab("Cluster")
+dev.off()
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/qc_after_CIARA_4.pdf")
+a[[4]]+theme(text = element_text(size=18))+xlab("Cluster")
+dev.off()
+```
+
+
+```{r }
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umap_esc_24.pdf",width=8,height = 6)
 p=plot_umap(cordinate_umap_24_update,final_cluster_version_sub)
 p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -689,7 +779,10 @@ plot_balloon_marker(norm_counts_ane_24_update,final_cluster_version_sub,c(top_0[
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/marker_esc_24.pdf",width=8,height = 6)
 plot_balloon_marker(norm_counts_ane_24_update,final_cluster_version_sub,c(top_0[1:5],c(top_1[1:4],top_1[8]),top_2[1:5]),5,max_size=5,text_size=10)
 dev.off()
+
+plot_balloon_marker_norm(norm_counts_ane_24_update,final_cluster_version_sub,c(top_0[1:5],c(top_1[1:4],top_1[8]),top_2[1:5]),5,max_size=5,text_size=10)
 ```
+
 
 
 ```{r }
@@ -730,7 +823,51 @@ sum(white_black_7)
 ```
 
 
-## Marker at 48h
+## Marker at 48h and 0h 
+
+
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project/result_ane_0.Rda")
+setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+load(file='mayra_dati_raw_0.Rda')
+mayra_seurat_0=cluster_analysis_integrate_rare(mayra_dati_raw_0,"Mayra_data_0",0.1,5,30)
+norm_counts_ane_0=as.matrix(GetAssayData(mayra_seurat_0, slot = "data",assay="RNA"))
+#knn_matrix_ane_0=as.matrix(mayra_seurat_0@graphs$RNA_nn)
+
+load("knn_matrix_ane_0.Rda")
+load("norm_counts_ane_0.Rda")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+#vedo=load("entropy_ane_0.Rda")
+cordinate_umap_0=as.data.frame(Embeddings(mayra_seurat_0, reduction = "umap")[, 1:2])
+```
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+#geni_top=row.names(result)[result[,1]==0&result[,2]<0.0001]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+```{r}
+mayra_0_ciara=cluster_analysis_integrate_rare(mayra_dati_raw_0,"Mayra data",0.1,5,30,(ciara_genes))
+```
+
+```{r}
+DefaultAssay(mayra_seurat_0) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(mayra_seurat_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),names(mayra_seurat_0$RNA_snn_res.0.1),5)
+```
+
+
+
+```{r}
+marker_plot_day_0_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_0_first=markers_first_elmir[[2]]
+marker_all_day_0_first=markers_first_elmir[[3]]
+marker_all_day_0_first_2=marker_all_day_0_first[names(marker_all_day_0_first)==2]
+
+
+```
+
 
 
 ```{r}
@@ -817,11 +954,25 @@ test=Test_Fisher(final_cluster_version_sub,marker_all_day_24_first,marker_1_smal
 test[[2]][test[[1]]<0.05&test[[2]]>2]
 ```
 
+```{r}
+test=Test_Fisher(final_cluster_version_sub,marker_all_day_24_first,marker_all_day_0_first_2)
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+
 ```{r }
 
 listInput <- list(mouse_48h_differentiation=marker_1_small,mouse_24h_differentiation=marker_all_day_24_first_2)
 
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_3/fig_3_e.pdf")
+upset(fromList(listInput), order.by = "freq")
+
+dev.off()
+
+
+listInput <- list(mouse_48h_differentiation=marker_1_small,mouse_24h_differentiation=marker_all_day_24_first_2, mouse_0h_differentiation=marker_all_day_0_first_2)
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_3/fig_3_e_extra.pdf")
 upset(fromList(listInput), order.by = "freq")
 
 dev.off()
@@ -1115,6 +1266,29 @@ for(i in (geni_top_top)[1:10]){
 p
 ```
 
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/localized_gene_mouse_esc.pdf",width = 8, height = 6)
+
+
+plot_gene(norm_counts_ane_0,cordinate_umap_0,"Zscan4a","Zscan4a")+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  theme(text = element_text(size=12))+geom_point( alpha = 0.3, na.rm = T, shape = 21, colour = "black",stroke=0.2)
+
+dev.off()
+#plot_gene(norm_counts_ane_0,cordinate_umap_0,"AC147512.2","AC147512.2")
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/not_localized_gene_mouse_esc.pdf", width = 8, height = 6)
+plot_gene(norm_counts_ane_0,cordinate_umap_0,"CR536609.1","CR536609.1")+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  theme(text = element_text(size=12))+geom_point( alpha = 0.3, na.rm = T, shape = 21, colour = "black",stroke=0.2)
+dev.off()
+
+```
+
 
 ```{r }
 localized_genes_mouse=detect_localized_genes(knn_matrix_ane_0,norm_counts_ane_0,geni_top_top,100) 
@@ -1187,12 +1361,13 @@ mayra_0_ciara=cluster_analysis_integrate_rare(mayra_dati_raw_0,"Mayra data",0.1,
 
 ```{r }
 
-find_resolution(mayra_0_ciara,seq(0.01,1,0.1))
+find_resolution(mayra_0_ciara,seq(0.001,0.1,0.01))
 
 ```
 
 
 ```{r }
+mayra_0_ciara=FindClusters(mayra_0_ciara,resolution = 0.1)
 p=plot_umap(cordinate_umap_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1))
 pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umap_cluster_ane_day_0.pdf",width = 8,height = 6)
 p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -1202,6 +1377,170 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),a
 dev.off()
 
 ```
+
+
+
+```{r}
+DefaultAssay(mayra_seurat_0) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(mayra_seurat_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),names(mayra_seurat_0$RNA_snn_res.0.1),5)
+```
+
+
+
+```{r}
+marker_plot_day_24_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_24_first=markers_first_elmir[[2]]
+marker_all_day_24_first=markers_first_elmir[[3]]
+
+```
+
+
+
+
+
+
+```{r }
+top_0=white_black_markers(as.vector(mayra_0_ciara$RNA_snn_res.0.1),0,norm_counts_ane_0,marker_all_day_24_first,0)
+
+top_0=names(top_0)[top_0]
+
+mean_top_0=apply(norm_counts_ane_0[top_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1)==0],1,mean)
+mean_top_0=sort(mean_top_0,decreasing = T)
+
+top_0=names(mean_top_0)
+names(top_0)=rep(0,length(top_0))
+```
+
+
+```{r }
+top_1=white_black_markers(as.vector(mayra_0_ciara$RNA_snn_res.0.1),1,norm_counts_ane_0,marker_all_day_24_first,0)
+
+top_1=names(top_1)[top_1]
+
+mean_top_1=apply(norm_counts_ane_0[top_1,as.vector(mayra_0_ciara$RNA_snn_res.0.1)==1],1,mean)
+mean_top_1=sort(mean_top_1,decreasing = T)
+
+top_1=names(mean_top_1)
+names(top_1)=rep(1,length(top_1))
+```
+
+
+```{r }
+top_2=white_black_markers(as.vector(mayra_0_ciara$RNA_snn_res.0.1),2,norm_counts_ane_0,marker_all_day_24_first,0)
+
+top_2=names(top_2)[top_2]
+
+mean_top_2=apply(norm_counts_ane_0[top_2,as.vector(mayra_0_ciara$RNA_snn_res.0.1)==2],1,mean)
+mean_top_2=sort(mean_top_2,decreasing = T)
+
+top_2=names(mean_top_2)
+names(top_2)=rep(2,length(top_2))
+```
+
+
+```{r }
+plot_balloon_marker_here=function (norm_matrix, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste( genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_matrix[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_matrix[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "white", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/marker_cluster_1_mouse_esc.pdf",width = 8, height = 6)
+plot_balloon_marker_here(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),c(top_1[1:8],top_1[18],top_1[30]),10,max_size=12,text_size=25)
+dev.off()
+```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/marker_cluster_2_mouse_esc.pdf",width = 8,height = 6)
+plot_balloon_marker_here(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),c(top_2[1:9],top_2[17]),10,max_size=12,text_size=25)
+dev.off()
+```
+
+```{r }
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_1/marker_plot.pdf",width = 8, height = 6)
+plot_balloon_marker(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),c(top_0[1:3],top_1[1:3],top_2[1:3]),3,max_size=5,text_size=10)
+dev.off()
+##Norm version
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_1/marker_plot_norm.pdf",width = 8, height = 6)
+plot_balloon_marker_norm(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),c(top_0[1:3],top_1[1:3],top_2[1:3]),3,max_size=5,text_size=10)
+dev.off()
+```
+
+
+```{r }
+plot_balloon_marker(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),c(top_0[1:3],top_1[1],top_1[18],top_1[30],top_2[7],top_2[17],top_2[11]),3,max_size=5,text_size=10)
+
+
+#plot_balloon_marker_norm(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),c(top_0[1:3],top_1[1],top_1[18],top_1[30],top_2[7],top_2[17],top_2[11]),3,max_size=5,text_size=10)
+```
+
+```{r }
+plot_balloon_marker(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),marker_all_day_24_first,5,max_size=5,text_size=10)
+```
+
+
 
 ```{r}
 table(as.vector(mayra_0_ciara$RNA_snn_res.0.1),cluster_number_0)

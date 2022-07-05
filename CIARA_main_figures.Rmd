@@ -27,6 +27,9 @@ library(ggplot2)
 library("mltools")
 library(FiRE)
 library(clustree)
+library(CellSIUS)
+library(RaceID)
+library(singleCellHaystack)
 ```
 
 ## Function
@@ -46,6 +49,71 @@ return(positive_cells)
 
 
 ```
+
+```{r}
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top,background){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=background
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+```
+
+```{r }
+Function_fisher=function(a,b,c){
+matrice=matrix(c(sum(c[c%in%a]%in%c[c%in%b]),sum(c[c%in%a]%in%c[!c%in%b]),sum(c[!c%in%a]%in%c[c%in%b]),sum(c[!c%in%a]%in%c[!c%in%b])),nrow=2,ncol=2,byrow = T)
+#Fisher test
+fisher.test(matrice)
+}
+```
+
+```{r }
+Get_background=function(norm_matrix,min_cells,min_counts){
+genes_filter=apply(norm_matrix,1,function(x){
+x=x[x>min_counts]
+if (length(x)>min_cells){return(TRUE)}
+else{return(FALSE)}
+})
+genes_important=row.names(norm_matrix)[genes_filter]
+return(genes_important)}
+```
+
+```{r}
+Cluster_analysis_integrate_rare_update=function (raw_counts, batch_name_1, resolution, neighbors, max_dimension, 
+    feature_genes = NULL) 
+{
+    batch_1 <- CreateSeuratObject(counts = raw_counts, project = batch_name_1)
+    batch_1 <- subset(batch_1, subset = nFeature_RNA > 0)
+    batch_1 <- NormalizeData(batch_1, verbose = FALSE)
+    batch_1 <- FindVariableFeatures(batch_1, selection.method = "vst", 
+        nfeatures = 2000)
+    batch_combined = batch_1
+    #batch_combined <- ScaleData(batch_combined, verbose = FALSE)
+    batch_combined$frac_mito=frac_mito
+batch_combined$frac_ribo=frac_ribo
+batch_combined <- ScaleData(batch_combined, verbose = FALSE,vars.to.regress = c("nCount_RNA","frac_mito","frac_ribo"))
+    batch_combined <- RunPCA(batch_combined, npcs = max_dimension, 
+        verbose = FALSE, features = feature_genes)
+    batch_combined = RunUMAP(batch_combined, reduction = "pca", 
+        dims = 1:20, set.seed = 42)
+    batch_combined <- FindNeighbors(batch_combined, reduction = "pca", 
+        dims = 1:max_dimension, k.param = neighbors)
+    batch_combined <- FindClusters(batch_combined, resolution = resolution)
+    return(batch_combined)
+}
+```
+
 ## Download files
 ```{r}
 current_wd <- getwd()
@@ -332,7 +400,7 @@ ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
 ## GiniClust
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+setwd(paste0(current_wd,"/CIARA"))
 load("gini_fig_5.Rda")
 ```
 
@@ -348,13 +416,13 @@ background=row.names(result)
 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+setwd(paste0(current_wd,"/CIARA"))
 load("test_data_3.Rda")
 #load(file="norm_gini_3.Rda")
 #load(file="knn_matrix_gini_5_30_3.Rda")
 #load(file="cordinate_gini_3.Rda")
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-gini_cluster_3=read.csv2("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/13059_2016_1010_MOESM11_ESM.csv")
+setwd(paste0(current_wd,"/CIARA"))
+gini_cluster_3=read.csv2("13059_2016_1010_MOESM11_ESM.csv")
 
 gini_name_3=gini_cluster_3$Cell.ID
 gini_cluster_3=gini_cluster_3$Cluster.ID
@@ -418,30 +486,17 @@ ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
 ## GiniClust2
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+setwd(paste0(current_wd,"/CIARA"))
 load("finalCluster.Rda")
 load("giniclust2.Rda")
 
-#norm_gini2=(GetAssayData(giniclust2, slot = "data",assay="RNA"))
+
 raw_gini2=(GetAssayData(giniclust2, slot = "data",assay="RNA"))
-#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-#save(norm_gini2,file="norm_gini2.Rda")
-
-#general_cluster_gini=giniclust2$RNA_snn_res.0.1
-
-
-#knn_matrix_gini=(giniclust2@graphs$RNA_nn)
-
-#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
-#knn_matrix_gini2=knn_matrix_gini
-#save(knn_matrix_gini2,file="knn_matrix_gini2.Rda")
-
-#cordinate_umap_gini=as.data.frame(Embeddings(giniclust2, reduction = "umap")[, 1:2])
 
 ```
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+setwd(paste0(current_wd,"/CIARA"))
 load("gini2.Rda")
 ```
 
@@ -531,12 +586,727 @@ ggplot(data=df, aes(x=Method, y=MCC, fill=Method)) +
 
 ```
 
+## RaceID 
 
 ```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+load(file="race_id_raw.Rda")
+load(file="cluster_race_id.Rda")
+load(file="cordinate_race.Rda")
+
+```
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("race.Rda")
+```
+
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+background=row.names(result)
+```
+
+```{r }
+
+race_ciara=cluster_analysis_integrate_rare(race_id_raw,"24h",0.2,3,20,ciara_genes)
+
+```
+
+```{r }
+
+norm_race=as.matrix(GetAssayData(race_ciara, slot = "data",assay="RNA"))
+
+cluster_race_ciara=as.vector(race_ciara$RNA_snn_res.0.2)
+
+```
+
+```{r }
+p=plot_umap(cordinate_race,cluster_race_id)
+p[[1]]+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  theme(text = element_text(size=18))
+  
+```
+
+```{r }
+p=plot_umap(cordinate_race,cluster_race_ciara)
+p[[1]]+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  theme(text = element_text(size=18))
+
+```
+
+```{r}
+DefaultAssay(race_ciara) <- "RNA"
+markers_race_ciara=markers_cluster_seurat(race_ciara,as.vector(race_ciara$RNA_snn_res.0.2),names(race_ciara$RNA_snn_res.0.2),5)
+```
+
+```{r}
+
+marker_all_day_24_first=markers_race_ciara[[3]]
+
+
+
+```
+
+### Cluster 2 is Goblet cells
+
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Clca3"]
+```
+
+
+### Cluster 3 is enterocytes
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Apoa1"]
+```
+
+### Cluster 4 is Paneth cells
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Defa24"]
+```
+
+### Cluster 5 is enteroendocrine cells
+
+
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Chgb"]
+```
+
+
+### Cluster 7 is tuft cells 
+
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Dclk1"]
+marker_all_day_24_first[marker_all_day_24_first=="Lrmp"]
+marker_all_day_24_first[marker_all_day_24_first=="Trpm5"]
+```
+### Cluster 6:markers other unkonwn cell types
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Nol3"]
+marker_all_day_24_first[marker_all_day_24_first=="Mylk4"]
+```
+
+
+## Figure 2C
+```{r }
+setwd(paste0(current_wd,"/CIARA"))
+load(file = "raw_counts_human_data.Rda")
+load(system.file("extdata", "result.Rda", package = "CIARA"))
+ciara_genes <- row.names(result)[result[, 1] < 1]
+ciara_genes_top <- row.names(result)[order(as.numeric(result[, 1]))]
+background=row.names(result)
+meta_info <- readRDS(system.file("extdata", "annot_umap.rds", package ="CIARA"))
+coordinate_umap <- meta_info[,2:3]
+
+```
+
+```{r }
+elmir_seurat_ciara=cluster_analysis_integrate_rare(raw_counts_human_data,"Elmir data",0.01,5,30,ciara_genes)
 
 ```
 
 
 
+
+```{r }
+
+norm_elmir_ciara_5_30=as.matrix(GetAssayData(elmir_seurat_ciara, slot = "data",assay="RNA"))
+
+```
+
+
+```{r}
+original_cluster=as.vector(meta_info$cluster_id)
+names(original_cluster)=names(elmir_seurat_ciara$RNA_snn_res.0.01)
+final_cluster=merge_cluster(original_cluster,elmir_seurat_ciara$RNA_snn_res.0.01,20)
+```
+
+
+```{r}
+final_cluster[final_cluster=="2-step_2"]="PGC"
+```
+
+
+```{r}
+new_cluster=rep("Other Clusters",length(final_cluster))
+new_cluster[final_cluster=="PGC"]="PGC"
+p=plot_umap(coordinate_umap,new_cluster)
+
+p[[1]]+scale_color_manual(values=c("grey","black"))+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+
+```
+
+
+###Step 3
+
+
+
+```{r }
+result_test <- test_hvg(raw_counts_human_data,final_cluster, ciara_genes, background, number_hvg = 100, min_p_value = 0.001)
+result_test[[2]]
+
+```
+
+
+
+
+
+
+
+
+
+```{r }
+raw_endoderm=raw_counts_human_data[,as.vector(meta_info$cluster_id)=="Endoderm"]
+raw_emo=raw_counts_human_data[,as.vector(meta_info$cluster_id)=="Hemogenic Endothelial Progenitors"]
+
+
+
+combined_endoderm=cluster_analysis_sub(raw_endoderm,0.2,5,30,"Endoderm")
+
+combined_emo=cluster_analysis_sub(raw_emo,0.6,5,30,"Hemogenic Endothelial Progenitors")
+
+
+
+
+
+
+```
+
+
+
+
+```{r }
+
+all_sub_cluster=c(combined_endoderm$seurat_clusters,combined_emo$seurat_clusters)
+final_cluster_version_sub=merge_cluster(final_cluster,all_sub_cluster)
+```
+
+```{r }
+
+
+original_sub=as.vector(meta_info$sub_cluster)
+original_sub[original_sub=="Blood Progenitors"]="MEP"
+original_sub[grep("Hemogenic Endothelial Progenitors_4",final_cluster_version_sub)]="MEP1"
+original_sub[original_sub=="YS Endoderm"]="YSE"
+original_sub[original_sub=="Hypoblast"]="Hypo"
+original_sub[grep("Endoderm_2",final_cluster_version_sub)]="YSE1"
+original_sub[original_sub=="DE(P)"]="DE1"
+original_sub[original_sub=="DE(NP)"]="DE2"
+original_sub[original_sub=="Erythroblasts"]="Ery"
+original_sub[original_sub=="Erythro-Myeloid Progenitors"]="EMP"
+original_sub[original_sub=="Hemogenic Endothelium"]="HE"
+original_sub[original_sub=="Myeloid Progenitors"]="MP"
+```
+
+
+```{r}
+DefaultAssay(elmir_seurat_ciara) <- "RNA"
+markers_first_elmir_final=markers_cluster_seurat(elmir_seurat_ciara,final_cluster_version_sub,names(elmir_seurat_ciara$RNA_snn_res.0.01),5)
+
+markers_first_elmir_1_final=markers_first_elmir_final[[1]]
+markers_first_elmir_3_final=markers_first_elmir_final[[3]]
+```
+
+## Figure 2d
+
+```{r }
+geni_pgc=c("NANOS3","NANOG","DPPA5")
+positive_cells=find_positive_cells(norm_elmir_ciara_5_30,threshold=0,geni_pgc)
+```
+
+
+### GiniClust2 old approach
+```{r }
+
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("experiment_name_FinalClustering_elmir.RData")
+```
+
+```{r}
+
+cordinate_umap=umap_elmir[,2:3]
+
+general_cluster_version=as.vector(umap_elmir$cluster_id)
+
+```
+
+
+
+
+
+```{r }
+
+
+ciara_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+original_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+result_method=rep(0,length(levels(factor(finalCluster))))
+
+original_score[colnames(norm_elmir_ciara_5_30)%in%positive_cells]=1
+ciara_score[final_cluster=="PGC"]=1
+
+for (i in 1:length(levels(factor(finalCluster)))){
+  
+  method_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+  method_score[finalCluster==levels(factor(finalCluster))[i]]=1
+  result_method[i]=mcc(method_score, original_score)
+  print(result_method[i])
+}
+
+print(max(result_method))
+
+
+mcc(original_score, ciara_score)
+```
+
+
+
+
+
+
+
+### Giniclust3 from python script giniclust3 
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+final_gini=read.table("all_gini.txt")
+final_gini=final_gini$V1
+
+```
+
+```{r }
+geni_marker=geni_pgc
+positive_cells=find_positive_cells(norm_elmir_ciara_5_30,threshold=0,geni_marker)
+final_gini=as.character(final_gini)
+
+ciara_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+original_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+result_method=rep(0,length(levels(factor(final_gini))))
+
+original_score[colnames(norm_elmir_ciara_5_30)%in%positive_cells]=1
+ciara_score[final_cluster=="PGC"]=1
+
+for (i in 1:length(levels(factor(final_gini)))){
+  
+  method_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+  method_score[final_gini==levels(factor(final_gini))[i]]=1
+  result_method[i]=mcc(method_score, original_score)
+  print(result_method[i])
+}
+
+print(max(result_method))
+
+
+
+mcc(original_score, ciara_score)
+```
+
+### CellSIUS
+
+### run on server hpc-build.scidom.de at path /home/ies/gabriele.lubatti/entropy_mixing/cellsius/ane
+### Rscript Cellsius_elmir_new.R 
+
+```{r}
+
+
+CELLSIUS_elmir=result
+
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+vedo=load("CELLSIUS_elmir_new.Rda")
+general_cluster_version=meta_info$cluster_id
+cluster_id=general_cluster_version
+names(cluster_id)=colnames(raw_counts_human_data)
+Final_Clusters = CellSIUS_final_cluster_assignment(CellSIUS.out=CELLSIUS_elmir, group_id=cluster_id, min_n_genes = 3)
+ 
+
+```
+
+
+```{r }
+
+Final_Clusters=as.vector(Final_Clusters)
+
+ciara_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+original_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+result_method=rep(0,length(levels(factor(Final_Clusters))))
+
+original_score[colnames(norm_elmir_ciara_5_30)%in%positive_cells]=1
+ciara_score[final_cluster=="PGC"]=1
+
+for (i in 1:length(levels(factor(Final_Clusters)))){
+  
+  method_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+  method_score[Final_Clusters==levels(factor(Final_Clusters))[i]]=1
+  result_method[i]=mcc(method_score, original_score)
+  print(result_method[i])
+}
+
+print(max(result_method))
+
+
+
+mcc(original_score, ciara_score)
+```
+
+### FiRE
+
+```{r }
+setwd(paste0(current_wd,"/CIARA"))
+source("preprocess.R")
+
+```
+
+```{r }
+data <- t(raw_counts_human_data)
+genes <- colnames(data)#It can be replaced with original gene names
+
+data_mat <- list(mat=data, gene_symbols=genes)
+
+preprocessedList <- ranger_preprocess(data_mat)
+preprocessedData <- as.matrix(preprocessedList$preprocessedData)
+
+model <- new(FiRE::FiRE, 100, 50, 1017881, 5489, 0)
+
+model$fit(preprocessedData)
+
+score <- model$score(preprocessedData)
+q3 <- quantile(score, 0.75)
+iqr <- IQR(score)
+th <- q3 + (1.5*iqr)
+th_new=q3 + (0.5*iqr)
+indIqr <- which(score >= th_new)
+predictions <- integer(dim(data)[1])
+predictions[indIqr] <- 1 
+
+#model$b
+```
+
+
+
+```{r }
+cluster_general=meta_info$cluster_id
+method_score=rep(0,length(predictions))
+method_score[cluster_general=="Primitive Streak"&predictions==1]=1
+
+original_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+original_score[colnames(norm_elmir_ciara_5_30)%in%positive_cells]=1
+
+
+
+mcc(method_score, original_score)
+```
+
+### Race ID 3
+```{r }
+
+sc <- SCseq(raw_counts_human_data)
+sc <- filterdata(sc,mintotal=2000)
+fdata <- getfdata(sc)
+
+sc <- compdist(sc,metric="pearson")
+
+```
+
+
+
+```{r }
+pgc_cells=colnames(raw_counts_human_data)[meta_info$sub_cluster=="PGC"]
+sc@cpart[names(sc@cpart)%in%pgc_cells]
+
+sc <- clustexp(sc,cln=15,sat=FALSE)
+```
+
+```{r }
+sc <- findoutliers(sc)
+```
+
+```{r }
+
+
+geni_marker=geni_pgc
+positive_cells=find_positive_cells(norm_elmir_ciara_5_30,threshold=0,geni_marker)
+Final_Clusters=as.vector(sc@cpart)
+
+ciara_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+original_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+result_method=rep(0,length(levels(factor(Final_Clusters))))
+
+original_score[colnames(norm_elmir_ciara_5_30)%in%positive_cells]=1
+ciara_score[final_cluster=="PGC"]=1
+
+for (i in 1:length(levels(factor(Final_Clusters)))){
+  
+  method_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+  method_score[Final_Clusters==levels(factor(Final_Clusters))[i]]=1
+  result_method[i]=mcc(method_score, original_score)
+  print(result_method[i])
+}
+
+print(max(result_method))
+
+
+
+mcc(original_score, ciara_score)
+```
+
+### SAM
+```{r}
+sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_rank_genes_human.csv")
+sam_genes=sam_genes$X0
+
+sam_cluster=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_clustering_human.csv")
+sam_cluster=sam_cluster$louvain_clusters
+```
+
+```{r }
+
+geni_marker=geni_pgc
+positive_cells=find_positive_cells(norm_elmir_ciara_5_30,threshold=0,geni_marker)
+Final_Clusters=as.vector(sam_cluster)
+
+ciara_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+original_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+result_method=rep(0,length(levels(factor(Final_Clusters))))
+
+original_score[colnames(norm_elmir_ciara_5_30)%in%positive_cells]=1
+ciara_score[final_cluster=="PGC"]=1
+
+for (i in 1:length(levels(factor(Final_Clusters)))){
+  
+  method_score=rep(0,length(colnames(norm_elmir_ciara_5_30)))
+  method_score[Final_Clusters==levels(factor(Final_Clusters))[i]]=1
+  result_method[i]=mcc(method_score, original_score)
+  print(result_method[i])
+}
+
+print(max(result_method))
+
+
+
+mcc(original_score, ciara_score)
+```
+
+```{r }
+
+
+method=factor(c("CIARA","CellSIUS","RaceID","GiniClust2","GiniClust3","SAM","FiRE"),levels=c(c("CIARA","CellSIUS","RaceID","GiniClust2","GiniClust3","SAM","FiRE")))
+df=data.frame(c(1,0.17,0.53,0.11,0.44,0.30,-0.002221461),method)
+colnames(df)=c("MCC","Method")
+
+
+ggplot(data=df, aes(x=Method, y=MCC)) +
+  geom_bar(stat="identity", width=0.5)+ylim(-0.01,1)+ggtitle("MCC score")+ggplot2::theme(text = ggplot2::element_text(size = 18), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+
+```
+
+## Figure 2d
+
+### singleCellHaystack
+
+
+
+```{r}
+elmir_seurat_5=cluster_analysis_integrate_rare(raw_counts_human_data,"Elmir_data",0.1,5,30)
+norm_elmir_5_30=as.matrix(GetAssayData(elmir_seurat_5, slot = "data",assay="RNA"))
+norm_elmir=norm_elmir_5_30
+
+```
+
+
+```{r}
+
+set.seed(123)
+dat.pca=as.data.frame(Embeddings(elmir_seurat_5, reduction = "pca"))
+median.per.gene <- apply(norm_elmir_5_30,1,median) # get the median read count per gene
+dat.detection <- norm_elmir_5_30 > median.per.gene
+res.pc30 <- haystack(x = dat.pca, detection = dat.detection , method = "highD")
+show_result_haystack(res.haystack = res.pc30, n = 5)
+top_values=row.names(res.pc30$results)[order(res.pc30$results$log.p.adj,decreasing = F)]
+cordinate_umap=coordinate_umap_human
+
+
+```
+
+
+```{r }
+genes_important=Get_background(norm_elmir_ciara_5_30,6,0.5)
+```
+
+
+```{r}
+
+#load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+test=Test_Fisher(final_cluster_version_sub,markers_first_elmir_3_final,top_values[1:1000],genes_important)
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+```{r}
+marker_pgc=c("NANOS3","NANOG","SOX17","DPPA5")
+
+match(marker_pgc,top_values)
+
+
+grep("NANOS3",top_values)
+which(top_values=="NANOG")
+grep("SOX17",top_values)
+which(top_values=="DPPA5")
+
+```
+
+
+
+
+### Triku
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+triku_gene_name=read.table("triku_gene_names.txt")
+triku_gene_name=triku_gene_name$V1
+triku_gene_all=read.table("triku_gene.txt")
+triku_distance=triku_gene_all$V3
+triku_gene=triku_gene_all$V5
+
+names(triku_distance)=triku_gene_name
+
+
+final_sort_triku=names(triku_distance)[order(triku_distance,decreasing = T)]
+
+
+```
+
+```{r}
+
+
+test=Test_Fisher(final_cluster_version_sub,markers_first_elmir_3_final,final_sort_triku[1:1000],genes_important)
+
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+```{r}
+grep("NANOS3",final_sort_triku)
+which(final_sort_triku=="NANOG")
+grep("SOX17",final_sort_triku)
+which(final_sort_triku=="DPPA5")
+
+which(final_sort_triku=="FETUB")
+
+```
+
+### SAM (new approach)
+```{r}
+sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_rank_genes_human.csv")
+sam_genes=sam_genes$X0
+```
+
+```{r}
+test=Test_Fisher(final_cluster_version_sub,markers_first_elmir_3_final,sam_genes[1:1000],genes_important)
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+
+```{r}
+
+marker_pgc=c("NANOS3","NANOG","SOX17","DPPA5")
+
+index_sc=match(marker_pgc,top_values)
+index_ciara=match(marker_pgc,ciara_genes_top)
+index_triku=match(marker_pgc,final_sort_triku)
+index_sam=match(marker_pgc,sam_genes)
+
+
+index_dist=data.frame(index_ciara,index_sc,index_triku,index_sam)
+index_dist=index_dist[order(index_ciara),]
+index_dist_log=log(index_dist)
+row.names(index_dist)=marker_pgc[order(index_ciara)]
+colnames(index_dist)=c("CIARA","sCH","Triku","SAM")
+index_dist=as.matrix(index_dist)
+my_palette <- colorRampPalette(c("lightblue1", "black"))(n = 1000)
+#my_palette <- colorRampPalette(c("", "#3182bd"))(n = 1000)
+
+#heatmap.2(log(index_dist), scale = "none",col = bluered(100), 
+          #trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1)
+
+heatmap.2(log(index_dist), scale = "none",col = my_palette, 
+          trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1)
+
+
+```
+
+## Figure 3b
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("raw_counts_ane_24_update.Rda")
+mayra_seurat_24=cluster_analysis_integrate_rare(raw_counts_ane_24_update,"Mayra_data_24",0.1,5,30)
+```
+
+```{r }
+
+frac_mito=apply(raw_counts_ane_24_update,2,function(x){
+  return(sum(x[grep("mt-",row.names(raw_counts_ane_24_update))])/sum(x))
+  
+  
+  
+})
+
+
+frac_ribo=apply(raw_counts_ane_24_update,2,function(x){
+  frac_ribo_s=x[grep("Rps",row.names(raw_counts_ane_24_update))]
+  frac_ribo_l=x[grep("Rpl",row.names(raw_counts_ane_24_update))]
+  frac_ribo_all=c(frac_ribo_s,frac_ribo_l)
+  return(sum(frac_ribo_all)/sum(x))
+
+
+
+})
+```
+
+
+```{r }
+mayra_seurat_24_update=Cluster_analysis_integrate_rare_update(raw_counts_ane_24_update,"Mayra_data_24",0.1,5,30)
+norm_counts_ane_24_update=as.matrix(GetAssayData(mayra_seurat_24_update, slot = "data",assay="RNA"))
+knn_matrix_ane_24_update=as.matrix(mayra_seurat_24_update@graphs$RNA_nn)
+cordinate_umap_24_update=as.data.frame(Embeddings(mayra_seurat_24_update, reduction = "umap")[, 1:2])
+```
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("ane_24.Rda")
+```
+
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+```{r }
+background=row.names(result)
+```
 
 

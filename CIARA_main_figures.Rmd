@@ -31,9 +31,100 @@ library(CellSIUS)
 library(RaceID)
 library(singleCellHaystack)
 library(destiny)
+library(SingleCellExperiment)
+library(MitoHEAR)
+library(tradeSeq)
+library(circlize)
+library(ComplexHeatmap)
 ```
 
 ## Function
+```{r }
+gg_color_hue=function (n) 
+{
+    hues <- seq(15, 375, length = n + 1)
+    hcl(h = hues, l = 65, c = 100)[1:n]
+}
+```
+
+```{r }
+
+heatmap_markers_time=function(marker_plot,marker_plot_plot,dpt,my.clusters,norm_es,colore_vector=NULL){
+  
+  
+  
+  
+
+  heatdata <- norm_es[marker_plot, order(dpt, na.last = NA)]
+heatclus<- my.clusters[order(dpt, na.last = NA)]
+
+time=as.numeric(dpt)
+time=time[!is.na(time)]
+
+cluster_unique=unique(my.clusters)
+cluster_unique=sort(cluster_unique,decreasing = F)
+
+
+
+row.names(heatdata)=marker_plot_plot
+if(is.null(colore_vector)){
+color_cluster=rep(0,length(unique(my.clusters)))
+
+            for (i in 1:length(color_cluster) ){
+              color_cluster[i]=gg_color_hue(length(color_cluster))[i]
+            }
+names(color_cluster)=as.character(cluster_unique)}
+
+if(!is.null(colore_vector)){
+  color_cluster=rep(0,length(unique(my.clusters)))
+
+            for (i in 1:length(color_cluster) ){
+              color_cluster[i]=colore_vector[i]
+            }
+names(color_cluster)=as.character(cluster_unique)
+  
+}
+
+
+color_condition=colorRamp2(c(0, round(max(time),4)), c("white", "blue"))
+
+
+data_heatmap=data.frame(Cluster = heatclus
+                                          ,PseudoTime = sort(time))
+
+
+haCol1 = HeatmapAnnotation(df= data_heatmap,col=list(Cluster=color_cluster,PseudoTime=color_condition)
+                               
+                               , show_legend = T
+            )
+
+ht21 = Heatmap(as.matrix(heatdata)# heat.vals_Mutant_Paired #
+               #,cluster_rows = FALSE
+                  , col= colorRamp2(c(0, round(max(heatdata),4)), c("blue", "red"))
+                  , name = "log norm counts"
+                  #, column_title = "Absolute values"
+                  #, cluster_columns = as.dendrogram(my.tree)
+               ,cluster_columns = F
+               , cluster_rows =T
+
+                  #, cluster_rows =as.dendrogram(as.numeric(row.names(log_data_tpm)[1:10]) )
+                  , top_annotation = haCol1
+                  , row_names_gp = gpar(fontsize = 6
+                                       #,col = geneColors
+                   )
+                  , show_column_names = F
+                  , show_row_names = T
+                  )
+
+draw(ht21
+   
+)
+
+
+
+}
+
+```
 ```{r}
 
 barplot_cell_cycle=function(cell_cycle,cluster,title,fraction=TRUE){
@@ -2099,6 +2190,291 @@ sapply(strsplit(x, " "), function(x)
 ```
 
 ## Figure 4h
+
+```{r}
+select_blood=which(as.vector(original_cluster=="Hemogenic Endothelial Progenitors"))
+DefaultAssay(human_data_seurat) <- "RNA"
+markers_first_elmir_final=markers_cluster_seurat(human_data_seurat[,select_blood],original_sub[select_blood],names(human_data_seurat$RNA_snn_res.0.1)[select_blood],5)
+
+markers_first_elmir_1_final=markers_first_elmir_final[[1]]
+markers_first_elmir_3_final=markers_first_elmir_final[[3]]
+```
+
+```{r}
+toMatch=c("EMP","HE","MEP","MEP1","NP")
+
+plot_balloon_marker_norm(norm_elmir_ciara_5_30[,grep(paste(toMatch,collapse="|"),original_sub)],original_sub[grep(paste(toMatch,collapse="|"),original_sub)],markers_first_elmir_3_final,5,max_size=5,text_size=10)
+
+
+
+
+```
+
+## Figure 4 l
+
+
+
+```{r }
+select_blood_full=which(as.vector(original_cluster=="Hemogenic Endothelial Progenitors")|as.vector(original_sub=="Ery"))
+data_diff=data.frame(original_sub,colnames(norm_elmir_ciara_5_30))
+clu_spe=data_diff[select_blood_full,1]
+raw_elmir=as.matrix(GetAssayData(elmir_seurat_ciara, slot = "counts",assay="RNA"))
+raw_elmir=raw_elmir[!grepl("ERCC",row.names(raw_elmir)),]
+raw_mega=raw_elmir[,select_blood_full]
+
+batch_1 <- CreateSeuratObject(counts = raw_mega, project = "Endoderm")
+    batch_1 <- subset(batch_1, subset = nFeature_RNA > 0)
+    batch_1 <- NormalizeData(batch_1, verbose = FALSE)
+    batch_1 <- FindVariableFeatures(batch_1, selection.method = "vst", 
+        nfeatures = 2000)
+    hvg_mega=batch_1@assays$RNA@var.features
+    
+    raw_mega_sub=raw_mega[hvg_mega,]
+    
+    norm_mega=as.matrix(GetAssayData(batch_1, slot = "data",assay="RNA"))
+    norm_mega_sub=norm_mega[hvg_mega,]
+    
+## Save for PAGA analysis in python    
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#write.csv(raw_mega,file="raw_elmir_blood.csv")
+#cluster_blood=clu_spe
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#write.table(cluster_blood,file='cluster_blood.txt',col.names = F,row.names = F)
+
+```
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+diff_map_hema=read.csv("hep_diffmap_coord.csv")
+
+
+diff_map_elmir=diff_map_hema[,3:4]
+
+row.names(diff_map_elmir)=diff_map_hema$cell_name
+
+diff_map_elmir=diff_map_elmir[colnames(norm_elmir_ciara_5_30)[select_blood_full],]
+
+```
+
+
+```{r }
+raw_es_small=raw_mega_sub
+sim <- SingleCellExperiment(assays =SimpleList(counts = raw_mega_sub))
+
+```
+
+```{r }
+
+
+
+assays(sim)$norm <- norm_mega_sub
+
+
+reducedDim(sim, "DiffMap") <- as.matrix(diff_map_elmir)
+colData(sim)$GMM <- clu_spe
+
+```
+
+```{r}
+sim_es <- slingshot(sim, clusterLabels = 'GMM', reducedDim = 'DiffMap',start.clus="MEP")
+
+
+
+```
+
+
+
+```{r}
+sim_only_es=SlingshotDataSet(sim_es)
+```
+
+```{r}
+
+cc=rep(0,length(clu_spe))
+
+
+
+cc[clu_spe=="EMP"]=MitoHEAR:::gg_color_hue(6)[1]
+cc[clu_spe=="Ery"]=MitoHEAR:::gg_color_hue(6)[2]
+cc[clu_spe=="HE"]=MitoHEAR:::gg_color_hue(6)[3]
+cc[clu_spe=="MEP"]=MitoHEAR:::gg_color_hue(6)[4]
+cc[clu_spe=="MEP1"]=MitoHEAR:::gg_color_hue(6)[5]
+cc[clu_spe=="MP"]=MitoHEAR:::gg_color_hue(6)[6]
+
+#plot(reducedDims(sim_es)$DiffMap, col = cc)
+#lines(SlingshotDataSet(sim_es), lwd=2, col='black')
+
+```
+
+```{r}
+plot(reducedDims(sim_es)$DiffMap, col =cc,ylab="DC2")
+lines(SlingshotDataSet(sim_es), lwd=2, type = 'lineages', col = 'black')
+
+
+```
+```{r }
+meta_data=data.frame(clu_spe,colnames(norm_mega))
+colnames(meta_data)=c('cluster','cell_name')
+row.names(meta_data)=colnames(norm_mega)
+```
+
+
+```{r}
+t_1 <- sim_es$slingPseudotime_1
+
+
+index_cell=which(!is.na(t_1))
+data=norm_mega_sub[,index_cell]
+risultato=apply(data,1,function(x){sum(x>1)})
+index_genes=which(as.vector(risultato)>10)
+data=data[index_genes,]
+
+
+Y <- data
+var100_1 <- names(sort(apply(Y,1,var),decreasing = TRUE))[1:100]
+Y <- Y[var100_1,]
+
+
+```
+
+
+
+```{r}
+t_2 <- sim_es$slingPseudotime_2
+
+index_cell=which(!is.na(t_2))
+data=norm_mega_sub[,index_cell]
+risultato=apply(data,1,function(x){sum(x>1)})
+index_genes=which(as.vector(risultato)>10)
+data=data[index_genes,]
+
+
+Y <- data
+var100_2 <- names(sort(apply(Y,1,var),decreasing = TRUE))[1:100]
+Y <- Y[var100_2,]
+
+
+```
+
+
+```{r}
+t_3 <- sim_es$slingPseudotime_3
+
+index_cell=which(!is.na(t_3))
+data=norm_mega_sub[,index_cell]
+risultato=apply(data,1,function(x){sum(x>1)})
+index_genes=which(as.vector(risultato)>10)
+data=data[index_genes,]
+
+
+Y <- data
+var100_3 <- names(sort(apply(Y,1,var),decreasing = TRUE))[1:100]
+Y <- Y[var100_3,]
+
+```
+
+```{r}
+t_4 <- sim_es$slingPseudotime_4
+
+index_cell=which(!is.na(t_4))
+data=norm_mega_sub[,index_cell]
+risultato=apply(data,1,function(x){sum(x>1)})
+index_genes=which(as.vector(risultato)>10)
+data=data[index_genes,]
+
+
+Y <- data
+var100_4 <- names(sort(apply(Y,1,var),decreasing = TRUE))[1:100]
+Y <- Y[var100_4,]
+
+
+```
+
+
+### Don't run (done on the server)
+```{r }
+
+
+#data_norm=norm_mega
+#risultato=apply(data_norm,1,function(x){sum(x>0.5)})
+#index_genes=which(as.vector(risultato)>0.5)
+#data_raw=raw_mega[index_genes,]
+
+
+#setwd('/nas_storage/gabriele.lubatti/10x_analysis/ciara_human')
+#load(file='data_raw.Rda')
+#load(file="sim_only_es.Rda")
+
+#set.seed(7)
+
+
+#pseudotime <- slingPseudotime(sim_only_es, na = FALSE)
+#cellWeights <- slingCurveWeights(sim_only_es)
+
+
+
+#tradeseq_human<- fitGAM(counts = data_raw, pseudotime = pseudotime, cellWeights = cellWeights,nknots = 6, verbose = TRUE,parallel=TRUE)
+
+#save(tradeseq_human,file='tradeseq_human.Rda')
+
+
+
+```
+
+
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/tradeseq_output")
+load("tradeseq_human.Rda")
+
+startRes <- startVsEndTest(tradeseq_human,lineage=TRUE)
+```
+
+
+
+
+
+
+
+```{r }
+startRes_4_up=startRes[startRes$pvalue_lineage4<0.05&startRes$logFClineage4>0,]
+
+startRes_4_up=startRes_4_up[order(startRes_4_up$waldStat_lineage4,decreasing = T),]
+```
+
+```{r }
+startRes_3_up=startRes[startRes$pvalue_lineage3<0.05&startRes$logFClineage3>0,]
+startRes_3_up=startRes_3_up[order(startRes_3_up$waldStat_lineage3,decreasing = T),]
+```
+
+
+```{r }
+
+t_3=as.numeric(sim_es$slingPseudotime_3)
+topgenes_3 <- row.names(startRes_3_up)[1:40]
+
+heatmap_markers_time(topgenes_3,topgenes_3,t_3,sim_es$GMM,norm_mega)
+
+
+
+
+        
+```
+
+```{r }
+
+t_4=as.numeric(sim_es$slingPseudotime_4)
+topgenes_4 <- row.names(startRes_4_up)[1:40]
+
+heatmap_markers_time(topgenes_4,topgenes_4,t_4,sim_es$GMM,norm_mega)
+
+
+
+        
+```
+
+
 ```{r }
 
 ```

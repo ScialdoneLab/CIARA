@@ -43,6 +43,34 @@ library(UpSetR)
 ## Function
 
 ```{r }
+Function_fisher_0_48=function(a,b,c){
+matrice=matrix(c(sum(c[c%in%a]%in%c[c%in%b]),sum(c[c%in%a]%in%c[!c%in%b]),sum(c[!c%in%a]%in%c[c%in%b]),sum(c[!c%in%a]%in%c[!c%in%b])),nrow=2,ncol=2,byrow = T)
+#Fisher test
+fisher.test(matrice)
+}
+```
+
+```{r}
+Test_Fisher_0_48=function(ciara_cluster,markers_cluster,marker_top){
+level=levels(as.factor(ciara_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=markers_cluster
+show=Function_fisher_0_48(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+
+```
+```{r }
 Test_Fisher_mouse=function(marker_all_cluster,marker_specific,background,cluster){
 level=levels(as.factor(cluster))
 p_value=rep(0,length(level))
@@ -869,16 +897,17 @@ hm.colors = c(gradient1,gradient2)
 genes_name_text=names_localized_genes(list_intersect ,geni_top_top,max_number=5)
 
 
-plot_localized_genes_interactive(cordinate_umap_0,norm_counts_ane_0,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+p=plot_localized_genes_interactive(cordinate_umap_0,norm_counts_ane_0,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+setwd("/Users/gabriele.lubatti/Downloads")
+htmlwidgets::saveWidget(p, file = "mouse_esc_0_h.html")
 
-
-
+pdf("/Users/gabriele.lubatti/Downloads/mouse_esc_0_h.pdf",width = 8, height = 6)
 plot_localized_genes(cordinate_umap_0,norm_counts_ane_0,rank_intersect,"Top 100 genes CIARA",hm.colors)+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
 panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),axis.text.y=element_blank(),
         axis.ticks.y=element_blank())+theme(text = element_text(size=12))+geom_point( alpha = 0.3, na.rm = T, shape = 21, colour = "black",stroke=0.1)
 
-
+dev.off()
 
 
 
@@ -918,6 +947,7 @@ marker_plot_plot_day_24_first=markers_first_elmir[[2]]
 marker_all_day_24_first=markers_first_elmir[[3]]
 
 ```
+
 
 
 
@@ -2625,13 +2655,72 @@ heatmap.2(dist_mouse, scale = "none", col = bluered(100),
 
 
 
-
+pdf("/Users/gabriele.lubatti/Downloads/dendo_0_24_48.pdf",width = 8, height = 6)
 hc <- hclust(my.dist)
-
+plot(hc)
+dev.off()
 
 plot(hc)
 
 ```
+
+```{r}
+DefaultAssay(mayra_0_ciara) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(mayra_0_ciara,as.vector(mayra_0_ciara$RNA_snn_res.0.1),names(mayra_0_ciara$RNA_snn_res.0.1),5)
+```
+
+```{r}
+marker_plot_day_0_first=markers_first_elmir[[1]]
+
+marker_plot_plot_day_0_first=markers_first_elmir[[2]]
+marker_all_day_0_first=markers_first_elmir[[3]]
+marker_all_day_0_first_2=marker_all_day_0_first[names(marker_all_day_0_first)==2]
+```
+
+```{r}
+
+
+test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first,marker_all_day_0_first_2)
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+
+```{r}
+DefaultAssay(mayra_seurat_48) <- "RNA"
+markers_first_elmir_48=markers_cluster_seurat(mayra_seurat_48,cluster_number_48,names(mayra_seurat_48$RNA_snn_res.0.1),20)
+```
+
+
+
+```{r}
+marker_plot_day_48_first=markers_first_elmir_48[[1]]
+
+marker_plot_plot_day_48_first=markers_first_elmir_48[[2]]
+marker_all_day_48_first=markers_first_elmir_48[[3]]
+marker_all_day_48_first_5=marker_all_day_48_first[names(marker_all_day_48_first)==5]
+```
+
+```{r}
+
+
+test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first,marker_all_day_48_first_5)
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+```{r }
+
+
+
+marker_all_day_24_first_2=marker_all_day_24_first[names(marker_all_day_24_first)=="2-step_2"]
+
+listInput <- list(mouse_48h_differentiation=marker_all_day_48_first_5,mouse_24h_differentiation=marker_all_day_24_first_2, mouse_0h_differentiation=marker_all_day_0_first_2)
+
+pdf("/Users/gabriele.lubatti/Downloads/common_0_24_48.pdf",width = 8, height = 6)
+upset(fromList(listInput), order.by = "freq")
+
+dev.off()
+```
+
 
 ## Figure 4a 
 

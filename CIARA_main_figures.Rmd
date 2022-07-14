@@ -17,7 +17,7 @@ rm(list=ls())
 #devtools::install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")
 ```
 
-
+###Note: input for CIARA is always knn 5 PCA:30  for all the datasets.
 
 ```{r }
 library(CIARA)
@@ -90,18 +90,12 @@ return(list(p_value,odds_ratio))
 ```{r }
 geni_ortogoli_unique=function(rabbit_id,name_mouse){
 
-#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Rabbit/10x_data/Processed_data/Radius_of_gyration")
 
 name_mouse=name_mouse[isUnique(as.vector(name_mouse$initial_ensg))&isUnique(as.vector(name_mouse$ortholog_name)),]
 marker_plot_all_1=rabbit_id[rabbit_id%in%name_mouse$initial_ensg]
 name_rabbit=as.vector(name_mouse$ortholog_name)
 name_rabbit[name_rabbit=="N/A"]=as.vector(name_mouse$initial_ensg[name_rabbit=="N/A"])
 
-#setwd(paste0(base_path,"10x_data/Output_script"))
-#name_mouse=read.csv(file=geni_ortogoli_g_profiler)
-#name_mouse_no=name_mouse[!(isUnique(as.vector(name_mouse$initial_ensg))&isUnique(as.vector(name_mouse$ortholog_name))),]
-#marker_plot_all_2=rabbit_id[rabbit_id%in%name_mouse_no$initial_ensg]
-#name_rabbit_no=unique(as.vector(name_mouse_no$initial_ensg))
 marker_plot_all_2=rabbit_id[!rabbit_id%in%name_mouse$initial_ensg]
 name_rabbit_no=rabbit_id[!rabbit_id%in%name_mouse$initial_ensg]
 ortogoli_name_final=c(name_rabbit,name_rabbit_no)
@@ -177,6 +171,7 @@ plot_balloon_marker_norm_receptor=function (norm_counts, cluster, marker_complet
                 hjust = 1), axis.title.x = ggplot2::element_blank())
 }
 ```
+
 ```{r}
 plot_balloon_marker_norm_blood=function (norm_counts, cluster, marker_complete, max_number, 
     max_size = 5, text_size = 7) 
@@ -840,6 +835,7 @@ cordinate_umap_0=as.data.frame(Embeddings(mayra_seurat_0, reduction = "umap")[, 
 ```
 
 ## Run CIARA
+
 ```{r }
 #norm_matrix=norm_counts_ane_0
 #knn_matrix=knn_matrix_ane_0
@@ -1510,11 +1506,22 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),a
 DefaultAssay(race_ciara) <- "RNA"
 markers_race_ciara=markers_cluster_seurat(race_ciara,as.vector(race_ciara$RNA_snn_res.0.2),names(race_ciara$RNA_snn_res.0.2),5)
 ```
+
 ```{r}
 marker_plot_day_24_first=markers_race_ciara[[1]]
 
 marker_plot_plot_day_24_first=markers_race_ciara[[2]]
 marker_all_day_24_first=markers_race_ciara[[3]]
+
+```
+
+```{r}
+DefaultAssay(race_ciara) <- "RNA"
+markers_race_ciara_original=markers_cluster_seurat(race_ciara,cluster_race_id,names(race_ciara$RNA_snn_res.0.2),5)
+```
+```{r}
+
+marker_all_day_24_first_original=markers_race_ciara_original[[3]]
 
 ```
 
@@ -1543,32 +1550,52 @@ top_2=names(mean_top_2)
 names(top_2)=rep(7,length(top_2))
 ```
 
+Cluster 7 comprises Lysozyme-expressing Paneth cells while Mucus-producing goblet cells constitute clusters 6 and 10.
+```{r}
+marker_all_day_24_first[marker_all_day_24_first=="Lgr5"]
+```
+```{r}
+plot_gene(norm_race,cordinate_race,"Lgr5","Lgr5")
+plot_umap(cordinate_race,cluster_race_id)
+```
 
 
-### Cluster 2 is Goblet cells
+### Cluster 2 is Goblet cells (cluster 6 in original cluster))
 
 ```{r}
 marker_all_day_24_first[marker_all_day_24_first=="Clca3"]
 ```
 
+```{r}
+marker_all_day_24_first_original[marker_all_day_24_first_original=="Clca3"]
+```
 
-### Cluster 3 is enterocytes
+
+### Cluster 3 is enterocytes (cluster 4 in original cluster)
 ```{r}
 marker_all_day_24_first[marker_all_day_24_first=="Apoa1"]
 ```
-
-### Cluster 4 is Paneth cells
+```{r}
+marker_all_day_24_first_original[marker_all_day_24_first_original=="Apoa1"]
+```
+### Cluster 4 is Paneth cells (cluster 7 in original cluster)
 ```{r}
 marker_all_day_24_first[marker_all_day_24_first=="Defa24"]
 ```
 
-### Cluster 5 is enteroendocrine cells
+```{r}
+marker_all_day_24_first_original[marker_all_day_24_first_original=="Defa24"]
+```
+
+### Cluster 5 is enteroendocrine cells (also clu 5 in original cluster)
 
 
 ```{r}
 marker_all_day_24_first[marker_all_day_24_first=="Chgb"]
 ```
-
+```{r}
+marker_all_day_24_first_original[marker_all_day_24_first_original=="Chgb"]
+```
 
 ### Cluster 7 is tuft cells 
 
@@ -1613,6 +1640,25 @@ clustree(classe_new, prefix="deepSplit", node_size = 10)
 
 
 ```
+```{r }
+classe_new<-data.frame(deepSplit1 = cluster_race_ciara[cluster_race_ciara==2|cluster_race_ciara==3|cluster_race_ciara==4|cluster_race_ciara==5|cluster_race_ciara==7|cluster_race_ciara==6],deepSplit0=cluster_race_id[cluster_race_ciara==3|cluster_race_ciara==4|cluster_race_ciara==5|cluster_race_ciara==7|cluster_race_ciara==6|cluster_race_ciara==2])
+classe_new$K1=c(rep("RaceID",92))
+classe_new$K2=c(rep("CIARA",92))
+
+
+
+
+
+pdf("/Users/gabriele.lubatti/Downloads/race_id_clustree_full.pdf", width = 8, height = 6)
+clustree(classe_new, prefix="deepSplit", node_size = 10)
+dev.off()
+
+
+
+```
+
+
+
 ## Figure 2C
 ```{r }
 setwd(paste0(current_wd,"/CIARA"))
@@ -1645,6 +1691,12 @@ norm_elmir_ciara_5_30=as.matrix(GetAssayData(elmir_seurat_ciara, slot = "data",a
 original_cluster=as.vector(meta_info$cluster_id)
 names(original_cluster)=names(elmir_seurat_ciara$RNA_snn_res.0.01)
 final_cluster=merge_cluster(original_cluster,elmir_seurat_ciara$RNA_snn_res.0.01,20)
+```
+```{r}
+pdf("/Users/gabriele.lubatti/Downloads/resolution_pgc.pdf",width = 8, height = 6)
+find_resolution(elmir_seurat_ciara, resolution_vector = seq(0.01,1,0.1))
+dev.off()
+
 ```
 
 
@@ -2680,11 +2732,25 @@ marker_all_day_0_first_2=marker_all_day_0_first[names(marker_all_day_0_first)==2
 ```{r}
 
 
-test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first,marker_all_day_0_first_2)
+test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first_all,marker_all_day_0_first_2)
 test[[2]][test[[1]]<0.05&test[[2]]>2]
 ```
+```{r}
 
+marker_all_day_0_first_1=marker_all_day_0_first[names(marker_all_day_0_first)==1]
+test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first_all,marker_all_day_0_first_1)
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+#1.132057e-44 p value
+```
+```{r}
 
+marker_all_day_0_first_0=marker_all_day_0_first[names(marker_all_day_0_first)==0]
+test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first_all,marker_all_day_0_first_0)
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+#0.0001163687 p value
+#marker_all_day_24_first_all
+
+```
 ```{r}
 DefaultAssay(mayra_seurat_48) <- "RNA"
 markers_first_elmir_48=markers_cluster_seurat(mayra_seurat_48,cluster_number_48,names(mayra_seurat_48$RNA_snn_res.0.1),20)
@@ -2703,7 +2769,21 @@ marker_all_day_48_first_5=marker_all_day_48_first[names(marker_all_day_48_first)
 ```{r}
 
 
-test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first,marker_all_day_48_first_5)
+test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first_all,marker_all_day_48_first_5)
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+```{r}
+
+marker_all_day_48_first_3=marker_all_day_48_first[names(marker_all_day_48_first)==3]
+test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first_all,marker_all_day_48_first_3)
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+```{r}
+
+marker_all_day_48_first_2=marker_all_day_48_first[names(marker_all_day_48_first)==2]
+test=Test_Fisher_0_48(final_cluster_version_sub,marker_all_day_24_first_all,marker_all_day_48_first_2)
 test[[2]][test[[1]]<0.05&test[[2]]>2]
 ```
 
@@ -2719,6 +2799,83 @@ pdf("/Users/gabriele.lubatti/Downloads/common_0_24_48.pdf",width = 8, height = 6
 upset(fromList(listInput), order.by = "freq")
 
 dev.off()
+```
+##Composition
+
+```{r }
+livelli_24=levels(factor(final_cluster_version_sub))
+livelli_48=levels(factor(cluster_number_48_lett[cluster_number_48_lett=="C"|cluster_number_48_lett=="D"|cluster_number_48_lett=="F"]))
+livelli_24[livelli_24==0]="Pluripotent cells"
+livelli_24[livelli_24=="1-step_2"]="2CLC"
+livelli_24[livelli_24=="2-step_2"]="Precursor cells"
+
+livelli_48[livelli_48=="C"]="Pluripotent cells"
+livelli_48[livelli_48=="D"]="2CLC"
+livelli_48[livelli_48=="F"]="Precursor cells"
+
+livelli_0=levels(as.factor(mayra_0_ciara$RNA_snn_res.0.1))
+livelli_0[livelli_0==0]="Pluripotent cells"
+livelli_0[livelli_0==1]="2CLC"
+livelli_0[livelli_0==2]="Precursor cells"
+```
+
+```{r }
+final_cluster_version_sub[final_cluster_version_sub=="0"]="Pluripotent cells"
+final_cluster_version_sub[final_cluster_version_sub=="1-step_2"]="2CLC"
+final_cluster_version_sub[final_cluster_version_sub=="2-step_2"]="Precursor cells"
+
+
+cluster_number_48_lett_new=cluster_number_48_lett[cluster_number_48_lett%in%c("C","D","F")]
+cluster_number_48_lett_new[cluster_number_48_lett_new=="C"]="Pluripotent cells"
+cluster_number_48_lett_new[cluster_number_48_lett_new=="D"]="2CLC"
+cluster_number_48_lett_new[cluster_number_48_lett_new=="F"]="Precursor cells"
+
+cluster_number_0_new=as.vector(as.factor(mayra_0_ciara$RNA_snn_res.0.1))
+cluster_number_0_new[cluster_number_0_new==0]="Pluripotent cells"
+cluster_number_0_new[cluster_number_0_new==1]="2CLC"
+cluster_number_0_new[cluster_number_0_new==2]="Precursor cells"
+
+time_0=rep("0h",length(cluster_number_0_new))
+time_24=rep("24h",length(final_cluster_version_sub))
+time_48=rep("48h",length(cluster_number_48_lett_new))
+
+time_all=c(time_0,time_24,time_48)
+composition=c(cluster_number_0_new,final_cluster_version_sub,cluster_number_48_lett_new)
+
+composition=factor(composition,levels=c("Pluripotent cells","2CLC","Precursor cells"))
+df_composition=data.frame(time_all,composition)
+
+colnames(df_composition)=c("cluster","origin_space")
+
+p=barplot_cell_cycle(df_composition[,2],df_composition[,1],"Mouse ESCs cell type composition",fraction = T)
+
+pdf("/Users/gabriele.lubatti/Downloads/composition.pdf",width = 8, height = 6)
+p[[1]]+theme(text = element_text(size=18),axis.text.x = element_text(size=18,angle = 45, vjust = 1, hjust = 1))+labs(fill="Composition")+ggtitle("Mouse ESCs treated with RA")+xlab(NULL)
+dev.off()
+
+```
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+spatial_annotation=read.table("spatial_annotation.txt")
+
+origin_space=spatial_annotation[,2]
+
+
+df=data.frame(original_sub[select_endo],origin_space[select_endo])
+colnames(df)=c("cluster","origin_space")
+
+```
+
+
+```{r }
+
+p=barplot_cell_cycle(df[,2],df[,1],"Endoderm - spatial origin",fraction = T)
+
+p[[1]]+theme(text = element_text(size=14),axis.text.x = element_text(size=14,angle = 45, vjust = 1, hjust = 1))
+
+
 ```
 
 
@@ -3012,7 +3169,17 @@ colnames(df)=c("cluster","origin_space")
 
 ```
 
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+spatial_annotation=read.table("spatial_annotation.txt")
 
+origin_space=spatial_annotation[,2]
+
+
+df=data.frame(original_sub[select_endo],origin_space[select_endo])
+colnames(df)=c("cluster","origin_space")
+
+```
 
 
 ```{r }
@@ -3080,9 +3247,11 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),a
 ## Figure 4g
 ```{r }
 df_plot=data.frame(sub_cluster_diff,time_endo)
+
+pdf("/Users/gabriele.lubatti/Downloads/dpt_YSE1_sup.pdf",width = 8, height = 6)
 ggplot(df_plot, aes(x=sub_cluster_diff, y=time_endo, color=sub_cluster_diff)) +
   geom_boxplot()+labs(color="Cluster")+ylab("DPT")+xlab(NULL)+theme(text = element_text(size=14),axis.text.x = element_text(size=14,angle = 45, vjust = 1, hjust = 1))+scale_color_manual(values=c("#42152C","#AA7EAF","#F2CBBC","#B48371" ,"#FEFD54"))
-
+dev.off()
 x <- c("66 21 44", "170 126 175","242 203 188","180 131 113","254 253 84")
 sapply(strsplit(x, " "), function(x)
     rgb(x[1], x[2], x[3], maxColorValue=255))

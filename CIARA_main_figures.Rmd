@@ -503,6 +503,81 @@ gg_color_hue=function (n)
 ```
 
 ```{r }
+plot_balloon_marker_here_0=function (norm_matrix, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+  #cluster=factor(cluster,levels = c("Pluripotent cells","2CLC","Precursor cells"))
+    #livelli <- levels((cluster))
+  livelli <- c("Pluripotent cells","2CLC","Precursor cells")
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste( genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_matrix[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_matrix[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = factor(cluster_label_all,levels=c(c("Pluripotent cells","2CLC","Precursor cells"))), 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "white", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+```{r }
+gg_color_hue=function (n) 
+{
+    hues <- seq(15, 375, length = n + 1)
+    hcl(h = hues, l = 65, c = 100)[1:n]
+}
+```
+
+```{r }
 
 heatmap_markers_time=function(marker_plot,marker_plot_plot,dpt,my.clusters,norm_es,colore_vector=NULL){
   
@@ -959,7 +1034,7 @@ mean_top_0=apply(norm_counts_ane_0[top_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1
 mean_top_0=sort(mean_top_0,decreasing = T)
 
 top_0=names(mean_top_0)
-names(top_0)=rep(0,length(top_0))
+names(top_0)=rep("Pluripotent cells",length(top_0))
 ```
 
 
@@ -972,7 +1047,7 @@ mean_top_1=apply(norm_counts_ane_0[top_1,as.vector(mayra_0_ciara$RNA_snn_res.0.1
 mean_top_1=sort(mean_top_1,decreasing = T)
 
 top_1=names(mean_top_1)
-names(top_1)=rep(1,length(top_1))
+names(top_1)=rep("2CLC",length(top_1))
 ```
 
 
@@ -985,20 +1060,33 @@ mean_top_2=apply(norm_counts_ane_0[top_2,as.vector(mayra_0_ciara$RNA_snn_res.0.1
 mean_top_2=sort(mean_top_2,decreasing = T)
 
 top_2=names(mean_top_2)
-names(top_2)=rep(2,length(top_2))
-```
-
-
-
-```{r }
-plot_balloon_marker_here(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),c(top_1[1:8],top_1[18],top_1[30]),10,max_size=12,text_size=25)
-
+names(top_2)=rep("Precursor cells",length(top_2))
 ```
 
 ```{r }
+new_clu=as.vector(mayra_0_ciara$RNA_snn_res.0.1)
+new_clu[new_clu==0]="Pluripotent cells"
+new_clu[new_clu==1]="2CLC"
+new_clu[new_clu==2]="Precursor cells"
+new_clu=factor(new_clu,levels=c("Pluripotent cells","2CLC","Precursor cells"))
+```
 
-plot_balloon_marker_here(norm_counts_ane_0,as.vector(mayra_0_ciara$RNA_snn_res.0.1),c(top_2[1:9],top_2[17]),10,max_size=12,text_size=25)
 
+```{r }
+plot_balloon_marker_here_0(norm_counts_ane_0,new_clu,c(top_1[1:8],top_1[18],top_1[30]),10,max_size=12,text_size=20)
+
+```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Downloads/2clc.pdf",width = 8, height = 6)
+plot_balloon_marker_here_0(norm_counts_ane_0,new_clu,c(top_1[1:8],top_1[18],top_1[30]),10,max_size=10,text_size=20)
+dev.off()
+```
+
+```{r }
+pdf("/Users/gabriele.lubatti/Downloads/pre_cells.pdf", width = 8, height = 6)
+plot_balloon_marker_here_0(norm_counts_ane_0,new_clu,c(top_2[1:9],top_2[17]),10,max_size=10,text_size=20)
+dev.off()
 ```
 
 ```{r }
@@ -2365,7 +2453,8 @@ genes_name_text=names_localized_genes(list_intersect ,geni_top_top,max_number=5)
 
 
 p=plot_localized_genes_interactive(cordinate_umap_24_update,norm_counts_ane_24_update,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
-#htmlwidgets::saveWidget(p, file = "mouse_esc.html")
+setwd("/Users/gabriele.lubatti/Downloads")
+htmlwidgets::saveWidget(p, file = "mouse_esc.html")
 
 
 p=plot_localized_genes(cordinate_umap_24_update,norm_counts_ane_24_update,rank_intersect,"Top genes CIARA",hm.colors)
@@ -2450,6 +2539,24 @@ markers_mega <- markers_mega[markers_mega$p_val <= 0.05,
 markers_mega=markers_mega[!markers_mega%in%marker_all_day_24_first]
 names(markers_mega)=rep("0",length(markers_mega))
 marker_all_day_24_first_all=c(marker_all_day_24_first,markers_mega)
+```
+
+
+```{r}
+diff_marker=marker_all_day_24_first_all[names(marker_all_day_24_first_all)=="2-step_2"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(diff_marker,file="Precursor_markers_24h.csv",row.names = F, col.names = F)
+```
+```{r}
+two_marker=marker_all_day_24_first_all[names(marker_all_day_24_first_all)=="1-step_2"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(two_marker,file="2CLC_markers_24h.csv",row.names = F, col.names = F)
+```
+
+```{r}
+pluri_marker=marker_all_day_24_first_all[names(marker_all_day_24_first_all)=="0"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(pluri_marker,file="Pluripotent_markers_24h.csv",row.names = F, col.names = F)
 ```
 
 ```{r }
@@ -2729,6 +2836,24 @@ marker_all_day_0_first=markers_first_elmir[[3]]
 marker_all_day_0_first_2=marker_all_day_0_first[names(marker_all_day_0_first)==2]
 ```
 
+
+```{r}
+diff_marker=marker_all_day_0_first[names(marker_all_day_0_first)=="2"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(diff_marker,file="Precursor_markers_0h.csv",row.names = F, col.names = F)
+```
+```{r}
+two_marker=marker_all_day_0_first[names(marker_all_day_0_first)=="1"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(two_marker,file="2CLC_markers_0h.csv",row.names = F, col.names = F)
+```
+
+```{r}
+pluri_marker=marker_all_day_0_first[names(marker_all_day_0_first)=="0"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(pluri_marker,file="Pluripotent_markers_0h.csv",row.names = F, col.names = F)
+```
+
 ```{r}
 
 
@@ -2755,9 +2880,6 @@ test[[2]][test[[1]]<0.05&test[[2]]>2]
 DefaultAssay(mayra_seurat_48) <- "RNA"
 markers_first_elmir_48=markers_cluster_seurat(mayra_seurat_48,cluster_number_48,names(mayra_seurat_48$RNA_snn_res.0.1),20)
 ```
-
-
-
 ```{r}
 marker_plot_day_48_first=markers_first_elmir_48[[1]]
 
@@ -2765,6 +2887,25 @@ marker_plot_plot_day_48_first=markers_first_elmir_48[[2]]
 marker_all_day_48_first=markers_first_elmir_48[[3]]
 marker_all_day_48_first_5=marker_all_day_48_first[names(marker_all_day_48_first)==5]
 ```
+
+```{r}
+diff_marker=marker_all_day_48_first[names(marker_all_day_48_first)=="5"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(diff_marker,file="Precursor_markers_48h.csv",row.names = F, col.names = F)
+```
+```{r}
+two_marker=marker_all_day_48_first[names(marker_all_day_48_first)=="3"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(two_marker,file="2CLC_markers_48h.csv",row.names = F, col.names = F)
+```
+
+```{r}
+pluri_marker=marker_all_day_48_first[names(marker_all_day_48_first)=="2"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(pluri_marker,file="Pluripotent_markers_48h.csv",row.names = F, col.names = F)
+```
+
+
 
 ```{r}
 
@@ -3017,9 +3158,10 @@ genes_name_text=names_localized_genes(list_intersect ,geni_top_top,max_number=5)
 
 
 
-plot_localized_genes_interactive(coordinate_umap,norm_elmir_ciara_5_30,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+p=plot_localized_genes_interactive(coordinate_umap,norm_elmir_ciara_5_30,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 
-#htmlwidgets::saveWidget(p, file = "human_gastrula.html")
+setwd("/Users/gabriele.lubatti/Downloads")
+htmlwidgets::saveWidget(p, file = "human_gastrula.html")
 
 p=plot_localized_genes(coordinate_umap,norm_elmir_ciara_5_30,rank_intersect,"Top genes CIARA",hm.colors)
 
@@ -3085,6 +3227,11 @@ plot_balloon_marker_norm(norm_elmir_ciara_5_30[,grep(paste(toMatch,collapse="|")
 ```
 
 
+```{r}
+yse1_marker=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="YSE1"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(yse1_marker,file="YSE1_markers.csv",row.names = F, col.names = F)
+```
 
 ```{r}
 top_endo=white_black_markers(original_sub[select_endo],"YSE1",norm_elmir_ciara_5_30[,select_endo],markers_first_elmir_3_final,0)
@@ -3279,6 +3426,12 @@ dev.off()
 
 
 
+```
+
+```{r}
+mep1_marker=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="MEP1"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(mep1_marker,file="MEP1_markers.csv",row.names = F, col.names = F)
 ```
 
 ```{r }
@@ -3659,6 +3812,7 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),a
         axis.ticks.x=element_blank(),axis.text.y=element_blank(),
         axis.ticks.y=element_blank())+theme(text = element_text(size=18))
 
+plot_umap(umap_cordinate_heart_small,cluster_heart_small)
 
 
 ```
@@ -3671,7 +3825,11 @@ marker_heart_top=markers_first_elmir[[1]]
 marker_heart=markers_first_elmir[[3]]
 ```
 
-
+```{r}
+two_marker=marker_heart[names(marker_heart)=="YSE1"]
+setwd("/Users/gabriele.lubatti/Downloads")
+write.csv2(two_marker,file="YSE1_markers_mouse.csv",row.names = F, col.names = F)
+```
 
 ```{r}
 select_endo=which(as.vector(original_cluster=="Endoderm")|original_sub=="Hypo")

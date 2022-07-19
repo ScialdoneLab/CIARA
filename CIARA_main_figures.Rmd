@@ -969,8 +969,8 @@ genes_name_text=names_localized_genes(list_intersect ,geni_top_top,max_number=5)
 
 
 p=plot_localized_genes_interactive(cordinate_umap_0,norm_counts_ane_0,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
-setwd("/Users/gabriele.lubatti/Downloads")
-htmlwidgets::saveWidget(p, file = "mouse_esc_0_h.html")
+#setwd("/Users/gabriele.lubatti/Downloads")
+#htmlwidgets::saveWidget(p, file = "mouse_esc_0_h.html")
 
 pdf("/Users/gabriele.lubatti/Downloads/mouse_esc_0_h.pdf",width = 8, height = 6)
 plot_localized_genes(cordinate_umap_0,norm_counts_ane_0,rank_intersect,"Top 100 genes CIARA",hm.colors)+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -1119,7 +1119,8 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),a
 setwd(paste0(current_wd,"/CIARA"))
 load(file="data.Rda")
 setwd(paste0(current_wd,"/CIARA"))
-labels <- read.table('/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/FiRE-master/data/labels_jurkat_two_species_1580.txt')
+#labels <- read.table('/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/FiRE-master/data/labels_jurkat_two_species_1580.txt')
+labels <- read.table('labels_jurkat_two_species_1580.txt')
 labels=labels$V1
 ```
 
@@ -1536,7 +1537,8 @@ plot_balloon_marker_here(norm_gini2,as.vector(giniclu2_ciara$RNA_snn_res.0.3),c(
 ## RaceID 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+setwd(paste0(current_wd,"/CIARA"))
 load(file="race_id_raw.Rda")
 load(file="cluster_race_id.Rda")
 load(file="cordinate_race.Rda")
@@ -1545,7 +1547,8 @@ load(file="cordinate_race.Rda")
 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+setwd(paste0(current_wd,"/CIARA"))
 load("race.Rda")
 ```
 
@@ -1888,7 +1891,8 @@ positive_cells=find_positive_cells(norm_elmir_ciara_5_30,threshold=0,geni_pgc)
 ```{r }
 
 
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+setwd(paste0(current_wd,"/CIARA"))
 load("experiment_name_FinalClustering_elmir.RData")
 
 
@@ -1988,7 +1992,8 @@ ggplot(mtcars, aes(x=max_gini, y=gini_value, color=label_all)) +
 ### Giniclust3 from python script giniclust3 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+setwd(paste0(current_wd,"/CIARA"))
 final_gini=read.table("all_gini.txt")
 final_gini=final_gini$V1
 
@@ -2031,8 +2036,8 @@ mcc(original_score, ciara_score)
 
 CELLSIUS_elmir=result
 
-
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+setwd(paste0(current_wd,"/CIARA"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
 vedo=load("CELLSIUS_elmir_new.Rda")
 general_cluster_version=meta_info$cluster_id
 cluster_id=general_cluster_version
@@ -2172,10 +2177,13 @@ mcc(original_score, ciara_score)
 
 ### SAM
 ```{r}
-sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_rank_genes_human.csv")
+#sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_rank_genes_human.csv")
+setwd(paste0(current_wd,"/CIARA"))
+sam_genes=read.csv("sam_rank_genes_human.csv")
 sam_genes=sam_genes$X0
 
-sam_cluster=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_clustering_human.csv")
+#sam_cluster=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_clustering_human.csv")
+sam_cluster=read.csv("sam_clustering_human.csv")
 sam_cluster=sam_cluster$louvain_clusters
 ```
 
@@ -2286,6 +2294,7 @@ which(top_values=="DPPA5")
 ### Triku
 ```{r}
 setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#setwd(paste0(current_wd,"/CIARA"))
 triku_gene_name=read.table("triku_gene_names.txt")
 triku_gene_name=triku_gene_name$V1
 triku_gene_all=read.table("triku_gene.txt")
@@ -2324,7 +2333,9 @@ which(final_sort_triku=="FETUB")
 
 ### SAM (new approach)
 ```{r}
-sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_rank_genes_human.csv")
+setwd(paste0(current_wd,"/CIARA"))
+#sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sam_rank_genes_human.csv")
+sam_genes=read.csv("sam_rank_genes_human.csv")
 sam_genes=sam_genes$X0
 ```
 
@@ -2358,10 +2369,10 @@ my_palette <- colorRampPalette(c("lightblue1", "black"))(n = 1000)
 
 #heatmap.2(log(index_dist), scale = "none",col = bluered(100), 
           #trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1)
-
+pdf("/Users/gabriele.lubatti/Downloads/index.pdf",width = 8, height = 6)
 heatmap.2(log(index_dist), scale = "none",col = my_palette, 
           trace = "none", density.info = "none",cexRow = 1,cexCol = 1,Rowv=FALSE,Colv=FALSE,notecex=0.1)
-
+dev.off()
 
 ```
 
@@ -2369,7 +2380,8 @@ heatmap.2(log(index_dist), scale = "none",col = my_palette,
 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
 load("raw_counts_ane_24_update.Rda")
 mayra_seurat_24=cluster_analysis_integrate_rare(raw_counts_ane_24_update,"Mayra_data_24",0.1,5,30)
 ```
@@ -2406,7 +2418,8 @@ cordinate_umap_24_update=as.data.frame(Embeddings(mayra_seurat_24_update, reduct
 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+setwd(paste0(current_wd,"/CIARA"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
 load("ane_24.Rda")
 ```
 
@@ -2453,8 +2466,8 @@ genes_name_text=names_localized_genes(list_intersect ,geni_top_top,max_number=5)
 
 
 p=plot_localized_genes_interactive(cordinate_umap_24_update,norm_counts_ane_24_update,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
-setwd("/Users/gabriele.lubatti/Downloads")
-htmlwidgets::saveWidget(p, file = "mouse_esc.html")
+#setwd("/Users/gabriele.lubatti/Downloads")
+#htmlwidgets::saveWidget(p, file = "mouse_esc.html")
 
 
 p=plot_localized_genes(cordinate_umap_24_update,norm_counts_ane_24_update,rank_intersect,"Top genes CIARA",hm.colors)
@@ -2544,18 +2557,18 @@ marker_all_day_24_first_all=c(marker_all_day_24_first,markers_mega)
 
 ```{r}
 diff_marker=marker_all_day_24_first_all[names(marker_all_day_24_first_all)=="2-step_2"]
-setwd("/Users/gabriele.lubatti/Downloads")
-write.csv2(diff_marker,file="Precursor_markers_24h.csv",row.names = F, col.names = F)
+#setwd("/Users/gabriele.lubatti/Downloads")
+#write.csv2(diff_marker,file="Precursor_markers_24h.csv",row.names = F, col.names = F)
 ```
 ```{r}
 two_marker=marker_all_day_24_first_all[names(marker_all_day_24_first_all)=="1-step_2"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(two_marker,file="2CLC_markers_24h.csv",row.names = F, col.names = F)
 ```
 
 ```{r}
 pluri_marker=marker_all_day_24_first_all[names(marker_all_day_24_first_all)=="0"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(pluri_marker,file="Pluripotent_markers_24h.csv",row.names = F, col.names = F)
 ```
 
@@ -2604,9 +2617,10 @@ plot_balloon_marker(norm_counts_ane_24_update,final_cluster_version_sub,c(top_0[
 
 
 ```{r}
-setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+setwd(paste0(current_wd,"/CIARA"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
 load(file='mayra_dati_raw_48.Rda')
-setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Mayra_project")
 cluster_mayra=read.csv('LIFcells_leidenClustering.csv')
 cluster_mayra_48=cluster_mayra[as.vector(cluster_mayra$batch)=='48h',]
 row.names(cluster_mayra_48)=as.vector(cluster_mayra_48$cell)
@@ -2839,18 +2853,18 @@ marker_all_day_0_first_2=marker_all_day_0_first[names(marker_all_day_0_first)==2
 
 ```{r}
 diff_marker=marker_all_day_0_first[names(marker_all_day_0_first)=="2"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(diff_marker,file="Precursor_markers_0h.csv",row.names = F, col.names = F)
 ```
 ```{r}
 two_marker=marker_all_day_0_first[names(marker_all_day_0_first)=="1"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(two_marker,file="2CLC_markers_0h.csv",row.names = F, col.names = F)
 ```
 
 ```{r}
 pluri_marker=marker_all_day_0_first[names(marker_all_day_0_first)=="0"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(pluri_marker,file="Pluripotent_markers_0h.csv",row.names = F, col.names = F)
 ```
 
@@ -2890,18 +2904,18 @@ marker_all_day_48_first_5=marker_all_day_48_first[names(marker_all_day_48_first)
 
 ```{r}
 diff_marker=marker_all_day_48_first[names(marker_all_day_48_first)=="5"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(diff_marker,file="Precursor_markers_48h.csv",row.names = F, col.names = F)
 ```
 ```{r}
 two_marker=marker_all_day_48_first[names(marker_all_day_48_first)=="3"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(two_marker,file="2CLC_markers_48h.csv",row.names = F, col.names = F)
 ```
 
 ```{r}
 pluri_marker=marker_all_day_48_first[names(marker_all_day_48_first)=="2"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(pluri_marker,file="Pluripotent_markers_48h.csv",row.names = F, col.names = F)
 ```
 
@@ -2998,7 +3012,8 @@ dev.off()
 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
 spatial_annotation=read.table("spatial_annotation.txt")
 
 origin_space=spatial_annotation[,2]
@@ -3160,8 +3175,8 @@ genes_name_text=names_localized_genes(list_intersect ,geni_top_top,max_number=5)
 
 p=plot_localized_genes_interactive(coordinate_umap,norm_elmir_ciara_5_30,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
 
-setwd("/Users/gabriele.lubatti/Downloads")
-htmlwidgets::saveWidget(p, file = "human_gastrula.html")
+#setwd("/Users/gabriele.lubatti/Downloads")
+#htmlwidgets::saveWidget(p, file = "human_gastrula.html")
 
 p=plot_localized_genes(coordinate_umap,norm_elmir_ciara_5_30,rank_intersect,"Top genes CIARA",hm.colors)
 
@@ -3229,7 +3244,7 @@ plot_balloon_marker_norm(norm_elmir_ciara_5_30[,grep(paste(toMatch,collapse="|")
 
 ```{r}
 yse1_marker=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="YSE1"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(yse1_marker,file="YSE1_markers.csv",row.names = F, col.names = F)
 ```
 
@@ -3277,7 +3292,8 @@ dev.off()
 ## Figure 4d
 ```{r }
 
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
 diff_map_endo=read.csv("endo_diffmap.csv")
 diff_map_elmir_endo=diff_map_endo[,2:4]
 diff_map_elmir_endo=diff_map_elmir_endo[,-2]
@@ -3305,7 +3321,8 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),a
 
 ## Figure 4e
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
 spatial_annotation=read.table("spatial_annotation.txt")
 
 origin_space=spatial_annotation[,2]
@@ -3317,7 +3334,8 @@ colnames(df)=c("cluster","origin_space")
 ```
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
 spatial_annotation=read.table("spatial_annotation.txt")
 
 origin_space=spatial_annotation[,2]
@@ -3430,7 +3448,7 @@ dev.off()
 
 ```{r}
 mep1_marker=markers_first_elmir_3_final[names(markers_first_elmir_3_final)=="MEP1"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(mep1_marker,file="MEP1_markers.csv",row.names = F, col.names = F)
 ```
 
@@ -3497,7 +3515,8 @@ batch_1 <- CreateSeuratObject(counts = raw_mega, project = "Endoderm")
 ```
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
 diff_map_hema=read.csv("hep_diffmap_coord.csv")
 
 
@@ -3678,7 +3697,8 @@ Y <- Y[var100_4,]
 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/tradeseq_output")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/tradeseq_output")
+setwd(paste0(current_wd,"/CIARA"))
 load("tradeseq_human.Rda")
 
 startRes <- startVsEndTest(tradeseq_human,lineage=TRUE)
@@ -3732,7 +3752,8 @@ dev.off()
 
 ```{r }
 
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
 #load("knn_matrix_heart_new.Rda")
 load("norm_data_heart.Rda")
 load("raw_data_heart.Rda")
@@ -3742,7 +3763,8 @@ load("umap_cordinate_heart_small.Rda")
 
 
 ```{r }
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+setwd(paste0(current_wd,"/CIARA"))
 load("endoderm.Rda")
 ```
 
@@ -3757,8 +3779,8 @@ background=row.names(result)
 
 gene_id=row.names(raw_data_heart)
 
-
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
 name_mouse=read.csv("human_mouse_heart.csv")
 
 
@@ -3827,7 +3849,7 @@ marker_heart=markers_first_elmir[[3]]
 
 ```{r}
 two_marker=marker_heart[names(marker_heart)=="YSE1"]
-setwd("/Users/gabriele.lubatti/Downloads")
+#setwd("/Users/gabriele.lubatti/Downloads")
 write.csv2(two_marker,file="YSE1_markers_mouse.csv",row.names = F, col.names = F)
 ```
 
@@ -3906,8 +3928,10 @@ marker_mega_human=markers_first_elmir_3_final[names(markers_first_elmir_3_final)
 #gene_id=row.names(raw_data_heart)
 
 
-setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
-name_mouse=read.csv("/Users/gabriele.lubatti/Downloads/mega_convert_human.csv")
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+setwd(paste0(current_wd,"/CIARA"))
+#name_mouse=read.csv("/Users/gabriele.lubatti/Downloads/mega_convert_human.csv")
+name_mouse=read.csv("mega_convert_human.csv")
 mega_mouse=name_mouse$ortholog_name
 mega_mouse_small=mega_mouse[mega_mouse!="N/A"&mega_mouse!=""]
 

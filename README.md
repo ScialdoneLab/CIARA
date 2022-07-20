@@ -210,8 +210,14 @@ plot_umap(coordinate_umap, final_cluster_version_sub)
 ```
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/entropy_cluster.png" width="700" height="500">
 With the cluster analysis based on CIARA we are able to detect two clusters (Endoderm_2 and and Hemogenic Endothelial Progenitors_4 highlighted in the plot) that were not reported in the original paper.
+With CIARA is also possible to obtain in a completely unsupervised way the primordial germ cells cluster (PGCs), that in the original paper was detected only with a supervised approach.
 
 For more exhaustive information about the functions offered by CIARA for the identification of rare populations of cells  see **Tutorials section** below and the help page of the single functions. (*?function_name*).
+
+## Comparison with other published methods for rare cell types identification
+
+We use the Matthews Correlation Coefficient (MCC) to evaluate the performance of other methods in the task of identfying the PGCs cluster from human gastrula. CIARA is the only able to detect the original PGCs cluster (7 cells).
+<img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/entropy_cluster.png" width="700" height="500">
 
 
 ## Vignette

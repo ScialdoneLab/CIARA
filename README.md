@@ -43,7 +43,7 @@ The main functions of the package are **CIARA_gene** and **CIARA**
 ### CIARA_gene
 
 ```r
-CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, odds_ratio=2, local_region = 1, approximation)
+CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value = 0.001, local_region = 1, approximation)
 ```
 requires as input:
 
@@ -51,9 +51,8 @@ requires as input:
 2. **knn_matrix**: K-nearest neighbors matrix (n_cells x n_cells)
 3. **gene_expression**: numeric vector with the gene expression (length equal to n_cells). The gene expression is binarized (equal to 0/1 in the cells where the value is below/above the median)
 4. **p_value**: maximum p value (returned by the R function fisher.test with parameter alternative = "g") for considering a local region enriched 
-6. **odds_ratio**: minimum odds ratio (returned by the R function **fisher.test** with parameter alternative = "g") above which a local region is considered enriched
 5. **local_region**: minimum number of local regions (cell with its knn neighbours) where the binarized gene expression is enriched in 1
-7. **approximation**.Logical.For a given gene, the fisher test is run in the local regions of only the cells where the binarized gene expression is 1
+6. **approximation**.Logical.For a given gene, the fisher test is run in the local regions of only the cells where the binarized gene expression is 1
 
 The gene expression is binarized (1/0) if the value in a given cell is above/below the median. Each of cell with its first K nearest neighbors defined a local region. If there are at least **local_region** enriched in 1 according **to fisher.test** (with p value below than **p_value** and odds ratio above or equal to **odds_ratio**) , then the entropy for the gene is computed starting from the probability of having 1/0. The minimum of the entropy across all the enriched local regions is the entropy of mixing. If there are no enriched local regions, then the entropy of mixing  and the p value by default are set to 1
 The output of **CIARA_gene**  is a list with one element corresponding to the p value of the gene
@@ -61,7 +60,7 @@ The output of **CIARA_gene**  is a list with one element corresponding to the p 
 ### CIARA
 
 ```r
-CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2,local_region = 1, approximation)
+CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001,local_region = 1, approximation)
 ```
 requires as input:
 
@@ -70,9 +69,8 @@ requires as input:
 3. **background**: Vector of genes for which the function **CIARA_gene** is run
 4. **cores_number**: Integer.Number of cores to use.
 5. **p_value**: maximum p value (returned by the R function fisher.test with parameter alternative = "g") for considering a local region enriched 
-6. **odds_ratio**: minimum odds ratio (returned by the R function fisher.test with parameter alternative = "g") above which a local region is considered enriched
-7. **local_region**: minimum number of local regions (cell with its knn neighbours) where the binarized gene expression is enriched in 1
-8. **approximation**.Logical.For a given gene, the fisher test is run in the local regions of only the cells where the binarized gene expression is 1
+6. **local_region**: minimum number of local regions (cell with its knn neighbours) where the binarized gene expression is enriched in 1
+7. **approximation**.Logical.For a given gene, the fisher test is run in the local regions of only the cells where the binarized gene expression is 1
 
 Return a dataframe with n_rows equal to the length of **background** . Each row is the output from **CIARA_gene**.
 
@@ -86,7 +84,7 @@ human_data_seurat <- cluster_analysis_integrate_rare(raw_counts_human_data, "Hum
 norm_matrix <- as.matrix(GetAssayData(human_data_seurat, slot = "data",assay="RNA"))
 knn_matrix <- as.matrix(human_data_seurat@graphs$RNA_nn)
 background <- get_background_full(norm_matrix, threshold = 1, n_cells_low = 3, n_cells_high = 20)
-result <- CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, odds_ratio = 2, local_region = 1, approximation = FALSE)
+result <- CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value = 0.001, local_region = 1, approximation = FALSE)
 ```
 The input file *raw_counts_human_data.Rda* can be downloaded [here](https://hmgubox2.helmholtz-muenchen.de/index.php/s/x83jDLHobM7Qer6)
 

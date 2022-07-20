@@ -9,7 +9,6 @@ CIARA_gene(
   knn_matrix,
   gene_expression,
   p_value = 0.001,
-  odds_ratio = 2,
   local_region = 1,
   approximation
 )
@@ -25,9 +24,6 @@ where the value is below/above the median)}
 
 \item{p_value}{p value returned by the function \emph{fisher.test} with
 parameter alternative = "g"}
-
-\item{odds_ratio}{odds_ratio returned by the function \emph{fisher.test}
-with parameter alternative = "g"}
 
 \item{local_region}{Integer. Minimum number of local regions (cell with its
 knn neighbours) where the binarized gene expression is enriched in 1.}

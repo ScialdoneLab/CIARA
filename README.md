@@ -4,5 +4,5 @@ The input data for generating the figures are available [here](https://hmgubox2.
 
 Folder:
 1. **script_paper**: Inside there is the script CIARA_main_figures.Rmd. With this script is possible to reproduce all the main and supplementary figures
-2. **Other_Methods**: folder with script used to run other pubslished methods for rare cell type detection on human gastrula dataset
+2. **Other_Methods**: folder with scripts used to run other pubslished methods for rare cell types detection on human gastrula dataset
 3. **old_script/tutorial** folder with additional tutorials, in addition to the human gastrula tutorial provided in the CIARA cran package

@@ -188,6 +188,8 @@ human_embryo_analysis_ciara <- cluster_analysis_integrate_rare(raw_counts_human_
 final_cluster <- merge_cluster(original_cluster, human_embryo_analysis_ciara$seurat_clusters, max_number = 20)
 final_cluster[grep("step_2",final_cluster)] <- "PGC"
 ```
+With CIARA is possible to obtain in a completely unsupervised way the primordial germ cells cluster (PGCs), that in the original paper was detected only with a supervised approach.
+
 ```r
 # step 4
 result_test <- test_hvg(raw_counts_human_data,final_cluster, ciara_genes, background, number_hvg = 100, min_p_value = 0.001)
@@ -210,7 +212,7 @@ plot_umap(coordinate_umap, final_cluster_version_sub)
 ```
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/entropy_cluster.png" width="700" height="500">
 With the cluster analysis based on CIARA we are able to detect two clusters (Endoderm_2 and and Hemogenic Endothelial Progenitors_4 highlighted in the plot) that were not reported in the original paper.
-With CIARA is also possible to obtain in a completely unsupervised way the primordial germ cells cluster (PGCs), that in the original paper was detected only with a supervised approach.
+
 
 For more exhaustive information about the functions offered by CIARA for the identification of rare populations of cells  see **Tutorials section** below and the help page of the single functions. (*?function_name*).
 

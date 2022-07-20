@@ -177,7 +177,7 @@ CIARA <- function(norm_matrix, knn_matrix, background, cores_number = 1, p_value
     }
     gene_expression <- as.vector(norm_matrix[background[i],])
     message(paste0("Running CIARA on gene:", background[i]))
-    return(CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value, odds_ratio, local_region, approximation))
+    return(CIARA_gene(norm_matrix, knn_matrix, gene_expression, p_value, local_region, approximation))
   }
   result_final <- do.call(rbind, mclapply(seq_len(length(background)),run_loop_genes , mc.cores = cores_number))
   row.names(result_final) <- background

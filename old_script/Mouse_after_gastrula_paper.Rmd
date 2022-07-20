@@ -1,0 +1,831 @@
+---
+title: "Mouse_after_gastrula"
+author: "Gabriele Lubatti"
+date: "10/21/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r } 
+gc()
+rm(list=ls())
+#library(devtools)
+#install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")
+```
+
+```{r } 
+#library(Seurat)
+#library(clustree)
+#library(plotly)
+#library(ggplot2)
+#library(CIARA)
+```
+
+
+```{r } 
+library(CIARA)
+library(UpSetR)
+library(Seurat)
+```
+
+
+
+
+
+```{r }
+detect_localized_genes=function(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,top_number){
+list_intersect=rep(list(0),length(colnames(knn_matrix_ane_24_update)))
+rank_intersect=rep(0,length(colnames(knn_matrix_ane_24_update)))
+for ( i in 1:length(colnames(knn_matrix_ane_24_update))){
+  knn_name=names(which(knn_matrix_ane_24_update[i,]==1))
+  geni_select=geni_top_top[1:top_number]
+  sum_knn=apply(norm_counts_ane_24_update[geni_select,knn_name],2,function(x){
+    somma=geni_select[which(x>1)]
+    return(somma)
+  })
+    #rank_intersect[i]=sum(duplicated(as.vector(unlist(sum_knn))))
+    list_intersect[[i]]=unique(as.vector(unlist(sum_knn))[duplicated(as.vector(unlist(sum_knn)))])
+    rank_intersect[i]=length(list_intersect[[i]])
+
+}
+return(list(list_intersect,rank_intersect))
+}
+```
+
+##old implementation
+```{r }
+detect_localized_genes_old=function(knn_matrix_ane_24_update,norm_counts_ane_24_update,geni_top_top,top_number){
+list_intersect=rep(list(0),length(colnames(knn_matrix_ane_24_update)))
+rank_intersect=rep(0,length(colnames(knn_matrix_ane_24_update)))
+for ( i in 1:length(colnames(knn_matrix_ane_24_update))){
+  knn_name=names(which(knn_matrix_ane_24_update[i,]==1))
+  geni_select=geni_top_top[1:top_number]
+  sum_knn=apply(norm_counts_ane_24_update[geni_select,knn_name],2,function(x){
+    somma=geni_select[which(x>1)]
+    return(somma)
+  })
+    rank_intersect[i]=sum(duplicated(as.vector(unlist(sum_knn))))
+    list_intersect[[i]]=unique(as.vector(unlist(sum_knn))[duplicated(as.vector(unlist(sum_knn)))])
+
+}
+return(list(list_intersect,rank_intersect))
+}
+```
+
+```{r }
+
+selection_localized_genes_here=function (list_intersect, geni_top_top, 
+    max_number_genes = 5){ 
+text=rep(0,length(list_intersect))
+
+for (i in 1:length(list_intersect)){
+  if (length(list_intersect[[i]])==0){
+    localized_genes="No specific genes"
+    text[i] <- "No specific genes"
+   
+  }
+  else {
+  localized_genes=geni_top_top[which(geni_top_top %in% list_intersect[[i]])]
+  
+  max_genes=min(max_number_genes,length(localized_genes))
+  if (max_genes<max_number_genes){
+    warning("max_number bigger than length of localized_genes. Set max_number_genes = length(localized_genes) ")
+  }
+  localized_genes=localized_genes[1:max_genes]
+  text[i]=paste(localized_genes, collapse = "-")
+  
+  
+  }
+}
+return(text)
+}
+
+
+```
+
+
+
+```{r }
+plot_interactive_here=function (coordinate_umap, norm_counts,color, text,ramp_list, min_x = NULL, max_x = NULL, 
+    min_y = NULL, max_y = NULL)
+  {
+  
+  
+  index_sort <- order(color)
+  text=text[index_sort]
+    row.names(coordinate_umap) <- colnames(norm_counts)
+    coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], 
+        ]
+    color <- sort(color)
+    
+
+    if (!requireNamespace("plotly", quietly = TRUE)) {
+        stop("Package plotly needed for interactive == TRUE. Please install it: install.packages('plotly')")
+    }
+    colnames(coordinate_umap) <- c("UMAP_1", "UMAP_2")
+    fig <- plotly::plot_ly(data = coordinate_umap, x = ~UMAP_1, 
+        y = ~UMAP_2, color = ~color, type = "scatter", mode = "markers", 
+        marker = list(size = 5, width = 2,line = list(color = "black",
+                                         width = 0.5)), text = ~text, hoverinfo = "text",colors=ramp_list)
+   #fig <- fig %>% 
+#layout(plot_bgcolor='white')
+    
+    if (!is.null(min_x)) {
+        fig <- fig %>% plotly::layout(xaxis = list(range = c(min_x, 
+            max_x)), yaxis = list(range = c(min_y, max_y))) %>% 
+layout(plot_bgcolor='rgb(254, 247, 234)') %>% 
+layout(paper_bgcolor='rgb(254, 247, 234)')
+    }
+    return(fig)
+    }
+    
+
+#line = list(color = 'rgba(152, 0, 0, .8)',
+                                         #width = 2)
+#'#e5ecf6'
+```
+
+```{r }
+plot_genes_sum_here=function (coordinate_umap, norm_counts, color_cell, name_title,hm.colors) 
+{
+    index_sort <- order(color_cell)
+    row.names(coordinate_umap) <- colnames(norm_counts)
+    coordinate_umap <- coordinate_umap[colnames(norm_counts)[index_sort], 
+        ]
+    color_cell <- sort(color_cell)
+    
+    umap_plot <- ggplot2::ggplot(coordinate_umap, ggplot2::aes(coordinate_umap[, 
+        1], coordinate_umap[, 2])) + ggplot2::geom_point(ggplot2::aes(colour = color_cell),size = 1) +
+        ggplot2::xlab("UMAP 1") + ggplot2::ylab("UMAP 2") + ggplot2::labs(col = "Number of localized genes") + 
+        #ggplot2::scale_colour_gradient(low = "white",high = "blue4") + 
+      scale_colour_gradientn(colours = hm.colors)+
+        ggplot2::ggtitle(name_title)
+    return((umap_plot))
+}
+
+#"#FFFFFF",ramp.list[index_color])
+
+#gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.25)) ), #ramp.list[index_color], "#00008B" )
+#hm.colors
+#geom_point(size = 1.5, alpha = 0.5, na.rm = T, shape = 21, colour = "black",stroke=0.1)
+
+```
+
+```{r }
+geni_ortogoli_unique=function(rabbit_id,name_mouse){
+
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Rabbit/10x_data/Processed_data/Radius_of_gyration")
+
+name_mouse=name_mouse[isUnique(as.vector(name_mouse$initial_ensg))&isUnique(as.vector(name_mouse$ortholog_name)),]
+marker_plot_all_1=rabbit_id[rabbit_id%in%name_mouse$initial_ensg]
+name_rabbit=as.vector(name_mouse$ortholog_name)
+name_rabbit[name_rabbit=="N/A"]=as.vector(name_mouse$initial_ensg[name_rabbit=="N/A"])
+
+#setwd(paste0(base_path,"10x_data/Output_script"))
+#name_mouse=read.csv(file=geni_ortogoli_g_profiler)
+#name_mouse_no=name_mouse[!(isUnique(as.vector(name_mouse$initial_ensg))&isUnique(as.vector(name_mouse$ortholog_name))),]
+#marker_plot_all_2=rabbit_id[rabbit_id%in%name_mouse_no$initial_ensg]
+#name_rabbit_no=unique(as.vector(name_mouse_no$initial_ensg))
+marker_plot_all_2=rabbit_id[!rabbit_id%in%name_mouse$initial_ensg]
+name_rabbit_no=rabbit_id[!rabbit_id%in%name_mouse$initial_ensg]
+ortogoli_name_final=c(name_rabbit,name_rabbit_no)
+rabbit_id_final=c(marker_plot_all_1,marker_plot_all_2)
+return(list(ortogoli_name_final,rabbit_id_final))}
+```
+
+
+```{r }
+Test_Fisher=function(marker_all_cluster,marker_specific,background,cluster){
+level=levels(as.factor(cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+for (i in 1:length(level)){
+show=CIARA:::build_fisher_test(marker_all_cluster[names(marker_all_cluster)==level[i]],marker_specific,background)
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+
+```
+
+
+
+```{r }
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("knn_matrix_heart_new.Rda")
+load("norm_data_heart.Rda")
+load("raw_data_heart.Rda")
+load("cluster_heart_small.Rda")
+load("umap_cordinate_heart_small.Rda")
+
+
+#load(system.file("extdata", "knn_matrix_heart_new.Rda", package ="CIARA"))
+#load(system.file("extdata", "norm_data_heart.Rda", package ="CIARA"))
+#load(system.file("extdata", "raw_data_heart.Rda", package ="CIARA"))
+#load(system.file("extdata", "cluster_heart_small.Rda", package ="CIARA"))
+#load(system.file("extdata", "umap_cordinate_heart_small.Rda", package ="CIARA"))
+
+
+```
+
+```{r }
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+#load("heart_hyper_new.Rda")
+#result_old=result
+```
+
+
+```{r }
+#load(system.file("extdata", "heart_december_2021.Rda", package ="CIARA"))
+#result_old=result
+#ciara_genes_old=row.names(result_old)[result_old[,1]<1]
+#geni_top=row.names(result_old)[result_old[,2]<0.0001&result_old[,1]==0]
+#geni_top_top=row.names(result_old)[order(as.numeric(result_old[,2]))]
+```
+
+## Load 
+
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_data_heart -k knn_matrix_heart_new -o endoderm_a.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a TRUE
+
+Rscript --vanilla /home/ies/gabriele.lubatti/ciara_marco/Entropy_server_december_2021_easy.R -n norm_data_heart -k knn_matrix_heart_new -o endoderm.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a FALSE
+
+```{r }
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#load("heart_december_2021.Rda")
+
+```
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("endoderm.Rda")
+```
+
+
+```{r }
+ciara_genes_old=row.names(result)[result[,1]<1]
+geni_top_top_old=row.names(result)[order(as.numeric(result[,1]))]
+background_old=row.names(result)
+```
+
+
+```{r }
+ciara_genes = ciara_genes_old
+geni_top_top = geni_top_top_old
+background = background_old
+```
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("endoderm_a.Rda")
+```
+
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+background=row.names(result)
+```
+
+
+```{r}
+#setwd('/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data')
+gene_id=row.names(raw_data_heart)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data")
+#write.table(gene_id,file="geni_heart.txt",row.names = F,quote=F)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+name_mouse=read.csv("human_mouse_heart.csv")
+#name_mouse=read.csv(system.file("extdata", "human_mouse_heart.csv", package ="CIARA"))
+
+
+human_gene_name=geni_ortogoli_unique(gene_id,name_mouse)
+human_name_all=human_gene_name[[1]]
+human_id_all=human_gene_name[[2]]
+
+data_all_human=data.frame(human_id_all,human_name_all)
+row.names(data_all_human)=human_id_all
+data_all_human_new=data_all_human[gene_id,]
+human_name_final=as.vector(data_all_human_new[,2])
+
+row.names(norm_data_heart)=human_name_final
+
+row.names(raw_data_heart)=human_name_final
+
+ciara_genes=data_all_human[ciara_genes,2]
+
+background=data_all_human[background,2]
+
+#geni_top=data_all_human[geni_top,2]
+geni_top_top=data_all_human[geni_top_top,2]
+
+```
+
+```{r }
+
+
+p=list()
+for(i in (geni_top_top)[1:10]){
+  q=plot_gene(norm_data_heart,umap_cordinate_heart_small,i,i)
+  p=list(p,q)
+}
+p
+```
+
+
+
+
+
+```{r }
+plot_genes_sum(umap_cordinate_heart_small,norm_data_heart,(ciara_genes),"Sum from top CIARA genes")
+
+```
+
+
+
+
+
+```{r }
+
+norm_counts_small = apply(norm_data_heart[(ciara_genes), ], 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+    gene_sum = apply(norm_counts_small, 1, sum)
+    
+    
+genes_name_text=selection_localized_genes(norm_data_heart,ciara_genes,min_number_cells=4,max_number_genes=4)
+plot.elmir=umap_cordinate_heart_small
+colnames(plot.elmir)=c("UMAP_1","UMAP_2")
+plot_interactive(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+```
+
+
+##new part interactive plot
+
+```{r }
+
+
+
+
+localized_genes_mouse=detect_localized_genes(knn_matrix_heart_new,norm_data_heart,geni_top_top,100) 
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+
+ramp <- colorRamp(c("white", "blue4"))
+
+
+
+
+ramp <- colorRamp(c("white", "blue4"))
+ 
+
+rank_intersect=localized_genes_mouse[[2]]
+list_intersect=localized_genes_mouse[[1]]
+
+
+ramp.list <- rgb( ramp(seq(0, 1, length = length(unique(rank_intersect)))), max = 255)
+
+index_color=round(length(ramp.list)/2,0)
+
+
+breaks = seq(0,max(rank_intersect),length.out=1000)
+gradient1 = colorpanel( sum( breaks[-1]<= as.numeric(quantile(breaks,0.15))), "#FFFFFF",ramp.list[index_color])
+
+gradient2 = colorpanel( sum( breaks[-1] > as.numeric(quantile(breaks,0.15)) ), ramp.list[index_color], "#00008B" )
+
+
+hm.colors = c(gradient1,gradient2)
+ 
+
+
+
+
+
+genes_name_text=selection_localized_genes_here(list_intersect ,geni_top_top,max_number_genes=5)
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/interactive_plot")
+p=plot_interactive_here(umap_cordinate_heart_small,norm_data_heart,rank_intersect,genes_name_text,hm.colors,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+htmlwidgets::saveWidget(p, file = "mouse_after_gastrula.html")
+
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/interactive_plot/mouse_after_gastrula.pdf",width = 8,height = 6)
+p=plot_genes_sum_here(umap_cordinate_heart_small,norm_data_heart,rank_intersect,"Top 100 genes CIARA",hm.colors)
+p+theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=12))+geom_point( alpha = 0.3, na.rm = T, shape = 21, colour = "black",stroke=0.1)
+dev.off()
+
+
+
+
+
+
+```
+
+
+
+
+## Cluster analysis using ciara of mixing (step 2)
+```{r }
+
+
+heart_seurat_ciara=cluster_analysis_integrate_rare(raw_data_heart,"Elmir data",0.1,5,30,ciara_genes)
+
+#heart_seurat_ciara_2=Cluster_analysis_integrate_rare(raw_data_heart,"Elmir data",0.1,3,30,ciara_genes_old)
+
+#heart_seurat_ciara=heart_seurat_ciara_2
+heart_seurat_ciara=FindClusters(heart_seurat_ciara,resolution = 0.2)
+
+```
+
+```{r }
+
+
+find_resolution(heart_seurat_ciara,seq(0.1,1,0.1))
+```
+
+```{r }
+heart_seurat_ciara=FindClusters(heart_seurat_ciara,resolution = 0.2)
+```
+
+
+```{r }
+plot_umap(umap_cordinate_heart_small,heart_seurat_ciara$RNA_snn_res.0.2)
+```
+
+
+```{r}
+names(cluster_heart_small)=colnames(raw_data_heart)
+cluster_ciara_heart=as.vector(heart_seurat_ciara$RNA_snn_res.0.2)
+names(cluster_ciara_heart)=colnames(raw_data_heart)
+final_cluster_heart=merge_cluster(cluster_heart_small,cluster_ciara_heart,30)
+```
+
+
+
+
+
+```{r }
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_e.pdf")
+plot_umap(umap_cordinate_heart_small,final_cluster_heart)
+dev.off()
+
+```
+
+
+```{r }
+
+final_cluster_heart_new=final_cluster_heart
+final_cluster_heart_new[final_cluster_heart=="2-step_2"]="YSE1"
+final_cluster_heart_new[final_cluster_heart=="En1"]="En1"
+final_cluster_heart_new[final_cluster_heart=="En2"]="En2"
+
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/umap_endoderm_conference.pdf",width = 8, height = 6)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/umap_endoderm_mouse.pdf",width = 8, height = 6)
+p=plot_umap(umap_cordinate_heart_small,final_cluster_heart_new)
+p[[1]]+theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+theme(text = element_text(size=18))
+dev.off()
+
+```
+
+```{r }
+table(final_cluster_heart)
+```
+
+
+
+```{r}
+DefaultAssay(heart_seurat_ciara) <- "RNA"
+markers_first_elmir=markers_cluster_seurat(heart_seurat_ciara,final_cluster_heart,names(heart_seurat_ciara$RNA_snn_res.0.1),50)
+
+
+marker_heart_top=markers_first_elmir[[1]]
+marker_heart=markers_first_elmir[[3]]
+```
+
+```{r}
+
+top_heart=white_black_markers(final_cluster_heart,"2-step_2",norm_data_heart,marker_heart,0)
+top_heart=names(top_heart)[top_heart]
+
+mean_top_heart=apply(norm_data_heart[top_heart,final_cluster_heart=="2-step_2"],1,mean)
+mean_top_heart=sort(mean_top_heart,decreasing = T)
+
+top_heart=names(mean_top_heart)
+names(top_heart)=rep("2-step_2",length(top_heart))
+```
+
+```{r}
+
+plot_balloon_marker(norm_data_heart,final_cluster_heart,marker_heart_top,10,max_size=2,text_size=9)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_f.pdf")
+
+plot_balloon_marker(norm_data_heart,final_cluster_heart,top_heart,10,max_size=2,text_size=9)
+dev.off()
+```
+
+
+
+
+
+
+
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("markers_first_elmir_final.Rda")
+#load(system.file("extdata", "markers_first_elmir_final.Rda", package ="CIARA"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/ciara_of_mixing_library/elmir_data")
+#load(file="markers_first_elmir_final.Rda")
+marker_elmir_all=markers_first_elmir_final[[3]]
+marker_endoderm_2=marker_elmir_all[names(marker_elmir_all)=="Endoderm_2"]
+
+
+
+
+
+```
+
+
+
+
+
+```{r }
+result=Test_Fisher(marker_heart,marker_endoderm_2,as.vector(marker_heart),as.vector(final_cluster_heart))
+
+
+
+
+names(result[[1]])[result[[1]]<0.05&result[[2]]>2]
+
+geni_comuni=intersect(marker_heart[names(marker_heart)=="2-step_2"],marker_endoderm_2)
+```
+
+```{r }
+plot_balloon_marker_here=function (norm_counts, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- genes_4_0
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_counts[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+        #cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "white", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1,size=14), axis.title.x = ggplot2::element_blank())
+}
+```
+
+```{r}
+plot_balloon_marker_norm=function (norm_counts, cluster, marker_complete, max_number, 
+    max_size = 5, text_size = 7) 
+{
+    livelli <- levels(factor(cluster))
+    all_markers_plot <- rep(list(0), length(livelli))
+    all_markers <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        genes_4_0 <- marker_complete[(names(marker_complete) == 
+            livelli[i])]
+        if (length(genes_4_0) > 0) {
+            genes_4_0 <- genes_4_0[1:max_number]
+            all_markers[[i]] <- genes_4_0
+            #genes_4_0_plot <- paste(livelli[i], genes_4_0, sep = "_")
+            genes_4_0_plot <- paste( genes_4_0, sep = "_")
+            all_markers_plot[[i]] <- genes_4_0_plot
+        }
+    }
+    all_markers <- lapply(all_markers, function(x) {
+        x[x != 0]
+    })
+    all_markers_plot <- lapply(all_markers_plot, function(x) {
+        x[x != 0]
+    })
+    all_markers_values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        gene_values_0 <- apply(norm_counts[unlist(all_markers, 
+            use.names = FALSE), cluster == livelli[i]], 1, mean)
+        all_markers_values[[i]] <- gene_values_0
+        all_markers_values[[i]]=gene_values_0/max(gene_values_0)
+    }
+    values <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        valore <- apply(norm_counts[unlist(all_markers, use.names = FALSE), 
+            cluster == livelli[i]], 1, function(x) {
+            sum(x > 1)/length(x)
+        })
+        values[[i]] <- valore
+    }
+    cluster_label_all <- rep(list(0), length(livelli))
+    for (i in 1:length(livelli)) {
+        cluster_label_all[[i]] <- rep(livelli[i], length(unlist(all_markers)))
+    }
+    all_markers_plot <- unlist(all_markers_plot)
+    cluster_label_all <- unlist(cluster_label_all)
+    values <- unlist(values)
+    all_markers_values <- unlist(all_markers_values)
+    balloon_melted <- data.frame(all_markers_plot, cluster_label_all, 
+        values)
+    colnames(balloon_melted) <- c("all_markers_plot", "cluster_label_all", 
+        "values")
+    p <- ggplot2::ggplot(balloon_melted, ggplot2::aes(x = cluster_label_all, 
+        y = all_markers_plot))
+    p + ggplot2::geom_point(ggplot2::aes(size = values, colour = as.numeric(all_markers_values))) + 
+        ggplot2::theme(panel.background = ggplot2::element_blank(), 
+            panel.border = ggplot2::element_rect(colour = "blue", 
+                fill = NA, size = 3)) + ggplot2::scale_size_area(max_size = max_size) + 
+        ggplot2::scale_colour_gradient(low = "grey", high = "midnight blue", 
+            na.value = NA) + ggplot2::labs(colour = "Mean", 
+        size = "Value") + 
+        ggplot2::xlab("Cluster") + ggplot2::ylab("Markers") + 
+        ggplot2::theme(text = ggplot2::element_text(size = text_size), 
+            axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, 
+                hjust = 1), axis.title.x = ggplot2::element_blank())
+}
+```
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load(file="top_endo.Rda")
+
+#names(top_heart)=rep("YSE1",length(top_heart))
+#names(top_endo)=rep("YSE1",length(top_endo))
+#geni_comuni=intersect(top_heart,top_endo)
+
+names(geni_comuni)=rep("YSE1",length(geni_comuni))
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/marker_endoderm_conference.pdf",width = 8, height = 6)
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/markers_endo_mouse.pdf",width = 8, height = 6)
+#plot_balloon_marker_here(norm_data_heart,final_cluster_heart_new,geni_comuni,10,max_size=12,text_size=25)
+plot_balloon_marker_norm(norm_data_heart,final_cluster_heart_new,geni_comuni,10,max_size=12,text_size=25)
+dev.off()
+```
+
+
+```{r }
+
+listInput <- list(YSE1_mouse=marker_heart[names(marker_heart)=="2-step_2"],YSE1_human=marker_endoderm_2)
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_g.pdf")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/enrichment_mouse_endo.pdf",width = 8, height = 6)
+upset(fromList(listInput), order.by = "freq")
+dev.off()
+
+#listInput <- list(ciara_mixing_rare_2=marker_2_small,giniclust2_rare_2=marker_2_original)
+
+#upset(fromList(listInput), order.by = "freq")
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+```{r }
+p=list()
+for(i in (geni_comuni)[1:10]){
+  q=plot_gene(norm_data_heart,umap_cordinate_heart_small,i,i)
+  p=list(p,q)
+}
+p
+```
+
+
+##Mega comprsion with mouse and human
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("markers_first_elmir_final.Rda")
+#load(system.file("extdata", "markers_first_elmir_final.Rda", package ="CIARA"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/ciara_of_mixing_library/elmir_data")
+#load(file="markers_first_elmir_final.Rda")
+marker_elmir_all=markers_first_elmir_final[[3]]
+marker_mega_human=marker_elmir_all[names(marker_elmir_all)=="Hemogenic Endothelial Progenitors_4"]
+
+
+
+
+
+```
+
+
+```{r}
+#setwd('/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data')
+gene_id=row.names(raw_data_heart)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data")
+#write.table(gene_id,file="geni_heart.txt",row.names = F,quote=F)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data")
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+name_mouse=read.csv("/Users/gabriele.lubatti/Downloads/mega_convert_human.csv")
+mega_mouse=name_mouse$ortholog_name
+mega_mouse_small=mega_mouse[mega_mouse!="N/A"&mega_mouse!=""]
+
+
+
+
+```
+
+
+```{r }
+
+listInput <- list(MEP1_mouse=mega_mouse_small,MEP1_human=marker_mega_human)
+#pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figure_4/figure_4_g.pdf")
+pdf("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/figures_paper/figures_conference/supplementary_figures/enrichment_mouse_mega.pdf",width = 8, height = 6)
+upset(fromList(listInput), order.by = "freq")
+dev.off()
+
+#listInput <- list(ciara_mixing_rare_2=marker_2_small,giniclust2_rare_2=marker_2_original)
+
+#upset(fromList(listInput), order.by = "freq")
+
+
+
+
+
+
+
+
+
+```
+```{r }
+cluster_test=names(marker_elmir_all)
+result=Test_Fisher(marker_elmir_all,mega_mouse_small,as.vector(marker_elmir_all),cluster_test)
+
+
+
+
+names(result[[1]])[result[[1]]<0.05&result[[2]]>2]
+
+geni_comuni=intersect(marker_mega_human,mega_mouse_small)
+```

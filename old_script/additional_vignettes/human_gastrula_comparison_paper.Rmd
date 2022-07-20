@@ -1,0 +1,1357 @@
+---
+title: "Comparison_Teichman"
+author: "Gabriele Lubatti"
+date: "3/31/2021"
+output: html_document
+---
+```{r }
+gc()
+rm(list=ls())
+library(ggplot2)
+library(ComplexHeatmap)
+library(circlize)
+library(Seurat)
+library(DescTools)
+library(rlist)
+library(devtools)
+library(clustree)
+library(Biobase)
+library(CellSIUS)
+library('FiRE')
+library(RaceID)
+library(singleCellHaystack)
+library(mcclust)
+```
+
+```{r }
+Function_fisher=function(a,b,c){
+matrice=matrix(c(sum(c[c%in%a]%in%c[c%in%b]),sum(c[c%in%a]%in%c[!c%in%b]),sum(c[!c%in%a]%in%c[c%in%b]),sum(c[!c%in%a]%in%c[!c%in%b])),nrow=2,ncol=2,byrow = T)
+#Fisher test
+fisher.test(matrice)
+}
+```
+
+```{r }
+Test_Fisher_fire=function(entropy_cluster,method_cluster){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+for (i in 1:length(level)){
+  set_2=names(entropy_cluster)[entropy_cluster==level[i]]
+set_all=colnames(raw_elmir_5_30)
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+```
+
+
+
+```{r}
+white_black_marker=function(cluster_race_entropy,single_cluster,norm_race,marker_list,soglia=1){
+  
+  white_black_7=apply(norm_race[marker_list[names(marker_list)==single_cluster],],1,function(x){
+  mean_one=median(x[cluster_race_entropy==single_cluster])
+  mean_different=rep(0,length(levels(factor(cluster_race_entropy[cluster_race_entropy!=single_cluster]))))
+  for ( i in 1:length(levels(factor(cluster_race_entropy[cluster_race_entropy!=single_cluster])))){
+  mean_different[i]=median(x[cluster_race_entropy==levels(factor(cluster_race_entropy[cluster_race_entropy!=single_cluster]))[i]])}
+  
+  if (mean_one>soglia&sum(mean_different)==0){
+    return(TRUE)
+  }
+  else{return(FALSE)}
+})
+  return(white_black_7)
+}
+```
+```{r }
+find_jacardi=function(cluster_new,cluster_old,norm_matrix,single_new,single_old){
+unione=union(colnames(norm_matrix)[cluster_new==single_new],colnames(norm_matrix)[cluster_old==single_old])
+intersezione=intersect(colnames(norm_matrix)[cluster_new==single_new],colnames(norm_matrix)[cluster_old==single_old])
+
+jacardi=length(intersezione)/length(unione)
+print(jacardi)
+return(jacardi)
+}
+```
+
+```{r}
+
+barplot_cell_cycle=function(cell_cycle,cluster,title,fraction=TRUE){
+dfForPlot <- data.frame(Phases =cell_cycle
+                                ,clu =cluster)
+
+if(fraction==TRUE){
+pnm <-ggplot(dfForPlot, aes(y=cell_cycle,x=cluster))+geom_bar( aes(fill = cell_cycle,y = (..count..)/sum(..count..)),position="fill")+ ggtitle(title)+ylab("Fraction of cells")+xlab("Cluster")+labs(fill="Elmir annotation")+theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1,size=6)) 
+pnm}
+
+if(fraction!=TRUE){
+  pnm <-ggplot(dfForPlot, aes(y=cell_cycle,x=cluster))+geom_bar( aes(fill = cell_cycle,y = (..count..),position="fill"))+ ggtitle(title)+ylab("Number of cells")+xlab("Cluster")+labs(fill="Elmir annotation")+theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1,size=6)) 
+pnm
+
+
+}
+return(list(pnm))}
+```
+
+```{r }
+#install_github("ScialdoneLab/EntropyMixingR",auth_token="8f6bf418b6ea0274f5f832b3a96de9b63be0997a",ref="master")
+
+
+```
+
+```{r }
+library(CIARA)
+```
+
+```{r }
+#load(system.file("extdata", "raw_elmir_5_30.Rda", package ="CIARA"))
+#raw_counts=raw_elmir_5_30
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("raw_elmir_5_30.Rda")
+raw_counts=raw_elmir_5_30
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+load("elmir_december_2021.Rda")
+
+umap_elmir <- readRDS(system.file("extdata", "annot_umap.rds", package = "CIARA"))
+
+coordinate_umap_human <- umap_elmir[, 2:3]
+
+
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+#save(hvg_human_gastrula,file="hvg_human_gastrula.Rda")
+
+```
+
+
+
+
+```{r }
+#load(system.file("extdata", "raw_elmir_5_30.Rda", package ="IDENTOM"))
+#load(system.file("extdata", "CELLSIUS_elmir.Rda", package ="EntropyMixingR"))
+#CELLSIUS_elmir=result
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+load("experiment_name_StatisticsTable_afterLOESS_elmir.RData")
+load("experiment_name_FinalClustering_elmir.RData")
+load("CELLSIUS_elmir.Rda")
+CELLSIUS_elmir=result
+
+#vedo=load(system.file("extdata", "experiment_name_StatisticsTable_afterLOESS_elmir.RData", package ="EntropyMixingR"))
+
+
+
+#vedo=load(system.file("extdata", "experiment_name_FinalClustering_elmir.RData", package ="EntropyMixingR"))
+
+
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+load(file="final_cluster_version_sub.Rda")
+
+vedo=load(system.file("extdata", "elmir_entropy_5_30.Rda", package ="EntropyMixingR"))
+
+```
+
+```{r}
+
+cordinate_umap=umap_elmir[,2:3]
+
+general_cluster_version=as.vector(umap_elmir$cluster_id)
+
+```
+
+
+
+## Giniclust2 
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/GiniClust2-master/risultato/results")
+final_geni=load("experiment_name_GeneList_final.RData")
+#GeneList.final
+
+```
+
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+load("norm_elmir_5_30.Rda")
+```
+
+```{r }
+
+
+plot_gene(norm_elmir_5_30,cordinate_umap,"NANOS3","NANOS3")
+plot_gene(norm_elmir_5_30,cordinate_umap,"DPPA5","DPPA5")
+plot_gene(norm_elmir_5_30,cordinate_umap,"NANOG","NANOG")
+
+```
+
+```{r }
+find_positive_cells=function(norm_elmir_5_30,geni_marker,threshold){
+
+logic_cell=apply(norm_elmir_5_30[geni_marker,],2,function(x){
+  
+  if (sum(x>threshold)==length(x))
+  {return(TRUE)}
+  else{return(FALSE)}
+})
+positive_cells=colnames(norm_elmir_5_30)[logic_cell]
+return(positive_cells)
+}
+
+
+
+```
+
+```{r }
+find_jacardi_new=function(cluster_new,norm_matrix,single_new,cells_positive){
+unione=union(colnames(norm_matrix)[cluster_new==single_new],cells_positive)
+intersezione=intersect(colnames(norm_matrix)[cluster_new==single_new],cells_positive)
+
+jacardi=length(intersezione)/length(unione)
+print(jacardi)
+return(jacardi)
+}
+```
+
+```{r }
+find_top_marker=function(marker_elmir_all,norm_elmir_5_30,name_cluster,fraction){
+geni_7=marker_elmir_all[names(marker_elmir_all)==name_cluster]
+logic_7=apply(norm_elmir_5_30[geni_7,final_cluster_version_sub==name_cluster],1,function(x){
+  if (length(x[x>1])>=(length(x)*fraction)){
+    return(TRUE)
+  }
+  else{return(FALSE)}
+})
+
+
+geni_7_top=geni_7[logic_7]
+names(geni_7_top)=rep(name_cluster,length(geni_7_top))
+
+return(geni_7_top)
+}
+```
+
+
+##For PGC definition
+```{r }
+geni_pgc=c("NANOS3","NANOG","DPPA5")
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_pgc)
+```
+
+```{r }
+for (i in 1:length(names(table(as.character(finalCluster))))){
+
+bo=find_jacardi_new(as.character(finalCluster),norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+```
+
+
+```{r }
+library("mltools")
+#mcc()
+#Matthews correlation coefficient 
+#methods for quantifying agreement between binary classification (from GiniClust2 paper) (values from -1 to +1)
+#preds <- c(1,1,1,0,1,1,0,0)
+#actuals <- c(1,1,1,1,0,0,0,0)
+
+ciara_score=rep(0,length(colnames(norm_elmir_5_30)))
+original_score=rep(0,length(colnames(norm_elmir_5_30)))
+result_method=rep(0,length(levels(factor(finalCluster))))
+
+original_score[colnames(norm_elmir_5_30)%in%positive_cells]=1
+ciara_score[final_cluster_version_sub=="PGC"]=1
+
+for (i in 1:length(levels(factor(finalCluster)))){
+  
+  method_score=rep(0,length(colnames(norm_elmir_5_30)))
+  method_score[finalCluster==finalCluster[i]]=1
+  result_method[i]=mcc(method_score, original_score)
+  print(result_method[i])
+}
+
+
+
+#with FiRE
+
+mcc(original_score, ciara_score)
+```
+
+
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+load(file="markers_first_elmir_final.Rda")
+marker_elmir_all=markers_first_elmir_final[[3]]
+
+
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+```
+
+
+
+## Yes first approach
+
+
+## Top ExE meso
+```{r}
+
+
+
+top_endo=white_black_markers(final_cluster_version_sub,"ExE Mesoderm_1",norm_elmir_5_30,marker_elmir_all,0)
+top_endo=names(top_endo)[top_endo]
+
+
+mean_top_endo=apply(norm_elmir_5_30[top_endo,final_cluster_version_sub=="ExE Mesoderm_1"],1,mean)
+mean_top_endo=sort(mean_top_endo,decreasing = T)
+
+top_endo=names(mean_top_endo)[1:4]
+names(top_endo)=rep("ExE Mesoderm_1",length(top_endo))
+
+plot_balloon_marker(norm_elmir_5_30,final_cluster_version_sub,top_endo,length(top_endo),max_size=5,text_size=10)
+
+geni_marker=top_endo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+for (i in 1:length(names(table(as.character(finalCluster))))){
+
+bo=find_jacardi_new(as.character(finalCluster),norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+
+```
+
+## Top endo
+```{r}
+
+
+
+top_endo=white_black_markers(final_cluster_version_sub,"Endoderm_2",norm_elmir_5_30,marker_elmir_all,1)
+top_endo=names(top_endo)[top_endo]
+
+
+mean_top_endo=apply(norm_elmir_5_30[top_endo,final_cluster_version_sub=="Endoderm_2"],1,mean)
+mean_top_endo=sort(mean_top_endo,decreasing = T)
+
+top_endo=names(mean_top_endo)[1:4]
+names(top_endo)=rep("Endoderm_2",length(top_endo))
+
+plot_balloon_marker(norm_elmir_5_30,final_cluster_version_sub,top_endo,length(top_endo),max_size=5,text_size=10)
+
+geni_marker=top_endo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+for (i in 1:length(names(table(as.character(finalCluster))))){
+
+bo=find_jacardi_new(as.character(finalCluster),norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+
+```
+
+## Top hemo
+```{r}
+
+
+
+top_hemo=white_black_markers(final_cluster_version_sub,"Hemogenic Endothelial Progenitors_4",norm_elmir_5_30,marker_elmir_all,1)
+top_hemo=names(top_hemo)[top_hemo]
+
+
+mean_top_hemo=apply(norm_elmir_5_30[top_hemo,final_cluster_version_sub=="Hemogenic Endothelial Progenitors_4"],1,mean)
+mean_top_hemo=sort(mean_top_hemo,decreasing = T)
+
+top_hemo=names(mean_top_hemo)[1:4]
+names(top_hemo)=rep("Hemogenic Endothelial Progenitors_4",length(top_hemo))
+
+plot_balloon_marker(norm_elmir_5_30,final_cluster_version_sub,top_hemo,length(top_hemo),max_size=5,text_size=4)
+
+geni_marker=top_hemo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+for (i in 1:length(names(table(as.character(finalCluster))))){
+
+bo=find_jacardi_new(as.character(finalCluster),norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+
+```
+
+
+## GiniClust2
+
+
+```{r }
+plot_umap(cordinate_umap,as.character(finalCluster))
+```
+
+```{r}
+table(final_cluster_version_sub,finalCluster)
+```
+
+```{r }
+
+
+
+for (i in levels(factor(finalCluster))){
+jacardi=find_jacardi(final_cluster_version_sub,finalCluster,raw_elmir_5_30,"Hemogenic Endothelial Progenitors_4",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(finalCluster))){
+jacardi=find_jacardi(final_cluster_version_sub,finalCluster,raw_elmir_5_30,"Endoderm_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+for (i in levels(factor(finalCluster))){
+jacardi=find_jacardi(final_cluster_version_sub,finalCluster,raw_elmir_5_30,"ExE Mesoderm_1",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(finalCluster))){
+jacardi=find_jacardi(final_cluster_version_sub,finalCluster,raw_elmir_5_30,"PGC",i)
+  print(paste0(i,"-",jacardi))
+}
+
+```
+
+
+
+
+
+## Comparison with higi gini index
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+vedo=load("elmir.Rda")
+```
+
+
+```{r }
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#vedo=load("elmir_hyper_old.Rda")
+
+```
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+background=row.names(result)
+```
+
+
+
+
+
+
+
+
+```{r }
+library(UpSetR)
+listInput <- list(entropy_genes=ciara_genes,gini_genes=GeneList.final)
+
+upset(fromList(listInput), order.by = "freq")
+
+listInput <- list(entropy_genes=ciara_genes[1:100],gini_genes=GeneList.final)
+
+upset(fromList(listInput), order.by = "freq")
+
+
+```
+
+```{r }
+Function_fisher=function(a,b,c){
+matrice=matrix(c(sum(c[c%in%a]%in%c[c%in%b]),sum(c[c%in%a]%in%c[!c%in%b]),sum(c[!c%in%a]%in%c[c%in%b]),sum(c[!c%in%a]%in%c[!c%in%b])),nrow=2,ncol=2,byrow = T)
+#Fisher test
+fisher.test(matrice)
+}
+```
+
+```{r}
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=markers_cluster
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+
+```
+
+
+
+
+```{r }
+Function_fisher(ciara_genes,GeneList.final,union(row.names(ExprM.Stat2),background))
+
+#"NANOS3"
+#"NANOG"
+#"SOX17"
+#"DPPA5"
+
+```
+
+
+## Comparison for PGC: gini index vs entropy of mixing
+
+```{r}
+#vedo=load(system.file("extdata", "experiment_name_StatisticsTable_afterLOESS_elmir.RData", package ="EntropyMixingR"))
+#"ExprM.Stat2"   
+
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#vedo=load("elmir_hyper_old.Rda")
+
+
+ciara_genes=row.names(result)[result[,2]<1]
+
+max_gini=ExprM.Stat2$log2.Maxs
+gini_value=ExprM.Stat2$Gini
+#max_gini=gini_index$log2..Max.Expression.Level..
+
+
+label_all=c(rep("No Gini gene",length(max_gini)))
+#label_all[ExprM.Stat2$Gini.pvalue<0.0001]="Gini gene"
+label_all[row.names(ExprM.Stat2)%in%Genelist.top_pvalue]="Gini gene"
+
+mtcars=data.frame(label_all,gini_value,max_gini)
+ggplot(mtcars, aes(x=max_gini, y=gini_value, color=label_all)) +
+  geom_point()+xlab("log2 (Max Expression Level)")+ylab("Gini")+labs(color="Label")
+
+
+
+label_all=c(rep("No CIARA gene",length(max_gini)))
+label_all[row.names(ExprM.Stat2)%in%ciara_genes]="CIARA gene"
+
+mtcars=data.frame(label_all,gini_value,max_gini)
+row.names(mtcars)=row.names(ExprM.Stat2)
+mtcars=mtcars[c(row.names(ExprM.Stat2)[!row.names(ExprM.Stat2)%in%ciara_genes],row.names(ExprM.Stat2)[row.names(ExprM.Stat2)%in%ciara_genes]),]
+ggplot(mtcars, aes(x=max_gini, y=gini_value, color=label_all)) +
+  geom_point()+xlab("log2 (Max Expression Level)")+ylab("Gini")+labs(color="Label")
+
+
+```
+
+## End GiniClust2 
+
+## Giniclust3 from python script giniclust3
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+final_gini=read.table("all_gini.txt")
+final_gini=final_gini$V1
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+only_gini=read.table("only_gini.txt")
+only_gini=only_gini$V1
+Plot_umap(cordinate_umap,final_gini)
+Plot_umap(cordinate_umap,only_gini)
+```
+## New approach with positive cells
+```{r }
+
+
+
+
+geni_marker=geni_pgc
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+final_gini=as.character(final_gini)
+
+for (i in levels(factor(final_gini))){
+print(i)
+bo=find_jacardi_new((final_gini),norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+
+geni_marker=top_endo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+final_gini=as.character(final_gini)
+
+for (i in levels(factor(final_gini))){
+print(i)
+bo=find_jacardi_new((final_gini),norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+geni_marker=top_hemo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+for (i in levels(factor(final_gini))){
+print(i)
+bo=find_jacardi_new((final_gini),norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+```
+
+## Old approach with intersection between cluster
+
+```{r }
+for (i in levels(factor(final_gini))){
+jacardi=find_jacardi(final_cluster_version_sub,final_gini,raw_elmir_5_30,"Endoderm_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+for (i in levels(factor(final_gini))){
+jacardi=find_jacardi(final_cluster_version_sub,final_gini,raw_elmir_5_30,"Hemogenic Endothelial Progenitors_4",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(final_gini))){
+jacardi=find_jacardi(final_cluster_version_sub,final_gini,raw_elmir_5_30,"PGC",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(final_gini))){
+jacardi=find_jacardi(final_cluster_version_sub,final_gini,raw_elmir_5_30,"ExE Mesoderm_1",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+
+```
+
+
+## Comparison with Triku
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+triku_gene_name=read.table("triku_gene_names.txt")
+triku_gene_name=triku_gene_name$V1
+triku_gene_all=read.table("triku_gene.txt")
+triku_distance=triku_gene_all$V3
+triku_gene=triku_gene_all$V5
+
+#triku_gene_name=triku_gene_name[triku_gene=="True"]
+
+names(triku_distance)=triku_gene_name
+
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/final_cluster_version_sub.Rda")
+
+final_sort_triku=names(triku_distance)[order(triku_distance,decreasing = T)]
+
+
+```
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+load(file="markers_first_elmir_final.Rda")
+marker_elmir_all=markers_first_elmir_final[[3]]
+```
+
+
+
+```{r}
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=markers_cluster
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,triku_gene_name)
+
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,final_sort_triku[1:2917])
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+```{r}
+grep("NANOS3",triku_gene_name)
+which(triku_gene_name=="NANOG")
+grep("SOX17",triku_gene_name)
+which(triku_gene_name=="DPPA5")
+
+
+
+grep("NANOS3",final_sort_triku)
+which(final_sort_triku=="NANOG")
+grep("SOX17",final_sort_triku)
+which(final_sort_triku=="DPPA5")
+
+which(final_sort_triku=="FETUB")
+
+```
+
+```{r}
+library(CIARA)
+load(system.file("extdata", "norm_human_data_ciara.Rda", package = "CIARA"))
+umap_elmir <- readRDS(system.file("extdata", "annot_umap.rds", package = "CIARA"))
+
+coordinate_umap_human <- umap_elmir[, 2:3]
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+load("norm_elmir_5_30.Rda")
+
+p <- list()
+for(i in final_sort_triku[1:10]) {
+  q <- plot_gene(norm_elmir_5_30, coordinate_umap_human, i, i)
+  p <- list(p, q)
+}
+p
+
+
+load(system.file("extdata", "result.Rda", package = "CIARA"))
+
+ciara_genes_top <- row.names(result)[order(as.numeric(result[, 1]))]
+ciara_genes <- row.names(result)[result[, 1]<1]
+
+
+p <- list()
+for(i in ciara_genes_top[1:2]) {
+  q <- plot_gene(norm_elmir_5_30, coordinate_umap_human, i, i)
+  p <- list(p, q)
+}
+p
+
+which(final_sort_triku %in% ciara_genes_top[1:2])
+
+length(intersect(final_sort_triku[1:2000],ciara_genes))
+
+```
+
+```{r}
+
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/CIARA_archive/CIARA_old/inst/extdata")
+vedo=load("raw_elmir_5_30.Rda")
+human_data_triku <- cluster_analysis_integrate_rare(raw_elmir_5_30, "Human_data", 0.1, 5, 30, feature_genes = final_sort_triku[1:1000])
+
+plot_umap(coordinate_umap_human, human_data_triku$RNA_snn_res.0.1)
+
+
+find_resolution(human_data_triku, seq(0.01,0.5,0.1))
+
+
+```
+
+
+
+## Comparison with CellSIUS
+
+## run on server hpc-build.scidom.de at path /home/ies/gabriele.lubatti/entropy_mixing/cellsius/ane
+## Rscript Cellsius_elmir_new.R 
+
+```{r}
+library(CellSIUS)
+
+#CELLSIUS_elmir=result
+
+#Below the changed version of cellsius for detecting PGC (in this way we don't detect any more sub endo 2 and hemo_4)
+ #setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+ #vedo=load("CELLSIUS_elmir_new.Rda")
+ cluster_id=general_cluster_version
+names(cluster_id)=colnames(raw_elmir_5_30)
+ Final_Clusters = CellSIUS_final_cluster_assignment(CellSIUS.out=CELLSIUS_elmir, group_id=cluster_id, min_n_genes = 3)
+
+```
+
+```{r }
+Plot_umap(cordinate_umap,Final_Clusters)
+Plot_umap(cordinate_umap,cluster_id)
+```
+
+```{r }
+
+
+geni_marker=geni_pgc
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+Final_Clusters=as.vector(Final_Clusters)
+
+for (i in levels(factor(Final_Clusters))){
+  print(i)
+bo=find_jacardi_new(Final_Clusters,norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+
+geni_marker=top_endo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+Final_Clusters=as.vector(Final_Clusters)
+
+for (i in levels(factor(Final_Clusters))){
+  print(i)
+bo=find_jacardi_new(Final_Clusters,norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+
+geni_marker=top_hemo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+Final_Clusters=as.vector(Final_Clusters)
+
+for (i in levels(factor(Final_Clusters))){
+  print(i)
+bo=find_jacardi_new(Final_Clusters,norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",i))
+  }
+}
+
+
+```
+
+```{r }
+table(final_cluster_version_sub,Final_Clusters)
+```
+
+```{r }
+
+for (i in levels(factor(Final_Clusters))){
+jacardi=find_jacardi(final_cluster_version_sub,Final_Clusters,raw_elmir_5_30,"Hemogenic Endothelial Progenitors_4",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+
+
+
+
+
+
+for (i in levels(factor(Final_Clusters))){
+jacardi=find_jacardi(final_cluster_version_sub,Final_Clusters,raw_elmir_5_30,"Endoderm_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+for (i in levels(factor(Final_Clusters))){
+jacardi=find_jacardi(final_cluster_version_sub,Final_Clusters,raw_elmir_5_30,"ExE Mesoderm_1",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(Final_Clusters))){
+jacardi=find_jacardi(final_cluster_version_sub,Final_Clusters,raw_elmir_5_30,"PGC",i)
+  print(paste0(i,"-",jacardi))
+}
+
+
+
+
+```
+
+
+
+
+```{r }
+
+Final_Clusters_plot=Final_Clusters
+Final_Clusters_plot[Final_Clusters=="Hemogenic Endothelial Progenitors_1"]="Hemogenic Endothelial Progenitors_sub_1"
+Final_Clusters_plot[Final_Clusters=="Hemogenic Endothelial Progenitors_2"]="Hemogenic Endothelial Progenitors_sub_2"
+Final_Clusters_plot[Final_Clusters=="Hemogenic Endothelial Progenitors_3"]="Hemogenic Endothelial Progenitors_sub_3"
+Final_Clusters_plot[Final_Clusters=="Hemogenic Endothelial Progenitors_3-Hemogenic Endothelial Progenitors_1 "]="Hemogenic Endothelial Progenitors_sub_1"
+Final_Clusters_plot[Final_Clusters=="Hemogenic Endothelial Progenitors_4"]="Hemogenic Endothelial Progenitors_sub_4"
+Final_Clusters_plot[Final_Clusters=="Hemogenic Endothelial Progenitors"]="Hemogenic Endothelial Progenitors_sub_0"
+Final_Clusters_plot[Final_Clusters=="Hemogenic Endothelial Progenitors_3-Hemogenic Endothelial Progenitors_1"]="Ambigous"
+Final_Clusters_plot[Final_Clusters=="Endoderm"]="Endoderm_sub_0"
+Final_Clusters_plot[Final_Clusters=="Endoderm_1"]="Endoderm_sub_1"
+Final_Clusters_plot[Final_Clusters=="ExE Mesoderm"]="ExE Mesoderm_sub_0"
+Final_Clusters_plot[Final_Clusters=="ExE Mesoderm_1"]="ExE Mesoderm_sub_1"
+
+
+
+```
+
+
+
+
+
+
+```{r }
+Plot_umap(cordinate_umap,Final_Clusters)
+```
+
+
+
+## FiRE
+```{r }
+
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/FIRE")
+#source('preprocess.R')
+
+source(system.file("extdata", "preprocess.R", package ="EntropyMixingR"))
+
+```
+
+```{r }
+data <- t(raw_elmir_5_30)
+genes <- colnames(data)#It can be replaced with original gene names
+
+data_mat <- list(mat=data, gene_symbols=genes)
+
+preprocessedList <- ranger_preprocess(data_mat)
+preprocessedData <- as.matrix(preprocessedList$preprocessedData)
+
+model <- new(FiRE::FiRE, 100, 50, 1017881, 5489, 0)
+
+model$fit(preprocessedData)
+
+score <- model$score(preprocessedData)
+q3 <- quantile(score, 0.75)
+iqr <- IQR(score)
+th <- q3 + (1.5*iqr)
+th_new=q3 + (0.5*iqr)
+indIqr <- which(score >= th_new)
+predictions <- integer(dim(data)[1])
+predictions[indIqr] <- 1 
+
+#model$b
+```
+
+
+```{r }
+cluster_plot=predictions
+cluster_plot[predictions==1]="Rare cells"
+cluster_plot[predictions==0]="NO Rare cells"
+Plot_umap(cordinate_umap,cluster_plot)
+```
+
+```{r }
+table(cluster_plot)
+```
+
+
+
+
+
+
+
+
+
+
+```{r }
+predictions <- integer(dim(data)[1])
+predictions[indIqr] <- 1 
+names(predictions)=colnames(raw_elmir_5_30)
+set_1=names(predictions)[predictions==1]
+final_cluster_version_sub_new=final_cluster_version_sub
+names(final_cluster_version_sub_new)=colnames(raw_elmir_5_30)
+
+
+test=Test_Fisher_fire(final_cluster_version_sub_new,predictions)
+```
+
+```{r }
+test[[2]][test[[1]]<=0.05&test[[2]]>2]
+```
+
+
+##New part
+
+
+
+
+
+
+
+```{r }
+#top_hemo
+#top_endo
+#positive_cells_pgc=find_positive_cells(norm_elmir_5_30,threshold=0,top_endo)
+#positive_cells_pgc=find_positive_cells(norm_elmir_5_30,threshold=0,top_hemo)
+positive_cells_pgc=find_positive_cells(norm_elmir_5_30,threshold=0,geni_pgc)
+positive_cells_other=colnames(norm_elmir_5_30)[!colnames(norm_elmir_5_30)%in%positive_cells_pgc]
+
+predictions_small_pgc=predictions[names(predictions)%in%positive_cells_pgc]
+predictions_small_other=predictions[names(predictions)%in%positive_cells_other]
+
+predictions_small_all=c(predictions_small_pgc,predictions_small_other)
+
+cluster_pgc=rep("Positive PGC",length(positive_cells_pgc))
+cluster_other=rep("OTHER",length(positive_cells_other))
+cluster_all=c(cluster_pgc,cluster_other)
+
+
+names(cluster_all)=c(positive_cells_pgc,positive_cells_other)
+
+
+test=Test_Fisher_fire(cluster_all,predictions_small_all)
+```
+
+```{r }
+test[[2]][test[[1]]<=0.05&test[[2]]>2]
+```
+
+
+
+## Race ID 3
+```{r }
+
+sc <- SCseq(raw_elmir_5_30)
+sc <- filterdata(sc,mintotal=2000)
+fdata <- getfdata(sc)
+
+sc <- compdist(sc,metric="pearson")
+
+sc <- clustexp(sc,clustnr =30)
+```
+
+
+
+```{r }
+pgc_cells=colnames(raw_elmir_5_30)[umap_elmir$sub_cluster=="PGC"]
+sc@cpart[names(sc@cpart)%in%pgc_cells]
+
+sc <- clustexp(sc,cln=15,sat=FALSE)
+```
+
+```{r }
+sc <- findoutliers(sc)
+```
+
+
+
+
+
+
+
+
+```{r }
+Plot_umap(cordinate_umap,sc@cpart)
+```
+
+
+```{r }
+Final_Clusters=as.vector(sc@cpart)
+
+geni_marker=top_endo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+table(Final_Clusters[colnames(raw_elmir_5_30)%in%positive_cells])
+
+for (i in levels(factor(Final_Clusters))){
+  print(i)
+bo=find_jacardi_new(Final_Clusters,norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",Final_Clusters[i]))
+  }
+}
+
+geni_marker=top_hemo
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+table(Final_Clusters[colnames(raw_elmir_5_30)%in%positive_cells])
+
+for (i in levels(factor(Final_Clusters))){
+  print(i)
+bo=find_jacardi_new(Final_Clusters,norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",Final_Clusters[i]))
+  }
+}
+
+geni_marker=geni_pgc
+positive_cells=find_positive_cells(norm_elmir_5_30,threshold=0,geni_marker)
+
+table(Final_Clusters[colnames(raw_elmir_5_30)%in%positive_cells])
+
+for (i in levels(factor(Final_Clusters))){
+  print(i)
+bo=find_jacardi_new(Final_Clusters,norm_elmir_5_30,i,positive_cells)
+  if (bo>=0.50){
+    print(paste0("yes we have-",Final_Clusters[i]))
+  }
+}
+```
+
+
+
+
+
+```{r }
+table(sc@cpart)
+```
+```{r }
+#outliers cells
+out_cells=sc@out$out
+length(out_cells)
+table(general_cluster_version[colnames(raw_elmir_5_30)%in%out_cells])
+```
+```{r }
+outlier_cluster=general_cluster_version
+outlier_cluster[colnames(raw_elmir_5_30)%in%out_cells]="Outliers"
+outlier_cluster[!colnames(raw_elmir_5_30)%in%out_cells]="NO Outliers"
+
+
+Plot_umap(cordinate_umap,outlier_cluster)
+```
+
+
+
+```{r}
+for (i in levels(factor(sc@cpart))){
+jacardi=find_jacardi(final_cluster_version_sub,sc@cpart,raw_elmir_5_30,"Endoderm_2",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(sc@cpart))){
+jacardi=find_jacardi(final_cluster_version_sub,sc@cpart,raw_elmir_5_30,"Hemogenic Endothelial Progenitors_4",i)
+  print(paste0(i,"-",jacardi))
+}
+
+for (i in levels(factor(sc@cpart))){
+jacardi=find_jacardi(final_cluster_version_sub,sc@cpart,raw_elmir_5_30,"ExE Mesoderm_1",i)
+  print(paste0(i,"-",jacardi))
+}
+
+```
+
+
+
+
+## singleCellHaystack
+
+# Standard parameter
+
+```{r}
+#elmir_seurat_5=Cluster_analysis_integrate_rare(raw_elmir_5_30,"Elmir_data",0.1,5,30)
+#norm_elmir_5_30=as.matrix(GetAssayData(elmir_seurat_5, slot = "data",assay="RNA"))
+#norm_elmir=norm_elmir_5_30
+
+```
+
+
+```{r}
+library(singleCellHaystack)
+set.seed(123)
+dat.pca=as.data.frame(Embeddings(elmir_seurat_5, reduction = "pca"))
+median.per.gene <- apply(norm_elmir_5_30,1,median) # get the median read count per gene
+dat.detection <- norm_elmir_5_30 > median.per.gene
+res.pc30 <- haystack(x = dat.pca, detection = dat.detection , method = "highD")
+
+
+show_result_haystack(res.haystack = res.pc30, n = 5)
+
+
+top_values=row.names(res.pc30$results)[order(res.pc30$results$log.p.adj,decreasing = F)]
+# plotting detection of Trim10
+
+plot_gene_haystack(x = cordinate_umap, gene = top_values[1], expression = dat.detection)
+plot_gene_haystack(x = cordinate_umap, gene = top_values[2], expression = dat.detection)
+plot_gene_haystack(x = cordinate_umap, gene = top_values[3], expression = dat.detection)
+plot_gene_haystack(x = cordinate_umap, gene = top_values[4], expression = dat.detection)
+
+```
+
+
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+load(file="markers_first_elmir_final.Rda")
+marker_elmir_all=markers_first_elmir_final[[3]]
+```
+
+
+
+```{r}
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=markers_cluster
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,top_values[1:2000])
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+```{r}
+grep("NANOS3",top_values)
+which(top_values=="NANOG")
+grep("SOX17",top_values)
+which(top_values=="DPPA5")
+
+which(top_values%in%top_endo)
+which(top_values%in%top_hemo)
+```
+
+```{r}
+
+res.top <- show_result_haystack(res.haystack = res.pc30, n = 1000)
+# cluster DEGs by their expression pattern in the 2D plot
+genes.top <- row.names(res.top)
+res.hc <- hclust_haystack(x = cordinate_umap, genes = genes.top, detection = dat.detection)
+res.hc.clusters <- cutree(res.hc, k=5)
+table(res.hc.clusters)
+
+pl <- lapply(1:5, function(cluster) {
+  gene.set <- names(res.hc.clusters)[res.hc.clusters==cluster]
+  plot.title <- paste0("Cluster ", cluster)
+  p <- plot_gene_set_haystack(x = cordinate_umap, genes = gene.set, detection = dat.detection)
+  p + ggtitle(plot.title) + theme(legend.title = element_text(size = 8))
+})
+pl
+
+```
+
+```{r }
+library(UpSetR)
+load(system.file("extdata", "elmir_entropy_5_30.Rda", package ="EntropyMixingR"))
+
+listInput <- list(EntropyMixing=(entropy_genes),singleCellHaystack=genes.top)
+
+upset(fromList(listInput), order.by = "freq")
+
+
+
+
+```
+
+
+
+
+```{r}
+
+
+p=list()
+for(i in genes.top[1:3]){
+  q=Plot_gene(norm_elmir_5_30,cordinate_umap,i,paste(i,which(genes.top==i)))
+  p=list(p,q)
+}
+p
+```
+
+##SAM application 
+
+
+```{r}
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+load(file="markers_first_elmir_final.Rda")
+marker_elmir_all=markers_first_elmir_final[[3]]
+```
+
+```{r}
+sam_genes=read.csv("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data/sam_output/sorted_sam_genes.csv")
+sam_genes=sam_genes$X0
+```
+
+
+
+```{r}
+Test_Fisher=function(entropy_cluster,markers_cluster,marker_top){
+level=levels(as.factor(entropy_cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+set_1=marker_top
+for (i in 1:length(level)){
+  set_2=markers_cluster[names(markers_cluster)==level[i]]
+set_all=markers_cluster
+show=Function_fisher(set_1,set_2,set_all)
+
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+test=Test_Fisher(final_cluster_version_sub,marker_elmir_all,sam_genes[1:2000])
+
+```
+
+```{r}
+test[[2]][test[[1]]<0.05&test[[2]]>2]
+```
+
+```{r}
+grep("NANOS3",sam_genes)
+which(sam_genes=="NANOG")
+grep("SOX17",sam_genes)
+which(sam_genes=="DPPA5")
+
+
+```
+
+```{r }
+setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/vignettes")
+vedo=load("elmir.Rda")
+```
+
+
+
+```{r }
+ciara_genes=row.names(result)[result[,1]<1]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+
+
+
+
+```{r}
+grep("NANOS3",geni_top_top)
+which(geni_top_top=="NANOG")
+grep("SOX17",geni_top_top)
+which(geni_top_top=="DPPA5")
+
+
+```
+
+

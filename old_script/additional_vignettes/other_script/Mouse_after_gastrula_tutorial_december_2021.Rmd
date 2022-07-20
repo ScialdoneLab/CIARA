@@ -1,0 +1,434 @@
+---
+title: "Mouse_after_gastrula"
+author: "Gabriele Lubatti"
+date: "10/21/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r } 
+gc()
+rm(list=ls())
+#library(devtools)
+#install_github("ScialdoneLab/IDENTOM",auth_token="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",ref="master")
+```
+
+```{r } 
+#library(Seurat)
+#library(clustree)
+#library(plotly)
+#library(ggplot2)
+#library(IDENTOM)
+```
+
+
+```{r } 
+library(IDENTOM)
+library(UpSetR)
+```
+
+
+##new CIARA
+```{r }
+##LAST VERSION condition srun -p normal_q -c 10 --mem=100G -t 1:00:00 --pty bash
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_server_december_2021_easy.R -n norm_data_heart -k knn_matrix_heart_new -o heart_december_2021.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a FALSE
+
+#  Time difference of Time difference of 1.17694 mins  
+
+
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_server_december_2021_easy.R -n norm_data_heart -k knn_matrix_heart_new -o heart_december_2021_a.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a TRUE
+
+#Time difference of 8.347204 secs
+```
+
+
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/heart_december_2021.Rda")
+complete=result
+entropy_genes_complete=row.names(complete)[complete[,1]<1]
+```
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/heart_december_2021_a.Rda")
+small=result
+entropy_genes_small=row.names(small)[small[,1]<1]
+```
+
+```{r }
+find_jacardi_genes=function(entropy_mixing_old,entropy_mixing_new){
+unione=union(entropy_mixing_old,entropy_mixing_new)
+intersezione=intersect(entropy_mixing_old,entropy_mixing_new)
+
+jacardi=length(intersezione)/length(unione)
+print(jacardi)
+return(jacardi)
+}
+
+```
+
+```{r }
+find_jacardi_genes(entropy_genes_complete,entropy_genes_small)
+```
+
+##Old CIARA
+```{r }
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_hyper_server_all_cells.R -n norm_data_heart -k knn_matrix_heart_new -o heart_hyper_old.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001
+#Time difference of 2.264237 mins
+
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_hyper_server_blood_new.R -n norm_data_heart -k knn_matrix_heart_new -o heart_hyper_new.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
+#Time difference of 11.14971 secs
+
+
+##LAST VERSION (setting srun -p normal_q -c 10  --mem=100G -t 1:00:00 --pty bash)
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_server_december_2021.R -n norm_data_heart -k knn_matrix_heart_new -o heart_december_2021.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a FALSE
+
+#Time difference of 2.116118 mins
+
+
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_server_december_2021.R -n norm_data_heart -k knn_matrix_heart_new -o heart_december_2021_a.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a TRUE
+#Time difference of 14.24822 secs
+```
+
+
+```{r }
+geni_ortogoli_unique=function(rabbit_id,name_mouse){
+
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/Early_embryonic_like_cells/Rabbit/10x_data/Processed_data/Radius_of_gyration")
+
+name_mouse=name_mouse[isUnique(as.vector(name_mouse$initial_ensg))&isUnique(as.vector(name_mouse$ortholog_name)),]
+marker_plot_all_1=rabbit_id[rabbit_id%in%name_mouse$initial_ensg]
+name_rabbit=as.vector(name_mouse$ortholog_name)
+name_rabbit[name_rabbit=="N/A"]=as.vector(name_mouse$initial_ensg[name_rabbit=="N/A"])
+
+#setwd(paste0(base_path,"10x_data/Output_script"))
+#name_mouse=read.csv(file=geni_ortogoli_g_profiler)
+#name_mouse_no=name_mouse[!(isUnique(as.vector(name_mouse$initial_ensg))&isUnique(as.vector(name_mouse$ortholog_name))),]
+#marker_plot_all_2=rabbit_id[rabbit_id%in%name_mouse_no$initial_ensg]
+#name_rabbit_no=unique(as.vector(name_mouse_no$initial_ensg))
+marker_plot_all_2=rabbit_id[!rabbit_id%in%name_mouse$initial_ensg]
+name_rabbit_no=rabbit_id[!rabbit_id%in%name_mouse$initial_ensg]
+ortogoli_name_final=c(name_rabbit,name_rabbit_no)
+rabbit_id_final=c(marker_plot_all_1,marker_plot_all_2)
+return(list(ortogoli_name_final,rabbit_id_final))}
+```
+
+
+```{r }
+Test_Fisher=function(marker_all_cluster,marker_specific,background,cluster){
+level=levels(as.factor(cluster))
+p_value=rep(0,length(level))
+odds_ratio=rep(0,length(level))
+for (i in 1:length(level)){
+show=Function_fisher(marker_all_cluster[names(marker_all_cluster)==level[i]],marker_specific,background)
+p_value[i]=as.numeric(show$p.value)
+names(p_value)[i]=level[i]
+odds_ratio[i]=as.numeric(show$estimate)
+names(odds_ratio)[i]=level[i]
+}
+return(list(p_value,odds_ratio))
+}
+
+```
+
+##Old CIARA
+```{r }
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_hyper_server_all_cells.R -n norm_data_heart -k knn_matrix_heart_new -o heart_hyper_old.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001
+#Time difference of 2.264237 mins
+
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_hyper_server_blood_new.R -n norm_data_heart -k knn_matrix_heart_new -o heart_hyper_new.Rda -r 1 -l 3 -h 20 -t 1 -p 0.001
+#Time difference of 11.14971 secs
+
+
+##LAST VERSION (setting srun -p normal_q -c 10  --mem=10G -t 1:00:00 --pty bash)
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_server_december_2021_new.R -n norm_data_heart -k knn_matrix_heart_new -o heart_december_2021.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a FALSE
+
+#Time difference of 2.44859 mins 16.18028 secs
+
+
+#Rscript --vanilla /home/ies/gabriele.lubatti/entropy_mixing/heart_data/Entropy_server_december_2021_new.R -n norm_data_heart -k knn_matrix_heart_new -o heart_december_2021_a.Rda -r 1 -l 3 -h 30 -t 1 -p 0.001 -c 10 -a TRUE
+#Time difference of 16.18028 secs
+```
+
+```{r }
+
+
+load(system.file("extdata", "knn_matrix_heart_new.Rda", package ="IDENTOM"))
+load(system.file("extdata", "norm_data_heart.Rda", package ="IDENTOM"))
+load(system.file("extdata", "raw_data_heart.Rda", package ="IDENTOM"))
+load(system.file("extdata", "cluster_heart_small.Rda", package ="IDENTOM"))
+load(system.file("extdata", "umap_cordinate_heart_small.Rda", package ="IDENTOM"))
+
+
+```
+
+```{r }
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/published_data")
+#load("heart_hyper_new.Rda")
+#result_old=result
+```
+
+
+```{r }
+#load(system.file("extdata", "heart_december_2021.Rda", package ="IDENTOM"))
+#result_old=result
+#entropy_genes_old=row.names(result_old)[result_old[,1]<1]
+#geni_top=row.names(result_old)[result_old[,2]<0.0001&result_old[,1]==0]
+#geni_top_top=row.names(result_old)[order(as.numeric(result_old[,2]))]
+```
+
+
+
+
+```{r }
+load("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/github_january_2022/heart_december_2021.Rda")
+
+```
+
+
+
+
+
+```{r }
+entropy_genes=row.names(result)[result[,1]<1]
+#geni_top=row.names(result)[result[,1]==0&result[,2]<0.0001]
+geni_top_top=row.names(result)[order(as.numeric(result[,1]))]
+```
+
+
+```{r }
+#load(system.file("extdata", "heart_december_2021.Rda", package ="IDENTOM"))
+result_old=result
+entropy_genes_old=row.names(result_old)[result_old[,1]<1]
+geni_top=row.names(result_old)[result_old[,2]<0.0001&result_old[,1]==0]
+geni_top_top=row.names(result_old)[order(as.numeric(result_old[,2]))]
+```
+
+```{r }
+background_old=row.names(result_old)
+#background=c(names(entropy_genes),names(entropy_genes_excluded))
+```
+
+```{r}
+#setwd('/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data')
+gene_id=row.names(raw_data_heart)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data")
+#write.table(gene_id,file="geni_heart.txt",row.names = F,quote=F)
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data/heart_data")
+
+name_mouse=read.csv(system.file("extdata", "human_mouse_heart.csv", package ="IDENTOM"))
+#name_mouse=read.csv("human_mouse_heart.csv")
+
+human_gene_name=geni_ortogoli_unique(gene_id,name_mouse)
+human_name_all=human_gene_name[[1]]
+human_id_all=human_gene_name[[2]]
+
+data_all_human=data.frame(human_id_all,human_name_all)
+row.names(data_all_human)=human_id_all
+data_all_human_new=data_all_human[gene_id,]
+human_name_final=as.vector(data_all_human_new[,2])
+
+row.names(norm_data_heart)=human_name_final
+
+row.names(raw_data_heart)=human_name_final
+
+entropy_genes_old=data_all_human[entropy_genes_old,2]
+
+background_old=data_all_human[background_old,2]
+
+geni_top=data_all_human[geni_top,2]
+geni_top_top=data_all_human[geni_top_top,2]
+
+```
+
+```{r }
+
+
+p=list()
+for(i in (geni_top_top)[1:10]){
+  q=Plot_gene(norm_data_heart,umap_cordinate_heart_small,i,i)
+  p=list(p,q)
+}
+p
+```
+
+
+
+
+
+```{r }
+Plot_genes_sum(umap_cordinate_heart_small,norm_data_heart,(geni_top),"Sum from top entropy genes")
+
+```
+
+
+
+
+
+```{r }
+
+norm_counts_small = apply(norm_data_heart[(entropy_genes_old), ], 
+        1, function(x) {
+            y = x/sum(x)
+            return(y)
+        })
+    gene_sum = apply(norm_counts_small, 1, sum)
+    
+    
+genes_name_text=selection_localized_genes(norm_data_heart,entropy_genes_old,min_number_cells=4,max_number_genes=4)
+plot.elmir=umap_cordinate_heart_small
+colnames(plot.elmir)=c("UMAP_1","UMAP_2")
+interactive_plot(plot.elmir,gene_sum,genes_name_text,min_x=NULL,max_x=NULL,min_y=NULL,max_y=NULL)
+```
+
+## Cluster analysis using entropy of mixing (step 2)
+```{r }
+
+
+heart_seurat_entropy=Cluster_analysis_integrate_rare(raw_data_heart,"Elmir data",0.1,5,30,entropy_genes_old)
+
+#heart_seurat_entropy_2=Cluster_analysis_integrate_rare(raw_data_heart,"Elmir data",0.1,3,30,entropy_genes_old)
+
+#heart_seurat_entropy=heart_seurat_entropy_2
+heart_seurat_entropy=FindClusters(heart_seurat_entropy,resolution = 0.2)
+```
+
+```{r }
+
+
+find_resolution(heart_seurat_entropy,seq(0.1,1,0.1))
+```
+
+```{r }
+heart_seurat_entropy=FindClusters(heart_seurat_entropy,resolution = 0.2)
+```
+
+
+```{r }
+Plot_umap(umap_cordinate_heart_small,heart_seurat_entropy$RNA_snn_res.0.2)
+```
+
+
+```{r}
+names(cluster_heart_small)=colnames(raw_data_heart)
+cluster_entropy_heart=as.vector(heart_seurat_entropy$RNA_snn_res.0.2)
+names(cluster_entropy_heart)=colnames(raw_data_heart)
+final_cluster_heart=EntropyMixingR::merge_cluster(cluster_heart_small,cluster_entropy_heart,30)
+```
+
+
+
+
+
+```{r }
+
+Plot_umap(umap_cordinate_heart_small,final_cluster_heart)
+
+
+```
+
+```{r }
+table(final_cluster_heart)
+```
+
+
+
+```{r}
+DefaultAssay(heart_seurat_entropy) <- "RNA"
+markers_first_elmir=markers_first_method(heart_seurat_entropy,final_cluster_heart,names(heart_seurat_entropy$RNA_snn_res.0.1),50)
+
+
+marker_heart_top=markers_first_elmir[[1]]
+marker_heart=markers_first_elmir[[3]]
+```
+
+```{r}
+
+top_heart=white_black_marker(final_cluster_heart,"2-step_2",norm_data_heart,marker_heart,0)
+top_heart=names(top_heart)[top_heart]
+
+mean_top_heart=apply(norm_data_heart[top_heart,final_cluster_heart=="2-step_2"],1,mean)
+mean_top_heart=sort(mean_top_heart,decreasing = T)
+
+top_heart=names(mean_top_heart)
+names(top_heart)=rep("2-step_2",length(top_heart))
+```
+
+```{r}
+
+Plot_balons(norm_data_heart,final_cluster_heart,marker_heart_top,10,max_size=2,text_size=9)
+
+
+Plot_balons(norm_data_heart,final_cluster_heart,top_heart,40,max_size=2,text_size=9)
+```
+
+
+
+
+
+
+
+
+
+```{r }
+load(system.file("extdata", "markers_first_elmir_final.Rda", package ="IDENTOM"))
+#setwd("/Users/gabriele.lubatti/Desktop/Phd/entropy_of_mixing_library/elmir_data")
+#load(file="markers_first_elmir_final.Rda")
+marker_elmir_all=markers_first_elmir_final[[3]]
+marker_endoderm_2=marker_elmir_all[names(marker_elmir_all)=="Endoderm_2"]
+
+
+
+
+
+```
+
+
+
+
+
+```{r }
+result=Test_Fisher(marker_heart,marker_endoderm_2,as.vector(marker_heart),as.vector(final_cluster_heart))
+
+
+
+
+names(result[[1]])[result[[1]]<0.05&result[[2]]>2]
+
+geni_comuni=intersect(marker_heart[names(marker_heart)=="2-step_2"],marker_endoderm_2)
+```
+
+```{r }
+
+listInput <- list(mouse_rare_endoderm=marker_heart[names(marker_heart)=="2-step_2"],human_rare_endoderm=marker_endoderm_2)
+
+upset(fromList(listInput), order.by = "freq")
+
+
+#listInput <- list(entropy_mixing_rare_2=marker_2_small,giniclust2_rare_2=marker_2_original)
+
+#upset(fromList(listInput), order.by = "freq")
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+```{r }
+p=list()
+for(i in (geni_comuni)[1:10]){
+  q=Plot_gene(norm_data_heart,umap_cordinate_heart_small,i,i)
+  p=list(p,q)
+}
+p
+```
+
+

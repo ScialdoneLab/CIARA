@@ -6,3 +6,5 @@ Folder:
 1. **script_paper**: Inside there is the script CIARA_main_figures.Rmd. With this script is possible to reproduce all the main and supplementary figures
 2. **Other_Methods**: folder with scripts used to run other pubslished methods for rare cell types detection on human gastrula dataset ([Tyser *et al.*, 2021](https://www.nature.com/articles/s41586-021-04158-y))
 3. **old_script/tutorial** folder with additional scripts, in addition to the human gastrula tutorial provided in the CIARA cran package
+
+Please see https://github.com/ScialdoneLab/CIARA/ for how to install and use CIARA, with extended information and documentations.

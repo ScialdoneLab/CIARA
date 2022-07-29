@@ -212,7 +212,7 @@ plot_umap(coordinate_umap, final_cluster_version_sub)
 With the cluster analysis based on CIARA we are able to detect two clusters (Endoderm_2 and and Hemogenic Endothelial Progenitors_4 highlighted in the plot) that were not reported in the original paper.
 
 
-For more exhaustive information about the functions offered by CIARA for the identification of rare populations of cells  see **Tutorials section** below and the help page of the single functions. (*?function_name*).
+For more exhaustive information about the functions offered by CIARA for the identification of rare populations of cells  see **Vignette** below and the help page of the single functions. (*?function_name*).
 
 ## Comparison with other published methods for rare cell types identification
 

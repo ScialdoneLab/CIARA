@@ -94,8 +94,7 @@ In the next two sections (**Visualization of rare cell markers** and **Cluster a
 
 ### Visualization of rare cell markers
 
- We can visualize the highly localized genes identified with CIARA with the functions **plot_gene**, **plot_genes_sum** and even in an interactive way with the function 
-**plot_interactive**. For more exhaustive information about the functions offered by CIARA for visualization  see **Vignette** below and the help page of the single functions. (*?function_name*).
+ We can visualize the highly localized genes identified with CIARA with the function **plot_gene**. For more exhaustive information about the functions offered by CIARA for visualization  see **Vignette** below and the help page of the single functions. (*?function_name*).
 The pattern expression of the top two genes according to CIARA are shown.
 ```r
 load(system.file("extdata", "result.Rda", package = "CIARA"))

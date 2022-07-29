@@ -216,7 +216,7 @@ For more exhaustive information about the functions offered by CIARA for the ide
 
 ## Comparison with other published methods for rare cell types identification
 
-We use the [Matthews Correlation Coefficient (MCC)](https://en.wikipedia.org/wiki/Phi_coefficient) to evaluate the performance of other methods in the task of identfying the PGCs cluster from human gastrula. 
+We use the [Matthews Correlation Coefficient (MCC)](https://en.wikipedia.org/wiki/Phi_coefficient) to evaluate the performance of other methods in the task of identfying the PGCs cluster from human gastrula ([Tyser *et al.*, 2021](https://www.nature.com/articles/s41586-021-04158-y)). 
 CIARA is the only able to detect the original PGCs cluster (7 cells).
 <img src="https://github.com/ScialdoneLab/CIARA/blob/main/figures/mcc_gap_clust.png" width="700" height="500">
 

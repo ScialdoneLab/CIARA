@@ -89,7 +89,7 @@ result <- CIARA(norm_matrix, knn_matrix, background, cores_number = 1, p_value =
 The input file *raw_counts_human_data.Rda* can be downloaded [here](https://hmgubox2.helmholtz-muenchen.de/index.php/s/x83jDLHobM7Qer6)
 
 
-In the next two sections (**Visualization of highly localized genes** and **Cluster analysis based on CIARA for the identification of extremely rare population of cells**) it is shown the analysis of the scRNA seq data from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.nature.com/articles/s41586-021-04158-y)
+In the next two sections (**Visualization of rare cell markers** and **Cluster analysis based on CIARA for rare cell types identification**) it is shown the analysis of the scRNA seq data from human embryo at the gastrulation state from [Tyser *et al.*, 2021](https://www.nature.com/articles/s41586-021-04158-y)
 
 ### Visualization of rare cell markers
 

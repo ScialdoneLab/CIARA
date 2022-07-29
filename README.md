@@ -14,6 +14,7 @@
     + [CIARA](#CIARA)
   * [Visualization of rare cell markers](#visualization-of-rare-cell-markers)
   * [Cluster analysis based on CIARA for rare cell types identification](#cluster-analysis-based-on-CIARA-for-rare-cell-types-identification)
+  * [Comparison with other published methods for rare cell types identification](#comparison-with-other-published-methods-for-rare-cell-types-identification)
   * [Vignette](#vignette)
   * [Citation](#Citation)
   * [Contributions and Support](#contributions-and-support)

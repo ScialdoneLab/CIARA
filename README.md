@@ -230,25 +230,10 @@ It can be accessed within R with:
 utils::vignette("CIARA")
 ```
 
-## Citation
-To cite package **CIARA** in publications use:
-```
-Gabriele Lubatti (2022). CIARA: Cluster Independent Algorithm for Rare Cell Types
-Identification. R package version 0.1.0. https://CRAN.R-project.org/package=CIARA
 
+## Citation
+The paper [CIARA: a cluster-independent algorithm for the identification of markers of rare cell types from single-cell RNA seq data](https://doi.org/10.1101/2022.08.01.501965) is available as a preprint on [biorxiv](https://www.biorxiv.org). 
 A BibTeX entry for LaTeX users is
-
-  @Manual{,
-    title = {CIARA: Cluster Independent Algorithm for Rare Cell Types Identification},
-    author = {Gabriele Lubatti},
-    year = {2022},
-    note = {R package version 0.1.0},
-    url = {https://CRAN.R-project.org/package=CIARA},
-  }
-
-```
-
-## Citation
 ```
 @article {Lubatti2022.08.01.501965,
 	author = {Lubatti, Gabriele and Stock, Marco and Iturbide, Ane and Ruiz Tejada Segura, Mayra L. and Tyser, Richard and Theis, Fabian J. and Srinivas, Shankar and Torres-Padilla, Maria-Elena and Scialdone, Antonio},

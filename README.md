@@ -248,6 +248,21 @@ A BibTeX entry for LaTeX users is
 
 ```
 
+## Citation
+```
+@article {Lubatti2022.08.01.501965,
+	author = {Lubatti, Gabriele and Stock, Marco and Iturbide, Ane and Ruiz Tejada Segura, Mayra L. and Tyser, Richard and Theis, Fabian J. and Srinivas, Shankar and Torres-Padilla, Maria-Elena and Scialdone, Antonio},
+	title = {CIARA: a cluster-independent algorithm for the identification of markers of rare cell types from single-cell RNA seq data},
+	elocation-id = {2022.08.01.501965},
+	year = {2022},
+	doi = {10.1101/2022.08.01.501965},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2022/08/03/2022.08.01.501965},
+	eprint = {https://www.biorxiv.org/content/early/2022/08/03/2022.08.01.501965.full.pdf},
+	journal = {bioRxiv}
+}
+```
+
 ## Contributions and Support
 Contributions in the form of feedback, comments, code and bug report are welcome.
 * For any contributions, feel free to fork the source code and [submit a pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork).

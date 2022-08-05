@@ -1,5 +1,5 @@
 # CIARA
-Repository for reproduce all the main and supplementary figures of the paper "CIARA: a cluster-independent algorithm for the identification of markers of rare cell types from single-cell RNA seq data". 
+Repository for reproduce all the main and supplementary figures of the paper [CIARA: a cluster-independent algorithm for the identification of markers of rare cell types from single-cell RNA seq data](https://doi.org/10.1101/2022.08.01.501965). 
 The input data for generating the figures are available [here](https://hmgubox2.helmholtz-muenchen.de/index.php/s/x83jDLHobM7Qer6).
 
 Folder:

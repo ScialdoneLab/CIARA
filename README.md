@@ -34,7 +34,7 @@ install.packages("CIARA")
 And the development version from [GitHub](https://github.com/) with:
 
 ```r
-devtools::install_github("ScialdoneLab/CIARA",auth_token="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",ref="master")
+devtools::install_github("ScialdoneLab/CIARA")
 ```
 
 ## Getting started 

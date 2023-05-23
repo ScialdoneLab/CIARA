@@ -55,7 +55,7 @@ requires as input:
 5. **local_region**: minimum number of local regions (cell with its knn neighbours) where the binarized gene expression is enriched in 1
 6. **approximation**.Logical.If TRUE, for a given gene the fisher test is run in the local regions of only the cells where the binarized gene expression is 1
 
-The gene expression is binarized (1/0) if the value in a given cell is above/below the median. Each of cell with its first K nearest neighbors defined a local region. If there are at least **local_region** enriched in 1 according **to fisher.test** (with p value below than **p_value** and odds ratio above or equal to **odds_ratio**) , then the entropy for the gene is computed starting from the probability of having 1/0. The minimum of the entropy across all the enriched local regions is the entropy of mixing. If there are no enriched local regions, then the entropy of mixing  and the p value by default are set to 1
+The gene expression is binarized (1/0) if the value in a given cell is above/below the median. Each of cell with its first K nearest neighbors defined a local region. If there are at least **local_region** enriched in 1 according **to fisher.test** (with p value below than **p_value** and odds ratio above or equal to **odds_ratio**) , then the  score for each gene is computed starting from the list of p values coming from the fihser test. The minimum of the p values across all the enriched local regions is the score of the gene. If there are no enriched local regions, the score by default are set to 1.
 The output of **CIARA_gene**  is a list with one element corresponding to the p value of the gene
 
 ### CIARA

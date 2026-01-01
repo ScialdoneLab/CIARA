@@ -19,6 +19,13 @@
   * [Citation](#Citation)
   * [Contributions and Support](#contributions-and-support)
  
+
+# CIARA2
+A new version of CIARA, called [CIARA2](https://github.com/gabrielelubatti/CIARA2) is available.
+
+In the new version, we group cells into clusters using directly the output of CIARA2 (list of potential rare cell markers), without relying on external clustering algorithm (i.e. Louvain/leiden).
+
+In addition in the new version, we always start from knn and normalized count matrix. We sort the cells according to decreasing expression. The top n cells are selected. With a binomial test we test if the top n cells are also enriched in being k nearest neighbourhood of each other. If this is the case then the gene is selected. We don’t do any more binarization of the gene expression using the median fisher and then fisher test in each local neighbourhood. With the new implementation we improve the running time. 
 # CIARA
 CIARA (Cluster Independent Algorithm for the identification of markers of RAre cell types) is an R package that identifies potential markers of rare cell types looking at genes whose expression is confined in small regions of the expression space. 
 It is possible to use these highly localized genes as features in standard cluster algorithm (i.e. Louvain), for identifying extremely rare population(3/4 cells from thousand of cells)
